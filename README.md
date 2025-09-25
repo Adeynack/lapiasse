@@ -48,7 +48,7 @@ lapiasse --api-port=3000
 lapiasse --remote="https://lapiasse.adeynack.net/api"
 ```
 
-As of for the database, in order to enable a simple-to-deploy local personal application, [SQLite](https://sqlite.org/) will be used. It is a well trusted local database engine and has even been recently [pushed more and more](https://www.youtube.com/watch?v=0rlATWBNvMw) as a [high-volume website alternative](https://www.sqlite.org/whentouse.html) to database servers. In the spirit of _let's cross the bridge when we get to the river_, this is the database this application will be based upon for the time being. If the need for it ever gets big enough, in a parallel universe where this personal project will become huge and people will want to use it in the cloud massively, then we can study a [PosqgreSQL](https://www.postgresql.org/) migration or a dual-database offering.
+As of for the database, in order to enable a simple-to-deploy local personal application, [SQLite](https://sqlite.org/) will be used. It is a well trusted local database engine and has even been recently [pushed more and more](https://www.youtube.com/watch?v=0rlATWBNvMw) as a [high-volume website alternative](https://www.sqlite.org/whentouse.html) to database servers. In the spirit of _let's cross the bridge when we get to the river_, this is the database this application will be based upon for the time being. If the need for it ever gets big enough, in a parallel universe where this personal project will become huge and people will want to use it in the cloud massively, then we can study a [PostgreSQL](https://www.postgresql.org/) migration or a dual-database offering.
 
 ### Step 2: GUI/Web Hybrid
 
