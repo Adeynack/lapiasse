@@ -4,13 +4,13 @@
 
 ### The Software
 
-_La Piasse_ is a personal finances manager, the like of _Moneydance_ or _GNU Cash_.
+_La Piasse_ is a personal finances manager, the like of [_Moneydance_](https://moneydance.com/) or [_GNU Cash_](https://www.gnucash.org/).
 
 ### Justification
 
 This is for now in the realm of the _personal projects_ and aims at pleasing my personal needs (@adeynack) when it comes to personal finance management.
 
-As long time user of _Moneydance_, I (@adeynack) grew tired of some of its ergonomic flaws and wanted the following features to be more to my liking:
+As long time user of [_Moneydance_](https://moneydance.com/), I (@adeynack) grew tired of some of its ergonomic flaws and wanted the following features to be more to my liking:
 
 - Quick keyboard oriented navigation.
 - Easy and speedy import of diverse bank statements (usually available as CSV
