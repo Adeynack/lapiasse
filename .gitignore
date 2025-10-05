@@ -1,0 +1,25 @@
+# overmind
+.overmind.sock
+
+# macOS
+.DS_Store
+
+# Temporary files
+/tmp/*
+!/tmp/.keep
+
+# Misc
+/bin
+__debug_bin*
+
+/vendor
+/out
+/node_modules
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Misc IDEs
+/.idea
