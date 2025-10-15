@@ -1,3 +1,5 @@
+GOEXPERIMENT ?= jsonv2
+
 # CODE
 .PHONY: lint
 lint:
@@ -25,3 +27,6 @@ test:
 .PHONY: db_new_migration
 db_new_migration:
 	go tool migrate
+
+foo:
+	echo ${GOEXPERIMENT}

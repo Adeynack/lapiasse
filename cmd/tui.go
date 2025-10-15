@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"adeynack.net/lapiasse/pkg/app"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +18,7 @@ var tuiCmd = &cobra.Command{
 For the terminal lovers, this application offers a text based version
 of its user interface.
 	`,
-	Run: executeTui,
+	RunE: executeTui,
 }
 
 func init() {
@@ -34,6 +35,13 @@ func init() {
 	// tuiCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func executeTui(cmd *cobra.Command, args []string) {
-	fmt.Println("tui called")
+func executeTui(cmd *cobra.Command, args []string) error {
+	configuration, err := app.InitializeConfiguration(cliFlags)
+	if err != nil {
+		return fmt.Errorf("initializing configuration: %w", err)
+	}
+
+	fmt.Printf("tui called with configuration %#v\v", configuration)
+
+	return nil
 }

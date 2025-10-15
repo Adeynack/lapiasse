@@ -16,9 +16,20 @@ var envCmd = &cobra.Command{
 	Use:   "env",
 	Short: "Output the detected runtime environment and the loaded configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println()
 		fmt.Printf("Environment: %s\n", app.RunEnv)
+
+		configuration, err := app.InitializeConfiguration(cliFlags)
+		if err != nil {
+			return fmt.Errorf("initializing configuration: %w", err)
+		}
+
+		fmt.Println()
+		fmt.Println("Configuration file path:", configuration.Path)
+
+		fmt.Println()
 		fmt.Println("Effective configuration:")
-		if err := configuration.WriteConfigTo(os.Stdout); err != nil {
+		if err := configuration.WriteTo(os.Stdout); err != nil {
 			return err
 		}
 		fmt.Print("\n")

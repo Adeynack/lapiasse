@@ -5,12 +5,11 @@ import (
 
 	"adeynack.net/lapiasse/pkg/app"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
-	configFilePath string       // Path to the configuration file
-	configuration  *viper.Viper // Configuration of the application
+	configFilePath string // Path to the configuration file
+	cliFlags       app.CliFlags
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -24,12 +23,7 @@ against its business logic.
 
 When no command is passed, the TUI is launched automatically.
 	`,
-	Run: executeTui,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		configuration, err = app.InitializeConfiguration(cmd)
-
-		return err
-	},
+	RunE: executeTui,
 }
 
 func Execute() {
@@ -40,10 +34,8 @@ func Execute() {
 }
 
 func init() {
-	f := rootCmd.Flags()
-	f.StringVar(&configFilePath, "config", "", "config file (default is $HOME/.lapiasse.yaml)")
-
 	p := rootCmd.PersistentFlags()
-	p.Bool("serve-web", false, "enable the web server, making the web API accessible via HTTP")
-	p.String("data", "", "specify where the data for the application is located")
+	cliFlags.Config = p.String("config", "", "config file (default is $HOME/.lapiasse.yaml)")
+	cliFlags.ServeWeb = p.Bool("serve-web", false, "enable the web server, making the web API accessible via HTTP")
+	cliFlags.Data = p.String("data", "", "specify where the data for the application is located")
 }

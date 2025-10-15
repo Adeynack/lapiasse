@@ -1,90 +1,156 @@
 package app
 
 import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"path"
-	"strings"
 
+	"github.com/creasty/defaults"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-type Configuration struct {
-	// A path to the folder in which all data (e.g. databases, files) is stored.
-	DataFolder string
+type ConfigurationHolder struct {
+	Path          string
+	Configuration Configuration
 }
 
-func InitializeConfiguration(cmd *cobra.Command) (*viper.Viper, error) {
-	v := viper.New()
-	if err := setConfigurationDefaults(v); err != nil {
-		return nil, fmt.Errorf("setting configuration defaults: %w", err)
-	}
-
-	configFilePath, err := cmd.Flags().GetString("config")
+func (c *ConfigurationHolder) WriteTo(out *os.File) error {
+	err := json.MarshalWrite(out, c, jsontext.WithIndent("  "))
 	if err != nil {
-		configFilePath = ""
+		return fmt.Errorf("writing configuration to %q: %w", c.Path, err)
 	}
 
-	if configFilePath == "" {
-		if configFilePath, err = setupDefaultConfigurationEnvironment(v); err != nil {
+	return nil
+}
+
+func (c *ConfigurationHolder) Load() error {
+	b, err := os.ReadFile(c.Path)
+	if err != nil {
+		return fmt.Errorf("loading configuration from %q: %w", c.Path, err)
+	}
+
+	err = json.Unmarshal(b, c)
+	if err != nil {
+		return fmt.Errorf("unmarshalling configuration from %q: %w", c.Path, err)
+	}
+
+	return nil
+}
+
+func (c *ConfigurationHolder) Save() error {
+	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return fmt.Errorf("opening configuration file %q: %w", c.Path, err)
+	}
+	defer file.Close()
+
+	err = c.WriteTo(file)
+	if err != nil {
+		return fmt.Errorf("writing configuration to %q: %w", c.Path, err)
+	}
+
+	return nil
+}
+
+type Configuration struct {
+	Data DataConfiguration `json:"data"`
+	Web  WebConfiguration  `json:"web"`
+}
+
+func (c *Configuration) ApplyDefaults() error {
+	return defaults.Set(c)
+}
+
+type BasePathConfiguration string
+
+type DataConfiguration struct {
+	// A path to the folder in which all data (e.g. databases, files) is stored.
+	BasePath string `json:"base_path"`
+}
+
+// SetDefaults implements the [defaults.Setter] interface
+func (c *DataConfiguration) SetDefaults() {
+	var err error
+
+	if c.BasePath, err = determineDefaultDataDirectory(); err != nil {
+		panic(fmt.Errorf("determining default data directory: %w", err))
+	}
+}
+
+type WebConfiguration struct {
+	Expose bool `json:"expose" default:"false"`
+	Port   int  `json:"port" default:"8080"`
+}
+
+type CliFlags struct {
+	Config   *string
+	Data     *string
+	ServeWeb *bool
+}
+
+func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
+	var err error
+	configHolder := ConfigurationHolder{Path: lo.FromPtrOr(flags.Config, "")}
+
+	if configHolder.Path == "" {
+		if configHolder.Path, err = setupDefaultConfigurationEnvironment(); err != nil {
 			return nil, fmt.Errorf("setting up default configuration environment: %w", err)
 		}
 	} else {
-		if _, err := os.Stat(configFilePath); err != nil {
-			return nil, fmt.Errorf("accessing configuration file %q: %w", configFilePath, err)
+		if _, err := os.Stat(configHolder.Path); err != nil {
+			return nil, fmt.Errorf("accessing configuration file %q: %w", configHolder.Path, err)
 		}
-		v.SetConfigFile(configFilePath)
 	}
 
 	// Load from configuration file
-	if err := v.ReadInConfig(); err != nil {
+	if err := configHolder.Load(); err != nil {
 		// It's OK if the config file does not exist.
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if errors.As(err, &configFileNotFoundError) {
-			slog.Info(fmt.Sprintf("configuration file not found, creating with defaults at %s", configFilePath))
-			if err := v.WriteConfigAs(configFilePath); err != nil {
-				return nil, fmt.Errorf("writing configuration to %q: %w", configFilePath, err)
-			}
+		if errors.Is(err, os.ErrNotExist) {
+			slog.Info(fmt.Sprintf("configuration file not found, creating with defaults at %s", configHolder.Path))
 		} else {
 			return nil, fmt.Errorf("reading config: %w", err)
 		}
 	}
 
-	// Load from ENV
-	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(
-		"-", "_", // --foo-bar=123  ==>  FOO_BAR=123
-		".", "_", // --web.port-admin=8081  ==>  WEB_PORT_ADMIN=8081
-	))
-
-	// Bind CLI flags to configuration.
-	for config, flag := range map[string]string{
-		"web.expose": "serve-web",
-		"data.path":  "data",
-	} {
-		if err := v.BindPFlag(config, cmd.Flags().Lookup(flag)); err != nil {
-			return nil, fmt.Errorf("binging configuration %q to CLI flag %q: %w", config, flag, err)
-		}
+	// Applying defaults & saving back to configuration file.
+	if err := configHolder.Configuration.ApplyDefaults(); err != nil {
+		return nil, fmt.Errorf("applying defaults to configuration: %w", err)
+	}
+	if err := configHolder.Save(); err != nil {
+		return nil, fmt.Errorf("saving configuration to %q: %w", configHolder.Path, err)
 	}
 
-	return v, nil
+	// Bind CLI flags to configuration.
+	// Perform this after saving the loaded + defaults configuration, since the CLI flags
+	// configurations are valid only for this run of the application, and should not be persisted.
+	if lo.FromPtrOr(flags.Data, "") != "" {
+		configHolder.Configuration.Data.BasePath = *flags.Data
+	}
+	if flags.ServeWeb != nil {
+		configHolder.Configuration.Web.Expose = *flags.ServeWeb
+	}
+
+	return &configHolder, nil
 }
 
-func setupDefaultConfigurationEnvironment(v *viper.Viper) (string, error) {
-	const configType = "json"
-	configName := "lapiasse"
+func setupDefaultConfigurationEnvironment() (string, error) {
+	const configName = "lapiasse"
 	var appConfigDir string
 
-	if RunEnv == EnvProduction {
+	switch RunEnv {
+	case EnvProduction:
 		userConfigDir, err := os.UserConfigDir()
 		cobra.CheckErr(err)
 
 		appConfigDir = path.Join(userConfigDir, "LaPiasse")
-	} else {
+	case EnvTest:
+		appConfigDir = path.Join(os.TempDir(), "lapiasse", "test-configuration")
+	default:
 		pwd, err := os.Getwd()
 		if err != nil {
 			return "", fmt.Errorf("obtaining working directory: %w", err)
@@ -97,24 +163,7 @@ func setupDefaultConfigurationEnvironment(v *viper.Viper) (string, error) {
 		return "", fmt.Errorf("creating application configuration folder at %q: %w", appConfigDir, err)
 	}
 
-	v.AddConfigPath(appConfigDir)
-	v.SetConfigName(configName)
-	v.SetConfigType(configType)
-
-	return path.Join(appConfigDir, configName+"."+configType), nil
-}
-
-func setConfigurationDefaults(v *viper.Viper) error {
-	v.SetDefault("web.expose", false)
-	v.SetDefault("web.port", 8080)
-
-	if defaultDataPath, err := determineDefaultDataDirectory(); err == nil {
-		v.SetDefault("data.path", defaultDataPath)
-	} else {
-		return fmt.Errorf("determining default data directory: %w", err)
-	}
-
-	return nil
+	return path.Join(appConfigDir, configName+".json"), nil
 }
 
 func determineDefaultDataDirectory() (string, error) {
