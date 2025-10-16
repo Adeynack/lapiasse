@@ -1,4 +1,5 @@
-GOEXPERIMENT ?= jsonv2
+# Ensuring all tasks are using the new JSONv2 Go library.
+export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2
 
 # CODE
 .PHONY: lint
@@ -27,6 +28,3 @@ test:
 .PHONY: db_new_migration
 db_new_migration:
 	go tool migrate
-
-foo:
-	echo ${GOEXPERIMENT}
