@@ -55,3 +55,9 @@ As of for the database, in order to enable a simple-to-deploy local personal app
 In order to have this application feel more modern, a GUI will have to be offered. This allows amongst other things better graphical reports to be generated and the mouse to be used more.
 
 The approach will be to develop this GUI in [React](https://react.dev/). This is mainly and pragmatically because the main programmer (@adeynack) knows it already and because it would serve him well in his career to get better at it. This approach allows both local and remote use cases to be dealt together. The local usecase will be presented to the user using [Wails](https://wails.io/) in order to package & serve the GUI elements from the single [Go](https://go.dev/) binary. The same GUI can then be served as a single-page web application, since it is already developped as such.
+
+### Documents
+
+See:
+
+- [Architecture](./docs/architecture.md)
