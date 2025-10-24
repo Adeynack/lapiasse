@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	configFilePath string // Path to the configuration file
-	cliFlags       app.CliFlags
+	cliFlags app.CliFlags
 )
 
 // rootCmd represents the base command when called without any subcommands
