@@ -9,9 +9,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/creasty/defaults"
+	"adeynack.net/lapiasse/pkg/env"
+	"adeynack.net/lapiasse/pkg/platform/loex"
+	"adeynack.net/lapiasse/pkg/repository"
+	"adeynack.net/lapiasse/pkg/web"
 	"github.com/samber/lo"
-	"github.com/spf13/cobra"
 )
 
 type ConfigurationHolder struct {
@@ -58,33 +60,23 @@ func (c *ConfigurationHolder) Save() error {
 }
 
 type Configuration struct {
-	Data DataConfiguration `json:"data"`
-	Web  WebConfiguration  `json:"web"`
+	Data repository.Configuration `json:"data"`
+	Web  web.Configuration        `json:"web"`
 }
 
-func (c *Configuration) ApplyDefaults() error {
-	return defaults.Set(c)
-}
-
-type BasePathConfiguration string
-
-type DataConfiguration struct {
-	// A path to the folder in which all data (e.g. databases, files) is stored.
-	BasePath string `json:"base_path"`
-}
-
-// SetDefaults implements the [defaults.Setter] interface
-func (c *DataConfiguration) SetDefaults() {
-	var err error
-
-	if c.BasePath, err = determineDefaultDataDirectory(); err != nil {
-		panic(fmt.Errorf("determining default data directory: %w", err))
+func ConfigurationDefaults() (Configuration, error) {
+	d, w, err := loex.GetAllOrErr2(
+		repository.ConfigurationDefaults,
+		web.ConfigurationDefaults,
+	)
+	if err != nil {
+		return Configuration{}, err
 	}
-}
 
-type WebConfiguration struct {
-	Expose bool `json:"expose" default:"false"`
-	Port   int  `json:"port" default:"8080"`
+	return Configuration{
+		Data: d,
+		Web:  w,
+	}, nil
 }
 
 type CliFlags struct {
@@ -94,22 +86,23 @@ type CliFlags struct {
 }
 
 func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
-	var err error
-	configHolder := ConfigurationHolder{Path: lo.FromPtrOr(flags.Config, "")}
+	defaultConfiguration, err := ConfigurationDefaults()
+	if err != nil {
+		return nil, fmt.Errorf("obtaining default configuration: %w", err)
+	}
+
+	configHolder := ConfigurationHolder{
+		Path:          lo.FromPtrOr(flags.Config, ""),
+		Configuration: defaultConfiguration,
+	}
 
 	if configHolder.Path == "" {
 		if configHolder.Path, err = setupDefaultConfigurationEnvironment(); err != nil {
 			return nil, fmt.Errorf("setting up default configuration environment: %w", err)
 		}
-	} else {
-		if _, err := os.Stat(configHolder.Path); err != nil {
-			return nil, fmt.Errorf("accessing configuration file %q: %w", configHolder.Path, err)
-		}
 	}
 
-	// Load from configuration file
 	if err := configHolder.Load(); err != nil {
-		// It's OK if the config file does not exist.
 		if errors.Is(err, os.ErrNotExist) {
 			slog.Info(fmt.Sprintf("configuration file not found, creating with defaults at %s", configHolder.Path))
 		} else {
@@ -117,23 +110,12 @@ func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
 		}
 	}
 
-	// Applying defaults & saving back to configuration file.
-	if err := configHolder.Configuration.ApplyDefaults(); err != nil {
-		return nil, fmt.Errorf("applying defaults to configuration: %w", err)
-	}
+	// Saving back to configuration file.
 	if err := configHolder.Save(); err != nil {
 		return nil, fmt.Errorf("saving configuration to %q: %w", configHolder.Path, err)
 	}
 
-	// Bind CLI flags to configuration.
-	// Perform this after saving the loaded + defaults configuration, since the CLI flags
-	// configurations are valid only for this run of the application, and should not be persisted.
-	if lo.FromPtrOr(flags.Data, "") != "" {
-		configHolder.Configuration.Data.BasePath = *flags.Data
-	}
-	if flags.ServeWeb != nil {
-		configHolder.Configuration.Web.Expose = *flags.ServeWeb
-	}
+	applyCliFlagsToConfiguration(&configHolder.Configuration, flags)
 
 	return &configHolder, nil
 }
@@ -142,13 +124,15 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 	const configName = "lapiasse"
 	var appConfigDir string
 
-	switch RunEnv {
-	case EnvProduction:
+	switch env.RunEnv {
+	case env.EnvProduction:
 		userConfigDir, err := os.UserConfigDir()
-		cobra.CheckErr(err)
+		if err != nil {
+			return "", fmt.Errorf("obtaining user configuration directory: %w", err)
+		}
 
 		appConfigDir = path.Join(userConfigDir, "LaPiasse")
-	case EnvTest:
+	case env.EnvTest:
 		appConfigDir = path.Join(os.TempDir(), "lapiasse", "test-configuration")
 	default:
 		pwd, err := os.Getwd()
@@ -156,7 +140,7 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 			return "", fmt.Errorf("obtaining working directory: %w", err)
 		}
 
-		appConfigDir = path.Join(pwd, "tmp", RunEnv.String(), "configuration")
+		appConfigDir = path.Join(pwd, "tmp", env.RunEnv.String(), "configuration")
 	}
 
 	if err := os.MkdirAll(appConfigDir, os.ModePerm); err != nil {
@@ -166,31 +150,15 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 	return path.Join(appConfigDir, configName+".json"), nil
 }
 
-func determineDefaultDataDirectory() (string, error) {
-	if RunEnv != EnvProduction {
-		pwd, err := os.Getwd()
-		if err != nil {
-			return "", fmt.Errorf("obtaining working directory: %w", err)
-		}
-
-		return path.Join(pwd, "tmp", RunEnv.String(), "data"), nil
+// Apply CLI flags to configuration.
+// Perform this after saving the loaded + defaults configuration, since the CLI flags
+// configurations are valid only for this run of the application, and should not be persisted.
+func applyCliFlagsToConfiguration(cfg *Configuration, flags CliFlags) {
+	if lo.FromPtrOr(flags.Data, "") != "" {
+		cfg.Data.BasePath = *flags.Data
 	}
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
+	if flags.ServeWeb != nil {
+		cfg.Web.Expose = *flags.ServeWeb
 	}
-
-	lo.FindOrElse(
-		[]string{
-			"Documents",
-			"My Documents",
-		},
-		"",
-		func(candidate string) bool {
-			_, err := os.Stat(path.Join(home, "Documents"))
-			return err == nil
-		})
-
-	return "", nil
 }

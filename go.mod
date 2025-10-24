@@ -181,7 +181,6 @@ require (
 )
 
 require (
-	github.com/creasty/defaults v1.8.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.19.0 // indirect

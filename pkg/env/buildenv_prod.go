@@ -1,5 +1,5 @@
 //go:build prod
 
-package app
+package env
 
 var BuildEnv Environment = EnvProduction

@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -8,6 +5,7 @@ import (
 	"os"
 
 	"adeynack.net/lapiasse/pkg/app"
+	"adeynack.net/lapiasse/pkg/env"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +15,7 @@ var envCmd = &cobra.Command{
 	Short: "Output the detected runtime environment and the loaded configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println()
-		fmt.Printf("Environment: %s\n", app.RunEnv)
+		fmt.Printf("Environment: %s\n", env.RunEnv)
 
 		configuration, err := app.InitializeConfiguration(cliFlags)
 		if err != nil {
