@@ -21,5 +21,8 @@ __debug_bin*
 .env.*
 !.env.example
 
+# Claude Code
+.claude/settings.local.json
+
 # Misc IDEs
 /.idea
