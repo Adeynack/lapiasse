@@ -2,69 +2,65 @@ package model
 
 import (
 	"go/ast"
-	"go/parser"
-	"go/token"
-	"path/filepath"
 	"reflect"
 	"testing"
 
+	"golang.org/x/tools/go/packages"
 	"gorm.io/gorm"
 )
 
 // TestAllGormModelsRegistered scans the model package for all structs that
 // embed gorm.Model and ensures they are all included in the Models variable.
-//
-// This test was written by Claude Code and could use some refactoring (it is quite long and verbose).
 func TestAllGormModelsRegistered(t *testing.T) {
-	// Step 1: Parse the package to find all structs embedding gorm.Model
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
+	// Credit for this code goes to Claude Sonnet 4.5.
+
+	// Step 1: Load the current package using go/packages
+	cfg := &packages.Config{
+		Mode: packages.NeedTypes | packages.NeedSyntax | packages.NeedName,
+	}
+	pkgs, err := packages.Load(cfg, ".")
 	if err != nil {
-		t.Fatalf("Failed to parse package: %v", err)
+		t.Fatalf("Failed to load package: %v", err)
+	}
+	if len(pkgs) == 0 {
+		t.Fatal("No packages found")
+	}
+	if packages.PrintErrors(pkgs) > 0 {
+		t.Fatal("Package has errors")
 	}
 
-	modelPkg, ok := pkgs["model"]
-	if !ok {
-		t.Fatal("Could not find 'model' package")
-	}
+	pkg := pkgs[0]
 
-	// Collect all struct names that embed gorm.Model
+	// Step 2: Collect all struct names that embed gorm.Model
 	gormModelStructs := make(map[string]bool)
-
-	for filename, file := range modelPkg.Files {
-		// Skip test files
-		if filepath.Ext(filename) == ".go" && filepath.Base(filename) != "package_test.go" {
-			ast.Inspect(file, func(n ast.Node) bool {
-				// Look for type declarations
-				if typeSpec, ok := n.(*ast.TypeSpec); ok {
-					if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-						// Check if the struct embeds gorm.Model
-						if embedsGormModel(structType) {
-							gormModelStructs[typeSpec.Name.Name] = true
-						}
+	for _, file := range pkg.Syntax {
+		ast.Inspect(file, func(n ast.Node) bool {
+			if typeSpec, ok := n.(*ast.TypeSpec); ok {
+				if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+					if embedsGormModel(structType) {
+						gormModelStructs[typeSpec.Name.Name] = true
 					}
 				}
-				return true
-			})
-		}
+			}
+			return true
+		})
 	}
 
 	if len(gormModelStructs) == 0 {
 		t.Log("No structs embedding gorm.Model found - this test may need adjustment")
 	}
 
-	// Step 2: Check which structs are registered in Models
+	// Step 3: Check which structs are registered in Models
 	registeredModels := make(map[string]bool)
 	for _, model := range Models {
 		modelType := reflect.TypeOf(model)
-		// Remove pointer to get the actual type
-		if modelType.Kind() == reflect.Ptr {
+		if modelType.Kind() == reflect.Pointer {
 			modelType = modelType.Elem()
 		}
 		registeredModels[modelType.Name()] = true
 	}
 
-	// Step 3: Find missing registrations
+	// Step 4: Find missing registrations
 	var missingModels []string
 	for structName := range gormModelStructs {
 		if !registeredModels[structName] {
@@ -72,12 +68,11 @@ func TestAllGormModelsRegistered(t *testing.T) {
 		}
 	}
 
-	// Step 4: Report results
 	if len(missingModels) > 0 {
 		t.Errorf("The following structs embed gorm.Model but are not registered in Models: %v", missingModels)
 	}
 
-	// Also verify that all registered models actually embed gorm.Model
+	// Step 5: Verify that all registered models actually embed gorm.Model
 	var extraModels []string
 	for modelName := range registeredModels {
 		if !gormModelStructs[modelName] {
