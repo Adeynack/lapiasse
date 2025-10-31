@@ -22,9 +22,4 @@ build:
 # TESTS
 .PHONY: test
 test:
-	go test -tags="test" ./... | go tool gotestfmt
-
-# DATABASE
-.PHONY: db_new_migration
-db_new_migration:
-	go tool migrate
+	go test -json -tags="test" ./... | go tool gotestfmt

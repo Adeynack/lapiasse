@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"adeynack.net/lapiasse/pkg/app"
+	"adeynack.net/lapiasse/pkg/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -20,16 +21,6 @@ of its user interface.
 
 func init() {
 	rootCmd.AddCommand(tuiCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// tuiCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// tuiCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func executeTui(cmd *cobra.Command, args []string) error {
@@ -38,7 +29,22 @@ func executeTui(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("initializing configuration: %w", err)
 	}
 
-	fmt.Printf("tui called with configuration %#v\v", configuration)
+	appInstance, err := app.NewInstance(configuration)
+	if err != nil {
+		return fmt.Errorf("initializing application instance: %w", err)
+	}
+	defer appInstance.Close()
+
+	tuiInstance, err := tui.NewInstance(appInstance)
+	if err != nil {
+		return fmt.Errorf("initializing TUI instance: %w", err)
+	}
+	defer tuiInstance.Close()
+
+	err = tuiInstance.Run()
+	if err != nil {
+		return fmt.Errorf("running TUI instance: %w", err)
+	}
 
 	return nil
 }

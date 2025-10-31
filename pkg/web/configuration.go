@@ -5,8 +5,8 @@ type Configuration struct {
 	Port   int  `json:"port"`
 }
 
-func ConfigurationDefaults() (Configuration, error) {
-	return Configuration{
+func ConfigurationDefaults() (*Configuration, error) {
+	return &Configuration{
 		Expose: false,
 		Port:   8080,
 	}, nil

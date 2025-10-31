@@ -14,13 +14,19 @@ type Configuration struct {
 	BasePath string `json:"base_path"`
 }
 
-func ConfigurationDefaults() (Configuration, error) {
+func ConfigurationDefaults() (*Configuration, error) {
 	basePath, err := determineDefaultDataDirectory()
 	if err != nil {
-		return Configuration{}, err
+		return nil, err
 	}
 
-	return Configuration{
+	return &Configuration{
+		BasePath: basePath,
+	}, nil
+}
+
+func ConfigurationForPath(basePath string) (*Configuration, error) {
+	return &Configuration{
 		BasePath: basePath,
 	}, nil
 }
@@ -52,4 +58,8 @@ func determineDefaultDataDirectory() (string, error) {
 		})
 
 	return "", nil
+}
+
+func (c *Configuration) MainDatabaseFilePath() string {
+	return path.Join(c.BasePath, "lapiasse.db")
 }

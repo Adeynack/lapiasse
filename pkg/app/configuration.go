@@ -18,7 +18,7 @@ import (
 
 type ConfigurationHolder struct {
 	Path          string
-	Configuration Configuration
+	Configuration *Configuration
 }
 
 func (c *ConfigurationHolder) WriteTo(out *os.File) error {
@@ -60,20 +60,20 @@ func (c *ConfigurationHolder) Save() error {
 }
 
 type Configuration struct {
-	Data repository.Configuration `json:"data"`
-	Web  web.Configuration        `json:"web"`
+	Data *repository.Configuration `json:"data"`
+	Web  *web.Configuration        `json:"web"`
 }
 
-func ConfigurationDefaults() (Configuration, error) {
+func ConfigurationDefaults() (*Configuration, error) {
 	d, w, err := loex.GetAllOrErr2(
 		repository.ConfigurationDefaults,
 		web.ConfigurationDefaults,
 	)
 	if err != nil {
-		return Configuration{}, err
+		return nil, err
 	}
 
-	return Configuration{
+	return &Configuration{
 		Data: d,
 		Web:  w,
 	}, nil
@@ -115,7 +115,7 @@ func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
 		return nil, fmt.Errorf("saving configuration to %q: %w", configHolder.Path, err)
 	}
 
-	applyCliFlagsToConfiguration(&configHolder.Configuration, flags)
+	applyCliFlagsToConfiguration(configHolder.Configuration, flags)
 
 	return &configHolder, nil
 }
@@ -143,6 +143,7 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 		appConfigDir = path.Join(pwd, "tmp", env.RunEnv.String(), "configuration")
 	}
 
+	slog.Debug("Ensure app config dir exists", slog.String("appConfigDir", appConfigDir))
 	if err := os.MkdirAll(appConfigDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("creating application configuration folder at %q: %w", appConfigDir, err)
 	}
