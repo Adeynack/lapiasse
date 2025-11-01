@@ -2,7 +2,6 @@ package tui
 
 import (
 	"errors"
-	"log/slog"
 
 	"adeynack.net/lapiasse/pkg/app"
 )
@@ -30,7 +29,7 @@ func (i *Instance) Close() error {
 }
 
 func (i *Instance) Run() error {
-	slog.Info("Starting TUI")
+	i.App.Logger.Info("Starting TUI")
 
 	return nil
 }

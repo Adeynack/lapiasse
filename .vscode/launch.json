@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run TUI",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/main.go",
+            "args": ["tui"],
+            "env": {
+                "GOEXPERIMENT": "jsonv2"
+            }
+        }
+    ]
+}

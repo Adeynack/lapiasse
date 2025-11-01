@@ -143,7 +143,7 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 		appConfigDir = path.Join(pwd, "tmp", env.RunEnv.String(), "configuration")
 	}
 
-	slog.Debug("Ensure app config dir exists", slog.String("appConfigDir", appConfigDir))
+	slog.Debug("Ensure app config dir exists", "appConfigDir", appConfigDir)
 	if err := os.MkdirAll(appConfigDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("creating application configuration folder at %q: %w", appConfigDir, err)
 	}

@@ -46,18 +46,22 @@ func determineDefaultDataDirectory() (string, error) {
 		return "", err
 	}
 
-	lo.FindOrElse(
+	documentsPath := lo.FindOrElse(
 		[]string{
-			"Documents",
-			"My Documents",
+			"Documents",    // Linux, macOS, ...
+			"My Documents", // Windows
 		},
 		"",
 		func(candidate string) bool {
-			_, err := os.Stat(path.Join(home, "Documents"))
+			_, err := os.Stat(path.Join(home, candidate))
 			return err == nil
 		})
 
-	return "", nil
+	if documentsPath != "" {
+		return path.Join(home, documentsPath, "La Piasse"), nil
+	}
+
+	return path.Join(home, ".lapiasse"), nil
 }
 
 func (c *Configuration) MainDatabaseFilePath() string {
