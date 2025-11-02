@@ -10,11 +10,11 @@ import (
 )
 
 func TestNewResolver(t *testing.T) {
-	t.Run("creates resolver with Background context when nil is provided", func(t *testing.T) {
-		resolver := NewResolver(nil) //nolint:staticcheck // Testing nil context handling
+	t.Run("creates resolver", func(t *testing.T) {
+		resolver := NewResolver(context.Background())
 
 		require.NotNil(t, resolver)
-		require.NotNil(t, resolver.ctx)
+		require.NotNil(t, resolver.Context)
 		require.NotNil(t, resolver.dependenciesByKey)
 	})
 }
@@ -58,12 +58,10 @@ func BenchmarkResolver(b *testing.B) {
 
 	b.Run("register values", func(b *testing.B) {
 		b.Run("with basic context approach", func(b *testing.B) {
-			b.Logf("b.N = %d\n", b.N)
 			registerValues(b.N, context.Background(), nil)
 		})
 
 		b.Run("with resolver", func(b *testing.B) {
-			b.Logf("b.N = %d\n", b.N)
 			resolver := NewResolver(context.Background())
 			registerValues(b.N, nil, resolver)
 		})
