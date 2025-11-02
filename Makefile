@@ -5,7 +5,6 @@ export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2
 .PHONY: lint
 lint:
 	go vet ./...
-	go tool staticcheck ./...
 	go tool golangci-lint run
 
 .PHONY: clean
