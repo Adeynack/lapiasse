@@ -3,7 +3,6 @@ package ctxval
 import (
 	"context"
 	"fmt"
-	"math/rand/v2"
 	"strconv"
 	"testing"
 
@@ -24,10 +23,8 @@ func BenchmarkResolver(b *testing.B) {
 	// GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkResolver$ adeynack.net/lapiasse/pkg/platform/ctxval
 	type structWithFloat struct{ C float64 }
 
-	orderedIndices := rand.Perm(10)
-
-	registerValues := func(ctx context.Context, resolver *Resolver) context.Context {
-		for i := range orderedIndices {
+	registerValues := func(bn int, ctx context.Context, resolver *Resolver) context.Context {
+		for i := range bn + 1 {
 			name := fmt.Sprintf("value-%d", i)
 
 			switch i % 3 {
@@ -61,22 +58,20 @@ func BenchmarkResolver(b *testing.B) {
 
 	b.Run("register values", func(b *testing.B) {
 		b.Run("with basic context approach", func(b *testing.B) {
-			for b.Loop() {
-				registerValues(context.Background(), nil)
-			}
+			b.Logf("b.N = %d\n", b.N)
+			registerValues(b.N, context.Background(), nil)
 		})
 
 		b.Run("with resolver", func(b *testing.B) {
-			for b.Loop() {
-				resolver := NewResolver(context.Background())
-				registerValues(nil, resolver)
-			}
+			b.Logf("b.N = %d\n", b.N)
+			resolver := NewResolver(context.Background())
+			registerValues(b.N, nil, resolver)
 		})
 	})
 
 	b.Run("resolve values", func(b *testing.B) {
-		resolveValues := func(ctx context.Context) {
-			for i := range orderedIndices {
+		resolveValues := func(bn int, ctx context.Context) {
+			for i := range bn + 1 {
 				name := fmt.Sprintf("value-%d", i)
 				var err error
 
@@ -94,21 +89,15 @@ func BenchmarkResolver(b *testing.B) {
 		}
 
 		b.Run("with basic context approach", func(b *testing.B) {
-			basicCtx := registerValues(context.Background(), nil)
+			basicCtx := registerValues(b.N, context.Background(), nil)
 			b.ResetTimer()
-
-			for b.Loop() {
-				resolveValues(basicCtx)
-			}
+			resolveValues(b.N, basicCtx)
 		})
 
 		b.Run("with resolver", func(b *testing.B) {
-			resolverCtx := registerValues(nil, NewResolver(context.Background()))
+			resolverCtx := registerValues(b.N, nil, NewResolver(context.Background()))
 			b.ResetTimer()
-
-			for b.Loop() {
-				resolveValues(resolverCtx)
-			}
+			resolveValues(b.N, resolverCtx)
 		})
 	})
 }
