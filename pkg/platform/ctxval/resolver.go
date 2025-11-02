@@ -27,6 +27,9 @@ func NewResolver(parent context.Context) *Resolver {
 }
 
 // Value implements the [context.Context] interface.
+//
+// It first checks the resolver's internal dependency map,
+// before falling back to the wrapped context's Value method.
 func (r *Resolver) Value(key any) any {
 	switch key := key.(type) {
 	case contextValueKey:
