@@ -15,6 +15,7 @@ type Resolver struct {
 	dependenciesByKey map[contextValueKey]any
 }
 
+// NewResolver creates a new Resolver instance, wrapping the given context.
 func NewResolver(ctx context.Context) *Resolver {
 	if ctx == nil {
 		ctx = context.Background()
@@ -53,11 +54,15 @@ func (r *Resolver) Value(key any) any {
 	return r.ctx.Value(key)
 }
 
+// RegisterInResolver registers a dependency of type T in the resolver,
+// to be retrieved later by type.
 func RegisterInResolver[T any](resolver *Resolver, value T) {
 	key := keyFor[T]("")
 	resolver.dependenciesByKey[key] = value
 }
 
+// RegisterNamedInResolver registers a named dependency of type T in the resolver,
+// to be retrieved later by type and name.
 func RegisterNamedInResolver[T any](resolver *Resolver, name string, value T) {
 	key := keyFor[T](name)
 	resolver.dependenciesByKey[key] = value

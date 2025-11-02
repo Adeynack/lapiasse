@@ -155,7 +155,7 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 // Perform this after saving the loaded + defaults configuration, since the CLI flags
 // configurations are valid only for this run of the application, and should not be persisted.
 func applyCliFlagsToConfiguration(cfg *Configuration, flags CliFlags) {
-	if lo.FromPtrOr(flags.Data, "") != "" {
+	if flags.Data != nil {
 		cfg.Data.BasePath = *flags.Data
 	}
 
