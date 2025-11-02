@@ -19,6 +19,94 @@ func TestNewResolver(t *testing.T) {
 	})
 }
 
+func TestResolverRegisterResolve(t *testing.T) {
+	t.Run("when nothing is registered", func(t *testing.T) {
+		resolver := NewResolver(t.Context())
+
+		t.Run("Resolve fails", func(t *testing.T) {
+			_, err := Resolve[Foo](resolver)
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo"`, err.Error())
+		})
+
+		t.Run("ResolveNamed fails", func(t *testing.T) {
+			_, err := ResolveNamed[Foo](resolver, "asdf")
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo(asdf)"`, err.Error())
+		})
+
+		t.Run("MustResolve panics", func(t *testing.T) {
+			require.PanicsWithError(
+				t,
+				`unable to resolve dependency: unregistered dependency "ctxval.Foo"`,
+				func() { MustResolve[Foo](resolver) },
+			)
+		})
+
+		t.Run("MustResolveNamed panics", func(t *testing.T) {
+			require.PanicsWithError(
+				t,
+				`unable to resolve dependency: unregistered dependency "ctxval.Foo(asdf)"`,
+				func() { MustResolveNamed[Foo](resolver, "asdf") },
+			)
+		})
+	})
+
+	t.Run("when an unnamed Foo value is registered", func(t *testing.T) {
+		registeredFoo := Foo{Bar: "5160b303-f563-44c3-ac93-baebea18cbe7"}
+		ctx := NewResolver(t.Context())
+		RegisterInResolver(ctx, registeredFoo)
+
+		t.Run("Resolve succeeds for unnamed Foo", func(t *testing.T) {
+			result, err := Resolve[Foo](ctx)
+			require.NoError(t, err)
+			require.Equal(t, registeredFoo, result)
+		})
+
+		t.Run("Resolve fails for unnamed Bar", func(t *testing.T) {
+			_, err := Resolve[Bar](ctx)
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Bar"`, err.Error())
+		})
+
+		t.Run("ResolveNamed fails for named Foo", func(t *testing.T) {
+			_, err := ResolveNamed[Foo](ctx, "asdf")
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo(asdf)"`, err.Error())
+		})
+	})
+
+	t.Run("when a named Foo value is registered", func(t *testing.T) {
+		registeredFoo := Foo{Bar: "e1950227-441b-4238-804f-908110c0592a"}
+		ctx := NewResolver(t.Context())
+		RegisterNamedInResolver(ctx, "TheFuu", registeredFoo)
+
+		t.Run("Resolve fails for unnamed Foo", func(t *testing.T) {
+			_, err := Resolve[Foo](ctx)
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo"`, err.Error())
+		})
+
+		t.Run("Resolve fails for unnamed Bar", func(t *testing.T) {
+			_, err := Resolve[Bar](ctx)
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Bar"`, err.Error())
+		})
+
+		t.Run("Resolve succeeds for Foo named 'TheFuu'", func(t *testing.T) {
+			result, err := ResolveNamed[Foo](ctx, "TheFuu")
+			require.NoError(t, err)
+			require.Equal(t, registeredFoo, result)
+		})
+
+		t.Run("Resolve fails for Foo named 'SomethingElse'", func(t *testing.T) {
+			_, err := ResolveNamed[Foo](ctx, "SomethingElse")
+			require.ErrorIs(t, err, ErrUnregisteredDependency)
+			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo(SomethingElse)"`, err.Error())
+		})
+	})
+}
+
 func BenchmarkResolver(b *testing.B) {
 	// GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkResolver$ adeynack.net/lapiasse/pkg/platform/ctxval
 	type structWithFloat struct{ C float64 }
