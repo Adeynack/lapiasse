@@ -12,12 +12,12 @@ Run a comprehensive suite of Go linting and static analysis tools on the codebas
 
 1. **Run go vet**
 
-   - Execute: `GOEXPERIMENT=jsonv2 go vet ./...`
+   - Execute: `go vet ./...`
    - Report any issues with file paths and line numbers
 
 2. **Run golangci-lint**
 
-   - Execute: `GOEXPERIMENT=jsonv2 go tool golangci-lint run`
+   - Execute: `go tool golangci-lint run`
    - Report any issues with file paths and line numbers
    - Highlight critical vs warning vs style issues
 
