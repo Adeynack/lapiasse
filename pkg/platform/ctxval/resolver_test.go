@@ -107,8 +107,16 @@ func TestResolverRegisterResolve(t *testing.T) {
 	})
 }
 
+// This benchmark compares the performance of dependency registration and resolution
+// using the standard context-based approach versus the Resolver-based approach.
+//
+// It shows that the Resolver is slower to register values, but significantly faster to resolve them.
+// It also, in both cases, uses less memory than the standard context approach.
+//
+// To run the benchmark, use the following command:
+//
+//	GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkResolver$ adeynack.net/lapiasse/pkg/platform/ctxval
 func BenchmarkResolver(b *testing.B) {
-	// GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkResolver$ adeynack.net/lapiasse/pkg/platform/ctxval
 	type structWithFloat struct{ C float64 }
 
 	registerValues := func(bn int, ctx context.Context, resolver *Resolver) context.Context {
