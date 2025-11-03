@@ -154,11 +154,16 @@ func BenchmarkResolver(b *testing.B) {
 
 	b.Run("register values", func(b *testing.B) {
 		b.Run("with basic context approach", func(b *testing.B) {
-			registerValues(b.N, context.Background(), nil)
+			ctx := context.Background()
+			b.ResetTimer() // Don't want to creation of the context itself to be included.
+
+			registerValues(b.N, ctx, nil)
 		})
 
 		b.Run("with resolver", func(b *testing.B) {
 			resolver := NewResolver(context.Background())
+			b.ResetTimer() // Don't want to creation of the resolver itself to be included.
+
 			registerValues(b.N, nil, resolver)
 		})
 	})
@@ -185,12 +190,14 @@ func BenchmarkResolver(b *testing.B) {
 		b.Run("with basic context approach", func(b *testing.B) {
 			basicCtx := registerValues(b.N, context.Background(), nil)
 			b.ResetTimer()
+
 			resolveValues(b.N, basicCtx)
 		})
 
 		b.Run("with resolver", func(b *testing.B) {
 			resolverCtx := registerValues(b.N, nil, NewResolver(context.Background()))
 			b.ResetTimer()
+
 			resolveValues(b.N, resolverCtx)
 		})
 	})
