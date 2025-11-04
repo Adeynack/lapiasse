@@ -14,7 +14,7 @@ type Bar struct {
 	Foo string
 }
 
-func TestResolve(t *testing.T) {
+func TestRegisterAndResolve(t *testing.T) {
 	t.Run("when nothing is registered", func(t *testing.T) {
 		t.Run("Resolve fails", func(t *testing.T) {
 			_, err := Resolve[Foo](t.Context())

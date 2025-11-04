@@ -19,7 +19,7 @@ func TestNewContainer(t *testing.T) {
 	})
 }
 
-func TestContainerRegisterResolve(t *testing.T) {
+func TestContainerRegisterAndResolve(t *testing.T) {
 	t.Run("when nothing is registered", func(t *testing.T) {
 		container := NewContainer(t.Context())
 
@@ -103,6 +103,43 @@ func TestContainerRegisterResolve(t *testing.T) {
 			_, err := ResolveNamed[Foo](ctx, "SomethingElse")
 			require.ErrorIs(t, err, ErrUnregisteredDependency)
 			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo(SomethingElse)"`, err.Error())
+		})
+	})
+}
+
+func TestContainerFallback(t *testing.T) {
+	t.Run("when the parent context has a value", func(t *testing.T) {
+		parentCtx := t.Context()
+		parentCtx = Register(parentCtx, "value from parent context")
+		container := NewContainer(parentCtx)
+		var ctx context.Context = container
+
+		t.Run("when the container does not have the same value registered", func(t *testing.T) {
+			t.Run("Value falls back to parent context", func(t *testing.T) {
+				value, err := Resolve[string](ctx)
+				require.NoError(t, err)
+				require.Equal(t, "value from parent context", value)
+			})
+		})
+
+		t.Run("when the container has the same value registered", func(t *testing.T) {
+			RegisterInContainer(container, "value from container")
+
+			t.Run("Value returns the container's value", func(t *testing.T) {
+				value, err := Resolve[string](ctx)
+				require.NoError(t, err)
+				require.Equal(t, "value from container", value)
+			})
+
+			t.Run("when a normal register is happening on top of the container", func(t *testing.T) {
+				ctx := Register(container, "value from child context")
+
+				t.Run("Value returns the overriding value", func(t *testing.T) {
+					value, err := Resolve[string](ctx)
+					require.NoError(t, err)
+					require.Equal(t, "value from child context", value)
+				})
+			})
 		})
 	})
 }
