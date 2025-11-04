@@ -5,22 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 
-	"adeynack.net/lapiasse/pkg/applog"
+	"adeynack.net/lapiasse/pkg/controller"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"adeynack.net/lapiasse/pkg/repository"
-	"gorm.io/gorm"
+	"adeynack.net/lapiasse/pkg/web"
 )
 
 // Instance represents a running instance of the application.
 type Instance struct {
-	DataFileSystem *os.Root // File system for the currently open data "file" (directory).
-	DB             *gorm.DB
-	Logger         *slog.Logger
-
-	dependencyContext *ctxval.Container
-	loggerCloseFn     func() error
+	dependenciesContext *ctxval.Container
+	cancel              context.CancelFunc
+	cleanupFuncs        []ctxval.CleanupFunc
 }
 
 func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
@@ -28,72 +24,83 @@ func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
 		return nil, errors.New("configuration holder is nil")
 	}
 
+	cancelCtx, cancel := context.WithCancel(context.Background())
+	container := ctxval.NewContainer(cancelCtx)
+	i := &Instance{
+		dependenciesContext: container,
+		cancel:              cancel,
+		cleanupFuncs:        make([]ctxval.CleanupFunc, 0),
+	}
+
+	// Register simple dependencies (no init, no error).
+	ctxval.RegisterInContainer[ctxval.CleanupRecorder](container, func(f ctxval.CleanupFunc) {
+		i.cleanupFuncs = append(i.cleanupFuncs, f)
+	})
+	ctxval.RegisterInContainer(container, slog.Default()) // temporary as default logger, until `configureLogger` runs
+	ctxval.RegisterInContainer(container, ch)
+	ctxval.RegisterInContainer(container, controller.New())
+
+	// Register dependencies requiring initialization.
 	var err error
-	instance := &Instance{
-		dependencyContext: ctxval.NewContainer(context.Background()),
-	}
-	ctx := context.Context(instance.dependencyContext)
+	c := ch.Configuration
+	reg(i, &err, c.Data, repository.InitializeDataFilesystem, "initializing data folder")
+	reg(i, &err, c.Data, configureLogger, "configuring logger")
+	reg(i, &err, c.Data, repository.InitializeGorm, "initializing Gorm database")
+	reg(i, &err, c.Web, web.StartServer, "starting web server")
 
-	config := ch.Configuration
-
-	instance.Logger, instance.loggerCloseFn, err = configureLogger(config.Data)
 	if err != nil {
-		return nil, fmt.Errorf("configuring logger: %w", err)
-	}
-	ctxval.RegisterInContainer(instance.dependencyContext, instance.Logger)
-
-	applog.Debug(ctx, "Ensure data directory exists", "path", config.Data.BasePath)
-	if err := os.MkdirAll(config.Data.BasePath, os.ModePerm); err != nil {
-		return nil, fmt.Errorf("creating application data directory %q: %w", config.Data.BasePath, err)
-	}
-
-	instance.DB, err = repository.InitializeGorm(ctx, config.Data)
-	if err != nil {
+		i.Close()
 		return nil, err
 	}
-	ctxval.RegisterInContainer(instance.dependencyContext, instance.DB)
 
-	instance.DataFileSystem, err = os.OpenRoot(config.Data.BasePath)
-	if err != nil {
-		return nil, fmt.Errorf("opening data file system at %q: %w", config.Data.BasePath, err)
+	return i, nil
+}
+
+// reg is a helper function to register a dependency in the instance's container.
+func reg[T, P any](
+	instance *Instance,
+	err *error,
+	param P,
+	factory func(ctx context.Context, param P) (T, error),
+	errorContext string,
+) {
+	if *err != nil {
+		return
 	}
 
-	return instance, nil
+	value, factoryErr := factory(instance.dependenciesContext, param)
+	if factoryErr != nil {
+		*err = fmt.Errorf("%s: %w", errorContext, factoryErr)
+
+		return
+	}
+
+	ctxval.RegisterInContainer(instance.dependenciesContext, value)
+}
+
+func (instance *Instance) Context() context.Context {
+	return instance.dependenciesContext
 }
 
 // Close implements the [io.Closer] interface.
-func (i *Instance) Close() error {
-	if i == nil {
+func (instance *Instance) Close() error {
+	if instance == nil {
 		return nil
 	}
 
-	// Join errors instead of early-returning the first, in order to attempt closing
-	// all resources of the instance.
-	var errs error
+	// Cancel the instance context to stop all background operations.
+	// Most depencies are listening to the context cancellation to stop and close themselves.
+	if instance.cancel != nil {
+		instance.cancel()
+	}
 
-	if i.DataFileSystem != nil {
-		if err := i.DataFileSystem.Close(); err != nil {
-			errs = errors.Join(errs, fmt.Errorf("closing data file system: %w", err))
+	// Call all registered cleanup functions, in reverse order.
+	for i := len(instance.cleanupFuncs) - 1; i >= 0; i-- {
+		cleanupFunc := instance.cleanupFuncs[i]
+		if cleanupFunc != nil {
+			cleanupFunc(instance.dependenciesContext)
 		}
 	}
 
-	if i.DB != nil {
-		sqlDB, err := i.DB.DB()
-		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("obtaining sql.DB from gorm.DB: %w", err))
-		}
-
-		if err := sqlDB.Close(); err != nil {
-			errs = errors.Join(errs, fmt.Errorf("closing database connection: %w", err))
-		}
-	}
-
-	if i.loggerCloseFn != nil {
-		err := i.loggerCloseFn()
-		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("closing logger: %w", err))
-		}
-	}
-
-	return errs
+	return nil
 }

@@ -15,8 +15,12 @@ clean:
 check: clean build lint test
 
 .PHONY: build
-build:
+build: gen
 	go build -o tmp/bin/lapiasse ./cmd/lapiasse
+
+.PHONY: gen
+gen:
+	go generate ./...
 
 # TESTS
 .PHONY: test

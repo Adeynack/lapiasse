@@ -2,8 +2,10 @@ package tui
 
 import (
 	"errors"
+	"fmt"
 
 	"adeynack.net/lapiasse/pkg/app"
+	"adeynack.net/lapiasse/pkg/applog"
 )
 
 type Instance struct {
@@ -29,7 +31,11 @@ func (i *Instance) Close() error {
 }
 
 func (i *Instance) Run() error {
-	i.App.Logger.Info("Starting TUI")
+	applog.Info(i.App.Context(), "Running TUI")
+
+	// Temporary "TUI" ;-)
+	fmt.Println("Press ENTER to exit")
+	_, _ = fmt.Scanln()
 
 	return nil
 }
