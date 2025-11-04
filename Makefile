@@ -16,7 +16,7 @@ check: clean build lint test
 
 .PHONY: build
 build:
-	go build -o tmp/bin/lapiasse ./main.go
+	go build -o tmp/bin/lapiasse ./cmd/lapiasse
 
 # TESTS
 .PHONY: test

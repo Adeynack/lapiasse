@@ -6,8 +6,11 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/main.go",
-            "args": ["tui"],
+            "program": "${workspaceFolder}/cmd/lapiasse",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "tui"
+            ],
             "env": {
                 "GOEXPERIMENT": "jsonv2"
             }
