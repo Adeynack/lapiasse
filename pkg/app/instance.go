@@ -19,7 +19,7 @@ type Instance struct {
 	DB             *gorm.DB
 	Logger         *slog.Logger
 
-	dependencyContext *ctxval.Resolver
+	dependencyContext *ctxval.Container
 	loggerCloseFn     func() error
 }
 
@@ -30,7 +30,7 @@ func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
 
 	var err error
 	instance := &Instance{
-		dependencyContext: ctxval.NewResolver(context.Background()),
+		dependencyContext: ctxval.NewContainer(context.Background()),
 	}
 	ctx := context.Context(instance.dependencyContext)
 
@@ -40,7 +40,7 @@ func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("configuring logger: %w", err)
 	}
-	ctxval.RegisterInResolver(instance.dependencyContext, instance.Logger)
+	ctxval.RegisterInContainer(instance.dependencyContext, instance.Logger)
 
 	applog.Debug(ctx, "Ensure data directory exists", "path", config.Data.BasePath)
 	if err := os.MkdirAll(config.Data.BasePath, os.ModePerm); err != nil {
@@ -51,7 +51,7 @@ func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctxval.RegisterInResolver(instance.dependencyContext, instance.DB)
+	ctxval.RegisterInContainer(instance.dependencyContext, instance.DB)
 
 	instance.DataFileSystem, err = os.OpenRoot(config.Data.BasePath)
 	if err != nil {

@@ -4,23 +4,23 @@ import (
 	"context"
 )
 
-// Resolver offers a facade to hash-based dependency resolution, offering
+// Container offers a facade to hash-based dependency resolution, offering
 // an alternative to the recursive calls of the basic [context.Context] implementation.
 //
 // It implements the [context.Context] interface, so it can be used as a drop-in
 // replacement for contexts, while providing faster dependency resolution capabilities.
-type Resolver struct {
+type Container struct {
 	context.Context
 	dependenciesByKey map[contextValueKey]any
 }
 
-// NewResolver creates a new Resolver instance, wrapping the given context.
-func NewResolver(parent context.Context) *Resolver {
+// NewContainer creates a new Container instance, wrapping the given context.
+func NewContainer(parent context.Context) *Container {
 	if parent == nil {
-		panic("cannot create resolver from nil parent context")
+		panic("cannot create container from nil parent context")
 	}
 
-	return &Resolver{
+	return &Container{
 		Context:           parent,
 		dependenciesByKey: make(map[contextValueKey]any),
 	}
@@ -28,9 +28,9 @@ func NewResolver(parent context.Context) *Resolver {
 
 // Value implements the [context.Context] interface.
 //
-// It first checks the resolver's internal dependency map,
+// It first checks the container's internal dependency map,
 // before falling back to the wrapped context's Value method.
-func (r *Resolver) Value(key any) any {
+func (r *Container) Value(key any) any {
 	switch key := key.(type) {
 	case contextValueKey:
 		if v := r.dependenciesByKey[key]; v != nil {
@@ -41,16 +41,16 @@ func (r *Resolver) Value(key any) any {
 	return r.Context.Value(key)
 }
 
-// RegisterInResolver registers a dependency of type T in the resolver,
+// RegisterInContainer registers a dependency of type T in the container,
 // to be retrieved later by type.
-func RegisterInResolver[T any](resolver *Resolver, value T) {
+func RegisterInContainer[T any](container *Container, value T) {
 	key := keyFor[T]("")
-	resolver.dependenciesByKey[key] = value
+	container.dependenciesByKey[key] = value
 }
 
-// RegisterNamedInResolver registers a named dependency of type T in the resolver,
+// RegisterNamedInContainer registers a named dependency of type T in the container,
 // to be retrieved later by type and name.
-func RegisterNamedInResolver[T any](resolver *Resolver, name string, value T) {
+func RegisterNamedInContainer[T any](container *Container, name string, value T) {
 	key := keyFor[T](name)
-	resolver.dependenciesByKey[key] = value
+	container.dependenciesByKey[key] = value
 }

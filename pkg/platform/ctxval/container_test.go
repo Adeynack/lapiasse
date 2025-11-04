@@ -9,28 +9,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewResolver(t *testing.T) {
-	t.Run("creates resolver", func(t *testing.T) {
-		resolver := NewResolver(context.Background())
+func TestNewContainer(t *testing.T) {
+	t.Run("creates container", func(t *testing.T) {
+		container := NewContainer(context.Background())
 
-		require.NotNil(t, resolver)
-		require.NotNil(t, resolver.Context)
-		require.NotNil(t, resolver.dependenciesByKey)
+		require.NotNil(t, container)
+		require.NotNil(t, container.Context)
+		require.NotNil(t, container.dependenciesByKey)
 	})
 }
 
-func TestResolverRegisterResolve(t *testing.T) {
+func TestContainerRegisterResolve(t *testing.T) {
 	t.Run("when nothing is registered", func(t *testing.T) {
-		resolver := NewResolver(t.Context())
+		container := NewContainer(t.Context())
 
 		t.Run("Resolve fails", func(t *testing.T) {
-			_, err := Resolve[Foo](resolver)
+			_, err := Resolve[Foo](container)
 			require.ErrorIs(t, err, ErrUnregisteredDependency)
 			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo"`, err.Error())
 		})
 
 		t.Run("ResolveNamed fails", func(t *testing.T) {
-			_, err := ResolveNamed[Foo](resolver, "asdf")
+			_, err := ResolveNamed[Foo](container, "asdf")
 			require.ErrorIs(t, err, ErrUnregisteredDependency)
 			require.Equal(t, `unable to resolve dependency: unregistered dependency "ctxval.Foo(asdf)"`, err.Error())
 		})
@@ -39,7 +39,7 @@ func TestResolverRegisterResolve(t *testing.T) {
 			require.PanicsWithError(
 				t,
 				`unable to resolve dependency: unregistered dependency "ctxval.Foo"`,
-				func() { MustResolve[Foo](resolver) },
+				func() { MustResolve[Foo](container) },
 			)
 		})
 
@@ -47,15 +47,15 @@ func TestResolverRegisterResolve(t *testing.T) {
 			require.PanicsWithError(
 				t,
 				`unable to resolve dependency: unregistered dependency "ctxval.Foo(asdf)"`,
-				func() { MustResolveNamed[Foo](resolver, "asdf") },
+				func() { MustResolveNamed[Foo](container, "asdf") },
 			)
 		})
 	})
 
 	t.Run("when an unnamed Foo value is registered", func(t *testing.T) {
 		registeredFoo := Foo{Bar: "5160b303-f563-44c3-ac93-baebea18cbe7"}
-		ctx := NewResolver(t.Context())
-		RegisterInResolver(ctx, registeredFoo)
+		ctx := NewContainer(t.Context())
+		RegisterInContainer(ctx, registeredFoo)
 
 		t.Run("Resolve succeeds for unnamed Foo", func(t *testing.T) {
 			result, err := Resolve[Foo](ctx)
@@ -78,8 +78,8 @@ func TestResolverRegisterResolve(t *testing.T) {
 
 	t.Run("when a named Foo value is registered", func(t *testing.T) {
 		registeredFoo := Foo{Bar: "e1950227-441b-4238-804f-908110c0592a"}
-		ctx := NewResolver(t.Context())
-		RegisterNamedInResolver(ctx, "TheFuu", registeredFoo)
+		ctx := NewContainer(t.Context())
+		RegisterNamedInContainer(ctx, "TheFuu", registeredFoo)
 
 		t.Run("Resolve fails for unnamed Foo", func(t *testing.T) {
 			_, err := Resolve[Foo](ctx)
@@ -108,47 +108,47 @@ func TestResolverRegisterResolve(t *testing.T) {
 }
 
 // This benchmark compares the performance of dependency registration and resolution
-// using the standard context-based approach versus the Resolver-based approach.
+// using the standard context-based approach versus the Container-based approach.
 //
-// It shows that the Resolver is slower to register values, but significantly faster to resolve them.
+// It shows that the Container is slower to register values, but significantly faster to resolve them.
 // It also, in both cases, uses less memory than the standard context approach.
 //
 // To run the benchmark, use the following command:
 //
-//	GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkResolver$ adeynack.net/lapiasse/pkg/platform/ctxval
-func BenchmarkResolver(b *testing.B) {
+//	GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkContainer$ adeynack.net/lapiasse/pkg/platform/ctxval
+func BenchmarkContainer(b *testing.B) {
 	type structWithFloat struct{ C float64 }
 
-	registerValues := func(bn int, ctx context.Context, resolver *Resolver) context.Context {
+	registerValues := func(bn int, ctx context.Context, container *Container) context.Context {
 		for i := range bn + 1 {
 			name := fmt.Sprintf("value-%d", i)
 
 			switch i % 3 {
 			case 0:
-				if resolver == nil {
+				if container == nil {
 					ctx = RegisterNamed(ctx, name, i)
 				} else {
-					RegisterNamedInResolver(resolver, name, i)
+					RegisterNamedInContainer(container, name, i)
 				}
 			case 1:
-				if resolver == nil {
+				if container == nil {
 					ctx = RegisterNamed(ctx, name, strconv.Itoa(i))
 				} else {
-					RegisterNamedInResolver(resolver, name, strconv.Itoa(i))
+					RegisterNamedInContainer(container, name, strconv.Itoa(i))
 				}
 			case 2:
-				if resolver == nil {
+				if container == nil {
 					ctx = RegisterNamed(ctx, name, structWithFloat{C: float64(i)})
 				} else {
-					RegisterNamedInResolver(resolver, name, structWithFloat{C: float64(i)})
+					RegisterNamedInContainer(container, name, structWithFloat{C: float64(i)})
 				}
 			}
 		}
 
-		if resolver == nil {
+		if container == nil {
 			return ctx
 		} else {
-			return resolver
+			return container
 		}
 	}
 
@@ -160,11 +160,11 @@ func BenchmarkResolver(b *testing.B) {
 			registerValues(b.N, ctx, nil)
 		})
 
-		b.Run("with resolver", func(b *testing.B) {
-			resolver := NewResolver(context.Background())
-			b.ResetTimer() // Don't want to creation of the resolver itself to be included.
+		b.Run("with container", func(b *testing.B) {
+			container := NewContainer(context.Background())
+			b.ResetTimer() // Don't want to creation of the container itself to be included.
 
-			registerValues(b.N, nil, resolver)
+			registerValues(b.N, nil, container)
 		})
 	})
 
@@ -194,11 +194,11 @@ func BenchmarkResolver(b *testing.B) {
 			resolveValues(b.N, basicCtx)
 		})
 
-		b.Run("with resolver", func(b *testing.B) {
-			resolverCtx := registerValues(b.N, nil, NewResolver(context.Background()))
+		b.Run("with container", func(b *testing.B) {
+			containerCtx := registerValues(b.N, nil, NewContainer(context.Background()))
 			b.ResetTimer()
 
-			resolveValues(b.N, resolverCtx)
+			resolveValues(b.N, containerCtx)
 		})
 	})
 }
