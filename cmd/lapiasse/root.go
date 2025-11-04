@@ -33,10 +33,8 @@ func Execute() {
 }
 
 func init() {
-	// p := rootCmd.PersistentFlags()
-	// cliFlags.Config = p.String("config", "", "config file (default is $HOME/.lapiasse.yaml)")
-	// cliFlags.ServeWeb = p.Bool("serve-web", false, "enable the web server, making the web API accessible via HTTP")
-	// cliFlags.Data = p.String("data", "", "specify where the data for the application is located")
-	// fmt.Printf("\n\nDEBUG: %s\n\n\n", lo.Must1(json.MarshalIndent(cliFlags, "", "  ")))
-	// os.Exit(0)
+	p := rootCmd.PersistentFlags()
+	p.StringVar(&cliFlags.Config, "config", "", "config file (default is $HOME/.lapiasse.yaml)")
+	p.BoolVar(&cliFlags.ServeWeb, "serve-web", false, "enable the web server, making the web API accessible via HTTP")
+	p.StringVar(&cliFlags.Data, "data", "", "specify where the data for the application is located")
 }

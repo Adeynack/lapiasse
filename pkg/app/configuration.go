@@ -13,7 +13,6 @@ import (
 	"adeynack.net/lapiasse/pkg/platform/loex"
 	"adeynack.net/lapiasse/pkg/repository"
 	"adeynack.net/lapiasse/pkg/web"
-	"github.com/samber/lo"
 )
 
 type ConfigurationHolder struct {
@@ -80,9 +79,9 @@ func ConfigurationDefaults() (*Configuration, error) {
 }
 
 type CliFlags struct {
-	Config   *string
-	Data     *string
-	ServeWeb *bool
+	Config   string
+	Data     string
+	ServeWeb bool
 }
 
 func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
@@ -92,7 +91,7 @@ func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
 	}
 
 	configHolder := ConfigurationHolder{
-		Path:          lo.FromPtrOr(flags.Config, ""),
+		Path:          flags.Config,
 		Configuration: defaultConfiguration,
 	}
 
@@ -155,11 +154,14 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 // Perform this after saving the loaded + defaults configuration, since the CLI flags
 // configurations are valid only for this run of the application, and should not be persisted.
 func applyCliFlagsToConfiguration(cfg *Configuration, flags CliFlags) {
-	if flags.Data != nil {
-		cfg.Data.BasePath = *flags.Data
+	// Override data directory if specified via CLI flag.
+	if flags.Data != "" {
+		cfg.Data.BasePath = flags.Data
 	}
 
-	if flags.ServeWeb != nil {
-		cfg.Web.Expose = *flags.ServeWeb
+	// Enable web server if requested. Will be on if the configuration file says so,
+	// but the CLI flag has precedence.
+	if flags.ServeWeb {
+		cfg.Web.Expose = true
 	}
 }
