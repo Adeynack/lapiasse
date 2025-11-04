@@ -154,6 +154,7 @@ func TestContainerFallback(t *testing.T) {
 //
 //	GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkContainer$ adeynack.net/lapiasse/pkg/platform/ctxval
 func BenchmarkContainer(b *testing.B) {
+	b.ReportAllocs()
 	type structWithFloat struct{ C float64 }
 
 	registerValues := func(bn int, ctx context.Context, container *Container) context.Context {
