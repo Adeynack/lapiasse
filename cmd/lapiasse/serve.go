@@ -24,8 +24,9 @@ func executeServe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("initializing configuration: %w", err)
 	}
 
-	configuration.Configuration.Web.Expose = true
-	configuration.Configuration.Log.UILess = true
+	// running this command implies:
+	configuration.Configuration.Web.Expose = true // exposing the web interface
+	configuration.Configuration.Log.UILess = true // running in UI-less mode
 
 	appInstance, err := app.NewInstance(configuration)
 	if err != nil {
@@ -34,6 +35,11 @@ func executeServe(cmd *cobra.Command, args []string) error {
 	defer appInstance.Close()
 
 	// Listen for interrupt signal (eg: Ctrl-C) to gracefully shutdown the server (managed by appInstance).
+	if configuration.Configuration.DryStart {
+		applog.Info(appInstance.Context(), "Dry start enabled, exiting now.")
+		return nil
+	}
+
 	applog.Info(appInstance.Context(), "Server is running. Press Ctrl-C to stop.")
 	<-appInstance.Context().Done()
 

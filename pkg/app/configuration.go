@@ -62,6 +62,8 @@ type Configuration struct {
 	Data *repository.Configuration `json:"data"`
 	Web  *web.Configuration        `json:"web"`
 	Log  *logConfiguration         `json:"log"`
+
+	DryStart bool `json:"-"`
 }
 
 func ConfigurationDefaults() (*Configuration, error) {
@@ -83,6 +85,7 @@ type CliFlags struct {
 	Config   string
 	Data     string
 	ServeWeb bool
+	DryStart bool
 }
 
 func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
@@ -165,4 +168,7 @@ func applyCliFlagsToConfiguration(cfg *Configuration, flags CliFlags) {
 	if flags.ServeWeb {
 		cfg.Web.Expose = true
 	}
+
+	// Enable dry-start.
+	cfg.DryStart = flags.DryStart
 }

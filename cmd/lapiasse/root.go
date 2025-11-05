@@ -34,7 +34,8 @@ func Execute() {
 
 func init() {
 	p := rootCmd.PersistentFlags()
-	p.StringVar(&cliFlags.Config, "config", "", "config file (default is $HOME/.lapiasse.yaml)")
-	p.BoolVar(&cliFlags.ServeWeb, "serve-web", false, "enable the web server, making the web API accessible via HTTP")
-	p.StringVar(&cliFlags.Data, "data", "", "specify where the data for the application is located")
+	p.StringVar(&cliFlags.Config, "config", "", "Optional config file path. Will default to the proper user configuration directory of the running platform.")
+	p.BoolVar(&cliFlags.ServeWeb, "serve-web", false, "Enable the web server, making the web API accessible via HTTP.")
+	p.StringVar(&cliFlags.Data, "data", "", "Optional path to the data directory. Will default to the proper user data directory of the running platform.")
+	p.BoolVar(&cliFlags.DryStart, "dry-start", false, "Enable dry start mode. Will initialize the specified command, but exit then immediately.")
 }

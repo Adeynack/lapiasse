@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"sync"
 
 	"adeynack.net/lapiasse/pkg/controller"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
@@ -19,6 +20,7 @@ type Instance struct {
 	dependenciesContext *ctxval.Container
 	cancel              context.CancelFunc
 	cleanupFuncs        []ctxval.CleanupFunc
+	closeOnce           func() error
 }
 
 func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
@@ -33,6 +35,8 @@ func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
 		cancel:              cancel,
 		cleanupFuncs:        make([]ctxval.CleanupFunc, 0),
 	}
+	i.closeOnce = sync.OnceValue(i.doCloseOnce)
+
 	defer func() {
 		if err != nil {
 			i.Close()
@@ -90,6 +94,10 @@ func (instance *Instance) Context() context.Context {
 
 // Close implements the [io.Closer] interface.
 func (instance *Instance) Close() error {
+	return instance.closeOnce()
+}
+
+func (instance *Instance) doCloseOnce() error {
 	if instance == nil {
 		return nil
 	}
@@ -113,6 +121,8 @@ func (instance *Instance) Close() error {
 	}
 
 	return errors.Join(errs...)
+
+	return nil // todo
 }
 
 func (instance *Instance) closeOnOsSignal() {
