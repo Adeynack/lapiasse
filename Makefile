@@ -18,6 +18,14 @@ check: clean build lint test
 build: gen
 	go build -o tmp/bin/lapiasse ./cmd/lapiasse
 
+.PHONY: build-debug
+build-debug:
+	go build -gcflags="all=-N -l" -o tmp/bin/lapiasse ./cmd/lapiasse
+
+.PHONY: run-watch
+run-watch:
+	go tool air -c air_run_watch.toml
+
 .PHONY: gen
 gen:
 	go generate ./...

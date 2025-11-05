@@ -1,0 +1,12 @@
+# Config file for [Air](https://github.com/cosmtrek/air) in TOML format
+
+[build]
+pre_cmd = ["make gen"]
+cmd = "make build-debug"
+bin = "tmp/bin/lapiasse"
+args_bin = ["serve"]
+send_interrupt = true
+kill_delay = 5000000
+include_ext = ["go", "yaml", "toml"]
+exclude_regex = [".*\\.gen\\.go"]
+exclude_dir = ["vendor", "node_modules", "out", "tmp"]
