@@ -121,8 +121,6 @@ func (instance *Instance) doCloseOnce() error {
 	}
 
 	return errors.Join(errs...)
-
-	return nil // todo
 }
 
 func (instance *Instance) closeOnOsSignal() {
