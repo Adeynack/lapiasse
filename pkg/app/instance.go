@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
+	"os/signal"
 
 	"adeynack.net/lapiasse/pkg/controller"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
@@ -49,11 +51,15 @@ func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
 	// Register dependencies requiring initialization.
 	c := ch.Configuration
 	reg(i, &err, c.Data, repository.InitializeDataFilesystem, "initializing data folder")
-	reg(i, &err, c.Data, configureLogger, "configuring logger")
+	reg(i, &err, c.Log, configureLogger, "configuring logger")
 	reg(i, &err, c.Data, repository.InitializeGorm, "initializing Gorm database")
 	reg(i, &err, c.Web, web.StartServer, "starting web server")
 
-	return i, nil
+	if err == nil {
+		i.closeOnOsSignal()
+	}
+
+	return
 }
 
 // reg is a helper function to register a dependency in the instance's container.
@@ -88,6 +94,11 @@ func (instance *Instance) Close() error {
 		return nil
 	}
 
+	// Cancel the instance context to stop all other background operations.
+	if instance.cancel != nil {
+		instance.cancel()
+	}
+
 	// Call all registered cleanup functions, in reverse order.
 	var errs []error
 	for i := len(instance.cleanupFuncs) - 1; i >= 0; i-- {
@@ -101,10 +112,16 @@ func (instance *Instance) Close() error {
 		}
 	}
 
-	// Cancel the instance context to stop all other background operations.
-	if instance.cancel != nil {
-		instance.cancel()
-	}
-
 	return errors.Join(errs...)
+}
+
+func (instance *Instance) closeOnOsSignal() {
+	go func() {
+		interruptCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer stop()
+
+		<-interruptCtx.Done()
+
+		_ = instance.Close()
+	}()
 }

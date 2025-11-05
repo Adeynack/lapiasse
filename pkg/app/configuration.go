@@ -61,6 +61,7 @@ func (c *ConfigurationHolder) Save() error {
 type Configuration struct {
 	Data *repository.Configuration `json:"data"`
 	Web  *web.Configuration        `json:"web"`
+	Log  *logConfiguration         `json:"log"`
 }
 
 func ConfigurationDefaults() (*Configuration, error) {

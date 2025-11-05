@@ -2,14 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run TUI",
+            "name": "Run Serve",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/lapiasse",
             "cwd": "${workspaceFolder}",
             "args": [
-                "tui"
+                "serve"
             ],
             "env": {
                 "GOEXPERIMENT": "jsonv2"
