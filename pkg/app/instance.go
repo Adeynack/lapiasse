@@ -19,18 +19,24 @@ type Instance struct {
 	cleanupFuncs        []ctxval.CleanupFunc
 }
 
-func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
+func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
 	if ch == nil {
 		return nil, errors.New("configuration holder is nil")
 	}
 
 	cancelCtx, cancel := context.WithCancel(context.Background())
 	container := ctxval.NewContainer(cancelCtx)
-	i := &Instance{
+	i = &Instance{
 		dependenciesContext: container,
 		cancel:              cancel,
 		cleanupFuncs:        make([]ctxval.CleanupFunc, 0),
 	}
+	defer func() {
+		if err != nil {
+			i.Close()
+			i = nil
+		}
+	}()
 
 	// Register simple dependencies (no init, no error).
 	ctxval.RegisterInContainer[ctxval.CleanupRecorder](container, func(f ctxval.CleanupFunc) {
@@ -41,17 +47,11 @@ func NewInstance(ch *ConfigurationHolder) (*Instance, error) {
 	ctxval.RegisterInContainer(container, controller.New())
 
 	// Register dependencies requiring initialization.
-	var err error
 	c := ch.Configuration
 	reg(i, &err, c.Data, repository.InitializeDataFilesystem, "initializing data folder")
 	reg(i, &err, c.Data, configureLogger, "configuring logger")
 	reg(i, &err, c.Data, repository.InitializeGorm, "initializing Gorm database")
 	reg(i, &err, c.Web, web.StartServer, "starting web server")
-
-	if err != nil {
-		i.Close()
-		return nil, err
-	}
 
 	return i, nil
 }
@@ -88,19 +88,23 @@ func (instance *Instance) Close() error {
 		return nil
 	}
 
-	// Cancel the instance context to stop all background operations.
-	// Most depencies are listening to the context cancellation to stop and close themselves.
+	// Call all registered cleanup functions, in reverse order.
+	var errs []error
+	for i := len(instance.cleanupFuncs) - 1; i >= 0; i-- {
+		cleanupFunc := instance.cleanupFuncs[i]
+		if cleanupFunc != nil {
+			if err := cleanupFunc(instance.dependenciesContext); err != nil {
+				// Do NOT early-return on error.
+				// All dependencies must have a chance to clean up, and the context to close.
+				errs = append(errs, err)
+			}
+		}
+	}
+
+	// Cancel the instance context to stop all other background operations.
 	if instance.cancel != nil {
 		instance.cancel()
 	}
 
-	// Call all registered cleanup functions, in reverse order.
-	for i := len(instance.cleanupFuncs) - 1; i >= 0; i-- {
-		cleanupFunc := instance.cleanupFuncs[i]
-		if cleanupFunc != nil {
-			cleanupFunc(instance.dependenciesContext)
-		}
-	}
-
-	return nil
+	return errors.Join(errs...)
 }

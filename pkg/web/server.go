@@ -19,11 +19,6 @@ func StartServer(ctx context.Context, config *Configuration) (*http.Server, erro
 		return &http.Server{}, nil
 	}
 
-	cleanup, err := ctxval.Resolve[ctxval.CleanupRecorder](ctx)
-	if err != nil {
-		return nil, fmt.Errorf("resolving cleanup recorder: %w", err)
-	}
-
 	handler, err := createHandler(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP handler: %w", err)
@@ -40,7 +35,7 @@ func StartServer(ctx context.Context, config *Configuration) (*http.Server, erro
 		}
 	}()
 
-	cleanup(closeServer(server))
+	ctxval.MustCleanup(ctx, closeServer(server))
 
 	return server, nil
 }
@@ -70,12 +65,12 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 }
 
 func closeServer(server *http.Server) ctxval.CleanupFunc {
-	return ctxval.CleanupFunc(func(ctx context.Context) {
+	return ctxval.CleanupFunc(func(ctx context.Context) error {
 		applog.Info(ctx, "Shutting down HTTP server...")
-		if err := server.Shutdown(context.Background()); err == nil {
-			applog.Info(ctx, "Shutting down HTTP server completed")
-		} else {
-			applog.Error(ctx, "HTTP server Shutdown error", "error", err)
+		if err := server.Shutdown(context.Background()); err != nil {
+			return fmt.Errorf("shutting down HTTP server: %w", err)
 		}
+
+		return nil
 	})
 }

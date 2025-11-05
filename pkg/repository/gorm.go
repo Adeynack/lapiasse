@@ -14,11 +14,6 @@ import (
 )
 
 func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error) {
-	cleanup, err := ctxval.Resolve[ctxval.CleanupRecorder](ctx)
-	if err != nil {
-		return nil, fmt.Errorf("resolving cleanup recorder: %w", err)
-	}
-
 	applog.Debug(ctx, "Initializing the Gorm database connector", "main_database_file_path", config.MainDatabaseFilePath())
 
 	gormLogger := slogGorm.New(
@@ -42,24 +37,23 @@ func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error
 		return nil, fmt.Errorf("migrating database schema: %w", err)
 	}
 
-	cleanup(closeDB(db))
+	ctxval.MustCleanup(ctx, closeDB(db))
 
 	return db, nil
 }
 
 func closeDB(db *gorm.DB) ctxval.CleanupFunc {
-	return ctxval.CleanupFunc(func(ctx context.Context) {
+	return ctxval.CleanupFunc(func(ctx context.Context) error {
 		sqlDB, err := db.DB()
 		if err != nil {
-			applog.Error(ctx, "Getting underlying SQL DB from Gorm DB failed during shutdown", "error", err)
-			return
+			return fmt.Errorf("getting underlying SQL DB from Gorm DB failed during shutdown: %w", err)
 		}
 
 		applog.Info(ctx, "Closing Gorm database connection...")
 		if err := sqlDB.Close(); err != nil {
-			applog.Error(ctx, "Closing Gorm database connection failed during shutdown", "error", err)
-		} else {
-			applog.Info(ctx, "Closing Gorm database connection completed")
+			return fmt.Errorf("closing Gorm database connection failed during shutdown: %w", err)
 		}
+
+		return nil
 	})
 }
