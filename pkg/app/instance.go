@@ -60,7 +60,7 @@ func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
 	reg(i, &err, c.Web, web.StartServer, "starting web server")
 
 	if err == nil {
-		i.closeOnOsSignal()
+		go i.closeOnOsSignal()
 	}
 
 	return
@@ -124,12 +124,10 @@ func (instance *Instance) doCloseOnce() error {
 }
 
 func (instance *Instance) closeOnOsSignal() {
-	go func() {
-		interruptCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-		defer stop()
+	interruptCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
-		<-interruptCtx.Done()
+	<-interruptCtx.Done()
 
-		_ = instance.Close()
-	}()
+	_ = instance.Close()
 }
