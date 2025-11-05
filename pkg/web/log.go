@@ -19,37 +19,40 @@ var _ middleware.LogFormatter = (*logFormatter)(nil)
 
 // NewLogEntry implements middleware.LogFormatter.
 func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
+	endpointArg := slog.String("endpoint", fmt.Sprintf(
+		"%s %s://%s%s %s\" ",
+		r.Method,
+		lo.Ternary(r.TLS == nil, "http", "https"),
+		r.Host,
+		r.RequestURI,
+		r.Proto,
+	))
+
+	applog.Info(r.Context(), "Web request received",
+		endpointArg,
+		slog.String("remote_addr", r.RemoteAddr),
+	)
+
 	return &logEntry{
-		ctx: r.Context(),
-		reqArgs: []any{
-			slog.String("endpoint", fmt.Sprintf(
-				"%s %s://%s%s %s\" ",
-				r.Method,
-				lo.Ternary(r.TLS == nil, "http", "https"),
-				r.Host,
-				r.RequestURI,
-				r.Proto,
-			)),
-			slog.String("remote_addr", r.RemoteAddr),
-		},
+		ctx:         r.Context(),
+		endpointArg: endpointArg,
 	}
 }
 
 type logEntry struct {
-	ctx     context.Context
-	reqArgs []any
+	ctx         context.Context
+	endpointArg slog.Attr
 }
 
 var _ middleware.LogEntry = (*logEntry)(nil)
 
 func (l *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
-	args := append(l.reqArgs,
+	applog.Info(l.ctx, "Web request answered",
+		l.endpointArg,
 		slog.Int("status", status),
 		slog.Int("response_size_b", bytes),
 		slog.Duration("duration", elapsed),
 	)
-
-	applog.Info(l.ctx, "Web request answered", args...)
 }
 
 func (l *logEntry) Panic(v any, stack []byte) {
@@ -59,10 +62,9 @@ func (l *logEntry) Panic(v any, stack []byte) {
 		return l, l != ""
 	})
 
-	args := append(l.reqArgs,
+	applog.Error(l.ctx, "Web request panicked",
+		l.endpointArg,
 		slog.Any("panic", v),
 		slog.Any("stack", stackLines),
 	)
-
-	applog.Error(l.ctx, "Web request panicked", args...)
 }
