@@ -8,20 +8,20 @@ import (
 	"adeynack.net/lapiasse/pkg/applog"
 	"adeynack.net/lapiasse/pkg/model"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
+	"github.com/go-chi/chi/v5/middleware"
 	slogGorm "github.com/orandin/slog-gorm"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error) {
 	applog.Debug(ctx, "Initializing the Gorm database connector", "main_database_file_path", config.MainDatabaseFilePath())
 
-	gormLogger := slogGorm.New(
-		slogGorm.WithTraceAll(),
-		slogGorm.WithContextFunc("system", func(context.Context) (slog.Value, bool) {
-			return slog.StringValue("gorm"), true
-		}),
-	)
+	gormLogger, err := initializeLogger(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("initializing Gorm logger: %w", err)
+	}
 
 	gormConfig := &gorm.Config{
 		Logger: gormLogger,
@@ -32,12 +32,12 @@ func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error
 		return nil, fmt.Errorf("opening main database %q: %w", config.MainDatabaseFilePath(), err)
 	}
 
+	ctxval.MustCleanup(ctx, closeDB(db))
+
 	applog.Info(ctx, "Auto-migrating the Gorm models")
 	if err := db.AutoMigrate(model.Models...); err != nil {
 		return nil, fmt.Errorf("migrating database schema: %w", err)
 	}
-
-	ctxval.MustCleanup(ctx, closeDB(db))
 
 	return db, nil
 }
@@ -55,5 +55,27 @@ func closeDB(db *gorm.DB) ctxval.CleanupFunc {
 		}
 
 		return nil
+	})
+}
+
+func initializeLogger(ctx context.Context) (logger.Interface, error) {
+	logger, err := applog.FromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting application logger from context: %w", err)
+	}
+
+	gormLogger := slogGorm.New(
+		slogGorm.WithHandler(logger.Handler()),
+		slogGorm.WithTraceAll(),
+		withMetaGroupName(),
+		slogGorm.WithContextValue("request_id", middleware.RequestIDKey),
+	)
+
+	return gormLogger, nil
+}
+
+func withMetaGroupName() slogGorm.Option {
+	return slogGorm.WithContextFunc("_group", func(context.Context) (slog.Value, bool) {
+		return slog.StringValue("gorm"), true
 	})
 }

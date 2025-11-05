@@ -7,8 +7,12 @@ import (
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 )
 
+func FromContext(ctx context.Context) (*slog.Logger, error) {
+	return ctxval.Resolve[*slog.Logger](ctx)
+}
+
 func loggerOrPanic(ctx context.Context) *slog.Logger {
-	logger, err := ctxval.Resolve[*slog.Logger](ctx)
+	logger, err := FromContext(ctx)
 	if err != nil {
 		panic(err)
 	}
