@@ -34,3 +34,12 @@ func requestIDStructuredLog(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+// logRequest is a middleware that logs HTTP requests using a custom log formatter.
+func logRequest() func(http.Handler) http.Handler {
+	formatter := &logFormatter{
+		SplitLogs: false,
+	}
+
+	return middleware.RequestLogger(formatter)
+}
