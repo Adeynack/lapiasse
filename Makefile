@@ -2,10 +2,18 @@
 export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2
 
 # CODE
+.PHONY: upgrade-deps
+upgrade-deps:
+	go get -u ./...
+	go mod tidy
+	go get -tool -modfile=golangci-lint.mod github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+
 .PHONY: lint
 lint:
 	go vet ./...
-	go tool golangci-lint run
+# golangci-lint run with a separate mod file to avoid dependency issues
+# See https://golangci-lint.run/docs/welcome/install/#install-from-sources
+	go tool -modfile=golangci-lint.mod golangci-lint run
 
 .PHONY: clean
 clean:
@@ -17,6 +25,7 @@ check: clean build lint test
 .PHONY: build
 build: gen
 	go build -o tmp/bin/lapiasse ./cmd/lapiasse
+	go build -o tmp/bin/import_md_to_lapiasse ./cmd/import_md_to_lapiasse
 
 .PHONY: build-debug
 build-debug:

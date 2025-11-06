@@ -1,5 +1,7 @@
 package loex
 
+import "errors"
+
 type Erroreable = func() error
 
 func GetAllOrErr(f ...Erroreable) error {
@@ -28,4 +30,28 @@ func GetAllOrErr2[T1, T2 any](
 	}
 
 	return v1, v2, nil
+}
+
+// OnErrJoin calls the provided function and, if it returns an error,
+// joins it to the error referenced by errRef.
+//
+// Useful for, e.g., deferring cleanup functions without ignoring errors.
+//
+// Example:
+//
+//	func someFunction() (err error) {
+//	    resource, err := acquireResource()
+//	    if err != nil {
+//	        return err
+//	    }
+//	    defer loex.OnErrJoin(&err, resource.Close)
+//
+//	    // do stuff with resource
+//
+//	    return nil
+//	}
+func OnErrJoin(errRef *error, fn func() error) {
+	if err := fn(); err != nil {
+		*errRef = errors.Join(*errRef, err)
+	}
 }

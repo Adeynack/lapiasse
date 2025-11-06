@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"adeynack.net/lapiasse/pkg/app"
+	"adeynack.net/lapiasse/pkg/platform/loex"
 	"adeynack.net/lapiasse/pkg/tui"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,7 @@ func init() {
 	rootCmd.AddCommand(tuiCmd)
 }
 
-func executeTui(cmd *cobra.Command, args []string) error {
+func executeTui(cmd *cobra.Command, args []string) (err error) {
 	configuration, err := app.InitializeConfiguration(cliFlags)
 	if err != nil {
 		return fmt.Errorf("initializing configuration: %w", err)
@@ -33,13 +34,13 @@ func executeTui(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("initializing application instance: %w", err)
 	}
-	defer appInstance.Close()
+	defer loex.OnErrJoin(&err, appInstance.Close)
 
 	tuiInstance, err := tui.NewInstance(appInstance)
 	if err != nil {
 		return fmt.Errorf("initializing TUI instance: %w", err)
 	}
-	defer tuiInstance.Close()
+	defer loex.OnErrJoin(&err, tuiInstance.Close)
 
 	err = tuiInstance.Run()
 	if err != nil {

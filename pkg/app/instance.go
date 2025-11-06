@@ -11,6 +11,7 @@ import (
 
 	"adeynack.net/lapiasse/pkg/controller"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
+	"adeynack.net/lapiasse/pkg/platform/loex"
 	"adeynack.net/lapiasse/pkg/repository"
 	"adeynack.net/lapiasse/pkg/web"
 )
@@ -39,7 +40,7 @@ func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
 
 	defer func() {
 		if err != nil {
-			i.Close()
+			loex.OnErrJoin(&err, i.Close)
 			i = nil
 		}
 	}()

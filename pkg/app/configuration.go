@@ -43,12 +43,12 @@ func (c *ConfigurationHolder) Load() error {
 	return nil
 }
 
-func (c *ConfigurationHolder) Save() error {
+func (c *ConfigurationHolder) Save() (err error) {
 	file, err := os.OpenFile(c.Path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("opening configuration file %q: %w", c.Path, err)
 	}
-	defer file.Close()
+	defer loex.OnErrJoin(&err, file.Close)
 
 	err = c.WriteTo(file)
 	if err != nil {

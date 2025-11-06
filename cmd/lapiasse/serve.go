@@ -5,6 +5,7 @@ import (
 
 	"adeynack.net/lapiasse/pkg/app"
 	"adeynack.net/lapiasse/pkg/applog"
+	"adeynack.net/lapiasse/pkg/platform/loex"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +19,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func executeServe(cmd *cobra.Command, args []string) error {
+func executeServe(cmd *cobra.Command, args []string) (err error) {
 	configuration, err := app.InitializeConfiguration(cliFlags)
 	if err != nil {
 		return fmt.Errorf("initializing configuration: %w", err)
@@ -32,7 +33,7 @@ func executeServe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("initializing application instance: %w", err)
 	}
-	defer appInstance.Close()
+	defer loex.OnErrJoin(&err, appInstance.Close)
 
 	// Listen for interrupt signal (eg: Ctrl-C) to gracefully shutdown the server (managed by appInstance).
 	if configuration.Configuration.DryStart {
