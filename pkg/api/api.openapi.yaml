@@ -83,6 +83,10 @@ paths:
                     $ref: "#/components/schemas/Book"
         "404":
           description: Not Found
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Error"
   /exchanges:
     get:
       responses:
@@ -115,11 +119,13 @@ paths:
                     type: string
                 required:
                   - status
-
 components:
   schemas:
     Error:
       type: object
+      description: |
+        A machine-readable format for specifying errors in HTTP API responses
+        based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
       required:
         - title
         - status
@@ -146,7 +152,6 @@ components:
 
     ID:
       type: string
-      format: uuid
 
     ExistingResource:
       type: object
@@ -169,24 +174,15 @@ components:
       allOf:
         - $ref: "#/components/schemas/ExistingResource"
         - $ref: "#/components/schemas/BookProperties"
-        - type: object
-          required:
-            - owner_display_name
-          properties:
-            owner_display_name:
-              type: string
 
     BookProperties:
       type: object
       required:
         - name
-        - owner_id
         - default_currency_iso_code
       properties:
         name:
           type: string
-        owner_id:
-          $ref: "#/components/schemas/ID"
         default_currency_iso_code:
           type: string
 

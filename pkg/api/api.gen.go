@@ -35,8 +35,6 @@ type Book struct {
 	DefaultCurrencyIsoCode string    `json:"default_currency_iso_code"`
 	Id                     ID        `json:"id"`
 	Name                   string    `json:"name"`
-	OwnerDisplayName       string    `json:"owner_display_name"`
-	OwnerId                ID        `json:"owner_id"`
 	UpdatedAt              time.Time `json:"updated_at"`
 }
 
@@ -44,10 +42,10 @@ type Book struct {
 type BookProperties struct {
 	DefaultCurrencyIsoCode string `json:"default_currency_iso_code"`
 	Name                   string `json:"name"`
-	OwnerId                ID     `json:"owner_id"`
 }
 
-// Error defines model for Error.
+// Error A machine-readable format for specifying errors in HTTP API responses
+// based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
 type Error struct {
 	// Detail A human-readable explanation specific to this occurrence of the problem.
 	Detail *string `json:"detail,omitempty"`
@@ -113,7 +111,7 @@ type ExistingResource struct {
 }
 
 // ID defines model for ID.
-type ID = openapi_types.UUID
+type ID = string
 
 // ServerHealthStatus defines model for ServerHealthStatus.
 type ServerHealthStatus string
@@ -503,12 +501,13 @@ func (response GetBook200JSONResponse) VisitGetBookResponse(w http.ResponseWrite
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetBook404Response struct {
-}
+type GetBook404JSONResponse Error
 
-func (response GetBook404Response) VisitGetBookResponse(w http.ResponseWriter) error {
+func (response GetBook404JSONResponse) VisitGetBookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type GetExchangesRequestObject struct {
