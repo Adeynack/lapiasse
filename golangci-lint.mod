@@ -1,6 +1,6 @@
 module github.com/adeynack/lapiasse/golangci-lint
 
-go 1.25.3
+go 1.25.4
 
 tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 

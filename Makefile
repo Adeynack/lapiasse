@@ -1,11 +1,18 @@
 # Ensuring all tasks are using the new JSONv2 Go library.
 export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2
 
+actual_go_version ?= $(shell go version | awk '{print $$3}' | sed 's/^go//')
+
 # CODE
 .PHONY: upgrade-deps
 upgrade-deps:
+	@echo "Setting Go version to $(actual_go_version) and upgrading dependencies..."
+	@echo "... in main go.mod"
+	go mod edit -go=$(actual_go_version)
 	go get -u ./...
 	go mod tidy
+	@echo "... in golangci-lint.mod"
+	go mod edit -go=$(actual_go_version) golangci-lint.mod
 	go get -tool -modfile=golangci-lint.mod github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 
 .PHONY: lint
