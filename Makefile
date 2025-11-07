@@ -14,6 +14,8 @@ upgrade-deps:
 	@echo "... in golangci-lint.mod"
 	go mod edit -go=$(actual_go_version) golangci-lint.mod
 	go get -tool -modfile=golangci-lint.mod github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	@echo "... in GitHub Actions"
+	sed -i '' "s/go-version: \".*\"/go-version: \"1.25.4\"/" .github/workflows/pr-check.yml
 
 .PHONY: lint
 lint:
