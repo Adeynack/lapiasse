@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"adeynack.net/lapiasse/pkg/applog"
+	"adeynack.net/lapiasse/pkg/env"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 // injectApplicationContext is a middleware that injects the application context
@@ -42,4 +44,22 @@ func logRequest() func(http.Handler) http.Handler {
 	}
 
 	return middleware.RequestLogger(formatter)
+}
+
+// handleCors is a middleware that handles CORS (Cross-Origin Resource Sharing).
+func handleCors() func(http.Handler) http.Handler {
+	if env.RunEnv == env.EnvProduction {
+		// In production, CORS should be handled by the reverse proxy (e.g. Nginx).
+		return nil
+	}
+
+	// Basic CORS example taken from https://github.com/go-chi/cors#usage
+	return cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
 }

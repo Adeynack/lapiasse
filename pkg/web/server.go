@@ -50,12 +50,13 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 	router := chi.NewMux()
 	timeoutDuration := time.Duration(config.RequestTimeoutMs) * time.Millisecond
 
-	router.Use(
+	routerUseNonNilMiddlewares(router,
 		injectApplicationContext(ctx),       // must be first, since other middlewares may rely on it for dependencies
 		middleware.RequestID,                // assign a request ID to the request
 		requestIDStructuredLog,              // ensure the request ID is part of every log entry
 		logRequest(),                        // log requests
 		middleware.Recoverer,                // recover from panics
+		handleCors(),                        // handle CORS
 		middleware.Timeout(timeoutDuration), // set a timeout for requests
 	)
 
@@ -63,6 +64,14 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 	handler := api.HandlerFromMux(strictHandler, router)
 
 	return handler, nil
+}
+
+func routerUseNonNilMiddlewares(router chi.Router, middlewares ...func(http.Handler) http.Handler) {
+	for _, mw := range middlewares {
+		if mw != nil {
+			router.Use(mw)
+		}
+	}
 }
 
 func closeServer(server *http.Server) ctxval.CleanupFunc {
