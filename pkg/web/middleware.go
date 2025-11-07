@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-// injectApplicationContext is a middleware that injects the application context
+// injectApplicationContext creates a middleware that injects the application context
 // into the request context as a fallback for resolving values. The request's context
 // values take precedence over the application context values.
 func injectApplicationContext(appContext context.Context) func(http.Handler) http.Handler {
@@ -37,7 +37,7 @@ func requestIDStructuredLog(next http.Handler) http.Handler {
 	})
 }
 
-// logRequest is a middleware that logs HTTP requests using a custom log formatter.
+// logRequest creates a middleware that logs HTTP requests using a custom log formatter.
 func logRequest() func(http.Handler) http.Handler {
 	formatter := &logFormatter{
 		SplitLogs: false,
@@ -46,7 +46,7 @@ func logRequest() func(http.Handler) http.Handler {
 	return middleware.RequestLogger(formatter)
 }
 
-// handleCors is a middleware that handles CORS (Cross-Origin Resource Sharing).
+// handleCors creates a middleware that handles CORS (Cross-Origin Resource Sharing).
 func handleCors() func(http.Handler) http.Handler {
 	if env.RunEnv == env.EnvProduction {
 		// In production, CORS should be handled by the reverse proxy (e.g. Nginx).
