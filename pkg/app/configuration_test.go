@@ -3,16 +3,39 @@ package app
 import (
 	"testing"
 
+	"adeynack.net/lapiasse/pkg/env"
+	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"github.com/stretchr/testify/require"
 )
 
 func TestConfiguration(t *testing.T) {
-	h, err := InitializeConfiguration(CliFlags{})
-	require.NoError(t, err)
+	for _, tc := range []struct {
+		env         env.Environment
+		expectPanic bool
+	}{
+		{env: env.EnvDevelopment},
+		{env: env.EnvTest, expectPanic: true},
+		{env: env.EnvProduction},
+	} {
+		t.Run(tc.env.String(), func(t *testing.T) {
+			ctx := ctxval.RegisterNamed(t.Context(), "run", tc.env)
 
-	t.Run("the Data configuration is properly initialized", func(t *testing.T) {
-		data := h.Configuration.Data
+			if tc.expectPanic {
+				require.Panics(t, func() {
+					_, _ = InitializeConfiguration(ctx, CliFlags{})
+				})
 
-		require.NotEmpty(t, data.BasePath)
-	})
+				return
+			}
+
+			h, err := InitializeConfiguration(ctx, CliFlags{})
+			require.NoError(t, err)
+
+			t.Run("the Data configuration is properly initialized", func(t *testing.T) {
+				data := h.Configuration.Data
+
+				require.NotEmpty(t, data.BasePath)
+			})
+		})
+	}
 }

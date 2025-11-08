@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -12,10 +13,13 @@ import (
 type Configuration struct {
 	// A path to the folder in which all data (e.g. databases, files) is stored.
 	BasePath string `json:"base_path"`
+
+	// InMemory indicates whether the database should be created in memory. Mainly used for tests.
+	InMemory bool `json:"-"`
 }
 
-func ConfigurationDefaults() (*Configuration, error) {
-	basePath, err := determineDefaultDataDirectory()
+func ConfigurationDefaults(ctx context.Context) (*Configuration, error) {
+	basePath, err := determineDefaultDataDirectory(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -31,14 +35,15 @@ func ConfigurationForPath(basePath string) (*Configuration, error) {
 	}, nil
 }
 
-func determineDefaultDataDirectory() (string, error) {
-	if env.RunEnv != env.EnvProduction {
+func determineDefaultDataDirectory(ctx context.Context) (string, error) {
+	runEnv := env.GetRunEnv(ctx)
+	if runEnv != env.EnvProduction {
 		pwd, err := os.Getwd()
 		if err != nil {
 			return "", fmt.Errorf("obtaining working directory: %w", err)
 		}
 
-		return path.Join(pwd, "tmp", env.RunEnv.String(), "data"), nil
+		return path.Join(pwd, "tmp", runEnv.String(), "data"), nil
 	}
 
 	home, err := os.UserHomeDir()
@@ -65,5 +70,9 @@ func determineDefaultDataDirectory() (string, error) {
 }
 
 func (c *Configuration) MainDatabaseFilePath() string {
+	if c.InMemory {
+		return "file::memory:?cache=shared"
+	}
+
 	return path.Join(c.BasePath, "lapiasse.db")
 }

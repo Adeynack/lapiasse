@@ -56,7 +56,7 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 		requestIDStructuredLog,              // ensure the request ID is part of every log entry
 		logRequest(),                        // log requests
 		middleware.Recoverer,                // recover from panics
-		handleCors(),                        // handle CORS
+		handleCors(ctx),                     // handle CORS
 		middleware.Timeout(timeoutDuration), // set a timeout for requests
 	)
 

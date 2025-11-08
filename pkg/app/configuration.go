@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
@@ -66,11 +67,13 @@ type Configuration struct {
 	DryStart bool `json:"-"`
 }
 
-func ConfigurationDefaults() (*Configuration, error) {
-	d, w, err := loex.GetAllOrErr2(
-		repository.ConfigurationDefaults,
-		web.ConfigurationDefaults,
-	)
+func ConfigurationDefaults(ctx context.Context) (*Configuration, error) {
+	d, err := repository.ConfigurationDefaults(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	w, err := web.ConfigurationDefaults()
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +91,8 @@ type CliFlags struct {
 	DryStart bool
 }
 
-func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
-	defaultConfiguration, err := ConfigurationDefaults()
+func InitializeConfiguration(ctx context.Context, flags CliFlags) (*ConfigurationHolder, error) {
+	defaultConfiguration, err := ConfigurationDefaults(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("obtaining default configuration: %w", err)
 	}
@@ -100,7 +103,7 @@ func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
 	}
 
 	if configHolder.Path == "" {
-		if configHolder.Path, err = setupDefaultConfigurationEnvironment(); err != nil {
+		if configHolder.Path, err = setupDefaultConfigurationEnvironment(ctx); err != nil {
 			return nil, fmt.Errorf("setting up default configuration environment: %w", err)
 		}
 	}
@@ -123,11 +126,12 @@ func InitializeConfiguration(flags CliFlags) (*ConfigurationHolder, error) {
 	return &configHolder, nil
 }
 
-func setupDefaultConfigurationEnvironment() (string, error) {
+func setupDefaultConfigurationEnvironment(ctx context.Context) (string, error) {
 	const configName = "lapiasse"
 	var appConfigDir string
 
-	switch env.RunEnv {
+	runEnv := env.GetRunEnv(ctx)
+	switch runEnv {
 	case env.EnvProduction:
 		userConfigDir, err := os.UserConfigDir()
 		if err != nil {
@@ -136,14 +140,14 @@ func setupDefaultConfigurationEnvironment() (string, error) {
 
 		appConfigDir = path.Join(userConfigDir, "LaPiasse")
 	case env.EnvTest:
-		appConfigDir = path.Join(os.TempDir(), "lapiasse", "test-configuration")
+		panic("Use \"CreateTestAppCtx\" for tests, not a real one")
 	default:
 		pwd, err := os.Getwd()
 		if err != nil {
 			return "", fmt.Errorf("obtaining working directory: %w", err)
 		}
 
-		appConfigDir = path.Join(pwd, "tmp", env.RunEnv.String(), "configuration")
+		appConfigDir = path.Join(pwd, "tmp", runEnv.String(), "configuration")
 	}
 
 	slog.Debug("Ensure app config dir exists", "appConfigDir", appConfigDir)

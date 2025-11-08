@@ -139,9 +139,19 @@ type SplitProperties struct {
 	Status                ExchangeStatus `json:"status"`
 }
 
+// Page defines model for page.
+type Page = int
+
+// PageSize defines model for page_size.
+type PageSize = int
+
 // GetBooksParams defines parameters for GetBooks.
 type GetBooksParams struct {
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	// Page The page number to retrieve (1-indexed).
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize The maximum number of items to return per page.
+	PageSize *PageSize `form:"page-size,omitempty" json:"page-size,omitempty"`
 }
 
 // CreateBookJSONBody defines parameters for CreateBook.
@@ -217,11 +227,19 @@ func (siw *ServerInterfaceWrapper) GetBooks(w http.ResponseWriter, r *http.Reque
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetBooksParams
 
-	// ------------- Optional query parameter "limit" -------------
+	// ------------- Optional query parameter "page" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	err = runtime.BindQueryParameter("form", true, false, "page", r.URL.Query(), &params.Page)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "page-size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page-size", r.URL.Query(), &params.PageSize)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page-size", Err: err})
 		return
 	}
 

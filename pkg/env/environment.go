@@ -14,10 +14,10 @@ const (
 	EnvProduction
 )
 
-var RunEnv Environment = EnvDevelopment
+var runEnv Environment = EnvDevelopment
 
 func (e Environment) String() string {
-	switch RunEnv {
+	switch runEnv {
 	case EnvDevelopment:
 		return "development"
 	case EnvProduction:
@@ -27,12 +27,12 @@ func (e Environment) String() string {
 	case EnvUndefined:
 		return "undefined"
 	default:
-		return fmt.Sprintf("unexpected app.Environment: %#v", RunEnv)
+		return fmt.Sprintf("unexpected app.Environment: %#v", runEnv)
 	}
 }
 
 func init() {
-	RunEnv = determineRuntimeEnvironment()
+	runEnv = determineRuntimeEnvironment()
 }
 
 func determineRuntimeEnvironment() Environment {
@@ -40,8 +40,8 @@ func determineRuntimeEnvironment() Environment {
 		return EnvTest
 	}
 
-	if BuildEnv != EnvUndefined {
-		return BuildEnv
+	if buildEnv != EnvUndefined {
+		return buildEnv
 	}
 
 	return EnvDevelopment

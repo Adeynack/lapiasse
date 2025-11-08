@@ -71,7 +71,7 @@ func initializeJsonFileHandler(ctx context.Context, config *logConfiguration) (s
 	}
 
 	logFileFlags := os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	if env.RunEnv == env.EnvDevelopment {
+	if env.GetRunEnv(ctx) == env.EnvDevelopment {
 		logFileFlags |= os.O_TRUNC
 	}
 
@@ -100,7 +100,8 @@ func initializeJsonStdOutHandler(ctx context.Context, config *logConfiguration) 
 	if !config.UILess {
 		return nil, nil // in UI mode, using only JSON file output
 	}
-	if env.RunEnv == env.EnvDevelopment {
+
+	if env.GetRunEnv(ctx) == env.EnvDevelopment {
 		return nil, nil // in development, using pretty output
 	}
 
@@ -115,7 +116,8 @@ func initializePrettyStdOutHandler(ctx context.Context, config *logConfiguration
 	if !config.UILess {
 		return nil, nil // in UI mode, using only JSON file output
 	}
-	if env.RunEnv != env.EnvDevelopment {
+
+	if env.GetRunEnv(ctx) != env.EnvDevelopment {
 		return nil, nil // using pretty output only in development
 	}
 

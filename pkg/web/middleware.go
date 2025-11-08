@@ -47,8 +47,8 @@ func logRequest() func(http.Handler) http.Handler {
 }
 
 // handleCors creates a middleware that handles CORS (Cross-Origin Resource Sharing).
-func handleCors() func(http.Handler) http.Handler {
-	if env.RunEnv == env.EnvProduction {
+func handleCors(ctx context.Context) func(http.Handler) http.Handler {
+	if env.GetRunEnv(ctx) == env.EnvProduction {
 		// In production, CORS should be handled by the reverse proxy (e.g. Nginx).
 		return nil
 	}

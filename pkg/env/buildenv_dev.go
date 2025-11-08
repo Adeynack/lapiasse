@@ -2,4 +2,4 @@
 
 package env
 
-var BuildEnv Environment = EnvDevelopment
+var buildEnv Environment = EnvDevelopment

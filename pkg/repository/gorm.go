@@ -16,7 +16,8 @@ import (
 )
 
 func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error) {
-	applog.Debug(ctx, "Initializing the Gorm database connector", "main_database_file_path", config.MainDatabaseFilePath())
+	dsn := config.MainDatabaseFilePath()
+	applog.Debug(ctx, "Initializing the Gorm database connector", "main_database_file_path", dsn)
 
 	gormLogger, err := initializeLogger(ctx)
 	if err != nil {
@@ -27,9 +28,9 @@ func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error
 		Logger: gormLogger,
 	}
 
-	db, err := gorm.Open(sqlite.Open(config.MainDatabaseFilePath()), gormConfig)
+	db, err := gorm.Open(sqlite.Open(dsn), gormConfig)
 	if err != nil {
-		return nil, fmt.Errorf("opening main database %q: %w", config.MainDatabaseFilePath(), err)
+		return nil, fmt.Errorf("opening main database %q: %w", dsn, err)
 	}
 
 	ctxval.MustCleanup(ctx, closeDB(db))

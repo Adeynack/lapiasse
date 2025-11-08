@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"adeynack.net/lapiasse/pkg/app"
+	"adeynack.net/lapiasse/pkg/env"
 	"adeynack.net/lapiasse/pkg/platform/loex"
 	"adeynack.net/lapiasse/pkg/tui"
 	"github.com/spf13/cobra"
@@ -25,12 +26,14 @@ func init() {
 }
 
 func executeTui(cmd *cobra.Command, args []string) (err error) {
-	configuration, err := app.InitializeConfiguration(cliFlags)
+	ctx := env.AutoRegisterEnvironments(cmd.Context())
+
+	configuration, err := app.InitializeConfiguration(ctx, cliFlags)
 	if err != nil {
 		return fmt.Errorf("initializing configuration: %w", err)
 	}
 
-	appInstance, err := app.NewInstance(configuration)
+	appInstance, err := app.NewInstance(ctx, configuration)
 	if err != nil {
 		return fmt.Errorf("initializing application instance: %w", err)
 	}

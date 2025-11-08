@@ -5,6 +5,7 @@ import (
 
 	"adeynack.net/lapiasse/pkg/app"
 	"adeynack.net/lapiasse/pkg/applog"
+	"adeynack.net/lapiasse/pkg/env"
 	"adeynack.net/lapiasse/pkg/platform/loex"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,9 @@ func init() {
 }
 
 func executeServe(cmd *cobra.Command, args []string) (err error) {
-	configuration, err := app.InitializeConfiguration(cliFlags)
+	ctx := env.AutoRegisterEnvironments(cmd.Context())
+
+	configuration, err := app.InitializeConfiguration(ctx, cliFlags)
 	if err != nil {
 		return fmt.Errorf("initializing configuration: %w", err)
 	}
@@ -29,7 +32,7 @@ func executeServe(cmd *cobra.Command, args []string) (err error) {
 	configuration.Configuration.Web.Expose = true // exposing the web interface
 	configuration.Configuration.Log.UILess = true // running in UI-less mode
 
-	appInstance, err := app.NewInstance(configuration)
+	appInstance, err := app.NewInstance(ctx, configuration)
 	if err != nil {
 		return fmt.Errorf("initializing application instance: %w", err)
 	}

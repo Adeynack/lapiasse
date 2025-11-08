@@ -24,13 +24,13 @@ type Instance struct {
 	closeOnce           func() error
 }
 
-func NewInstance(ch *ConfigurationHolder) (i *Instance, err error) {
+func NewInstance(ctx context.Context, ch *ConfigurationHolder) (i *Instance, err error) {
 	if ch == nil {
 		return nil, errors.New("configuration holder is nil")
 	}
 
-	cancelCtx, cancel := context.WithCancel(context.Background())
-	container := ctxval.NewContainer(cancelCtx)
+	ctx, cancel := context.WithCancel(ctx)
+	container := ctxval.NewContainer(ctx)
 	i = &Instance{
 		dependenciesContext: container,
 		cancel:              cancel,

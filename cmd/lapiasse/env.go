@@ -14,10 +14,12 @@ var envCmd = &cobra.Command{
 	Use:   "env",
 	Short: "Output the detected runtime environment and the loaded configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println()
-		fmt.Printf("Environment: %s\n", env.RunEnv)
+		ctx := env.AutoRegisterEnvironments(cmd.Context())
 
-		configuration, err := app.InitializeConfiguration(cliFlags)
+		fmt.Println()
+		fmt.Printf("Environment: %s\n", env.GetRunEnv(ctx).String())
+
+		configuration, err := app.InitializeConfiguration(ctx, cliFlags)
 		if err != nil {
 			return fmt.Errorf("initializing configuration: %w", err)
 		}

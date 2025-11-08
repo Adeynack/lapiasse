@@ -1,0 +1,14 @@
+{
+  "Path": "/Users/adeynack/src/github.com/Adeynack/lapiasse/pkg/app/tmp/test/configuration/lapiasse.json",
+  "Configuration": {
+    "data": {
+      "base_path": "/Users/adeynack/src/github.com/Adeynack/lapiasse/pkg/app/tmp/test/data"
+    },
+    "web": {
+      "expose": false,
+      "port": 8080,
+      "request_timeout_ms": 30000
+    },
+    "log": null
+  }
+}

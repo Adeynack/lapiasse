@@ -1,6 +1,7 @@
 {
   "go.toolsEnvVars": {
     "GOEXPERIMENT": "jsonv2",
-    "PWD": "${workspaceFolder}"
+    "PWD": "${workspaceFolder}",
   },
+  "go.buildTags": "test"
 }

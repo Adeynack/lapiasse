@@ -19,7 +19,10 @@ type BooksController struct {
 func (c *BooksController) GetBooks(ctx context.Context, request api.GetBooksRequestObject) (api.GetBooksResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
-	books, err := gorm.G[model.Book](db).Find(ctx)
+	books, err := gorm.G[model.Book](db).
+		Scopes(scopePaginate(request.Params.Page, request.Params.PageSize)).
+		Order("books.name").
+		Find(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("reading books from database: %w", err)
 	}
