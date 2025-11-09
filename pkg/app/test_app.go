@@ -4,9 +4,9 @@ package app
 
 import (
 	"context"
-	"log/slog"
 	"testing"
 
+	"adeynack.net/lapiasse/pkg/applog"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"adeynack.net/lapiasse/pkg/repository"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +24,7 @@ func CreateTestAppCtx(t testing.TB) context.Context {
 	}))
 
 	// todo: Make sure that the default logger during tests is logging to the test logger (t.Logf)
-	ctx = ctxval.Register(ctx, slog.Default())
+	ctx = applog.RegisterTestLogger(ctx, t)
 
 	testDb, err := repository.InitializeGorm(ctx, &repository.Configuration{
 		InMemory: true,

@@ -7,6 +7,10 @@ import (
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 )
 
+func WithLogger(ctx context.Context, logger *slog.Logger) context.Context {
+	return ctxval.Register(ctx, logger)
+}
+
 func FromContext(ctx context.Context) (*slog.Logger, error) {
 	return ctxval.Resolve[*slog.Logger](ctx)
 }
@@ -39,5 +43,6 @@ func Error(ctx context.Context, msg string, args ...any) {
 func With(ctx context.Context, args ...any) context.Context {
 	logger := loggerOrPanic(ctx)
 	logger = logger.With(args...)
-	return ctxval.Register(ctx, logger)
+
+	return WithLogger(ctx, logger)
 }
