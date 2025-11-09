@@ -15,87 +15,85 @@ import (
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
-	"go.llib.dev/testcase"
 	"gorm.io/gorm"
 )
 
-func TestBooksController(t *testing.T) {
-	s := testcase.NewSpec(t)
+func TestBooksController_Table(t *testing.T) {
+	seedMoreBooksThanMaxPageSize := func(ctx context.Context) {
+		db := ctxval.MustResolve[*gorm.DB](ctx)
+		for _, i := range rand.Perm(controller.DefaultPageSize + 10) {
+			lo.Must0(gorm.G[model.Book](db).Create(ctx, &model.Book{Name: fmt.Sprintf("Book %04d", i+1)}))
+		}
+	}
 
-	ctx := testcase.Let(s, func(t *testcase.T) context.Context {
-		return app.CreateTestAppCtx(t)
-	})
+	responseBookNames := func(resp api.GetBooks200JSONResponse) []string {
+		return lo.Map(resp.Books, func(b api.Book, _ int) string { return b.Name })
+	}
 
-	ctrl := testcase.Let(s, func(t *testcase.T) *controller.BooksController {
-		return &controller.BooksController{}
-	})
-
-	s.Describe("GetBooks", func(s *testcase.Spec) {
-		request := testcase.Let(s, func(t *testcase.T) api.GetBooksRequestObject {
-			return api.GetBooksRequestObject{}
-		})
-
-		response := testcase.Let(s, func(t *testcase.T) api.GetBooksResponseObject {
-			resp, err := ctrl.Get(t).GetBooks(ctx.Get(t), request.Get(t))
-			require.NoError(t, err)
-			return resp
-		})
-
-		response200 := testcase.Let(s, func(t *testcase.T) api.GetBooks200JSONResponse {
-			resp := response.Get(t)
-			require.IsType(t, api.GetBooks200JSONResponse{}, resp)
-			return resp.(api.GetBooks200JSONResponse)
-		})
-
-		responseBookNames := testcase.Let(s, func(t *testcase.T) []string {
-			return lo.Map(response200.Get(t).Books, func(b api.Book, _ int) string { return b.Name })
-		})
-
-		s.When("there are no books", func(s *testcase.Spec) {
-			s.Then("the response contains no book", func(t *testcase.T) {
-				require.Empty(t, response200.Get(t).Books)
-			})
-		})
-
-		s.When("some books exist", func(s *testcase.Spec) {
-			s.Before(func(t *testcase.T) {
-				db := ctxval.MustResolve[*gorm.DB](ctx.Get(t))
-				for _, i := range rand.Perm(controller.DefaultPageSize + 10) {
-					lo.Must0(gorm.G[model.Book](db).Create(ctx.Get(t), &model.Book{Name: fmt.Sprintf("Book %04d", i+1)}))
-				}
-			})
-
-			s.Then("the response contains all books, up to the default limit", func(t *testcase.T) {
+	for _, tc := range []struct {
+		name         string
+		seed         func(ctx context.Context)
+		request      api.GetBooksRequestObject
+		expecting200 func(t *testing.T, resp api.GetBooks200JSONResponse)
+	}{
+		{
+			name: "no books exist, response is empty",
+			expecting200: func(t *testing.T, resp api.GetBooks200JSONResponse) {
+				require.Empty(t, resp.Books)
+			},
+		},
+		{
+			name: "some books exist, response contains limited number of books (default page size)",
+			seed: seedMoreBooksThanMaxPageSize,
+			expecting200: func(t *testing.T, resp api.GetBooks200JSONResponse) {
 				expectedBookNames := lo.Map(lo.RangeFrom(1, controller.DefaultPageSize), func(i int, _ int) string {
 					return fmt.Sprintf("Book %04d", i)
 				})
-				actual := responseBookNames.Get(t)
-				require.Equal(t, expectedBookNames, actual)
-			})
+				require.Equal(t, expectedBookNames, responseBookNames(resp))
+			},
+		},
+		{
+			name: "some books exist, request specifies limit, response contains correct books",
+			seed: seedMoreBooksThanMaxPageSize,
+			request: api.GetBooksRequestObject{
+				Params: api.GetBooksParams{
+					PageSize: lo.ToPtr(3),
+				},
+			},
+			expecting200: func(t *testing.T, resp api.GetBooks200JSONResponse) {
+				require.Equal(t, []string{"Book 0001", "Book 0002", "Book 0003"}, responseBookNames(resp))
+			},
+		},
+		{
+			name: "some books exist, request specifies limit and page, response contains correct books",
+			seed: seedMoreBooksThanMaxPageSize,
+			request: api.GetBooksRequestObject{
+				Params: api.GetBooksParams{
+					PageSize: lo.ToPtr(3),
+					Page:     lo.ToPtr(2),
+				},
+			},
+			expecting200: func(t *testing.T, resp api.GetBooks200JSONResponse) {
+				require.Equal(t, []string{"Book 0004", "Book 0005", "Book 0006"}, responseBookNames(resp))
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := app.CreateTestAppCtx(t)
+			if tc.seed != nil {
+				tc.seed(ctx)
+			}
 
-			s.When("a limit is given", func(s *testcase.Spec) {
-				request.Let(s, func(t *testcase.T) api.GetBooksRequestObject {
-					r := request.PreviousValue(t)
-					r.Params.PageSize = lo.ToPtr(3)
-					return r
-				})
+			ctrl := &controller.BooksController{}
+			resp, err := ctrl.GetBooks(ctx, tc.request)
 
-				s.Then("the response contains only the limited number of books", func(t *testcase.T) {
-					require.Equal(t, []string{"Book 0001", "Book 0002", "Book 0003"}, responseBookNames.Get(t))
-				})
+			require.NoError(t, err)
 
-				s.When("a page is given", func(s *testcase.Spec) {
-					request.Let(s, func(t *testcase.T) api.GetBooksRequestObject {
-						req := request.PreviousValue(t)
-						req.Params.Page = lo.ToPtr(2)
-						return req
-					})
-
-					s.Then("the requested page is returned", func(t *testcase.T) {
-						require.Equal(t, []string{"Book 0004", "Book 0005", "Book 0006"}, responseBookNames.Get(t))
-					})
-				})
-			})
+			if tc.expecting200 != nil {
+				resp200, ok := resp.(api.GetBooks200JSONResponse)
+				require.True(t, ok, "expected GetBooks200JSONResponse, got %T", resp)
+				tc.expecting200(t, resp200)
+			}
 		})
-	})
+	}
 }
