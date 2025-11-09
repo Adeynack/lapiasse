@@ -117,10 +117,10 @@ func TestCreateBook(t *testing.T) {
 				DefaultCurrencyIsoCode: "INVALID",
 			},
 			expecting422: func(t *testing.T, resp api.CreateBook422JSONResponse) {
-				require.NotNil(t, resp.Detail)
-				require.Equal(t,
-					"Key: 'Book.DefaultCurrencyIsoCode' Error:Field validation for 'DefaultCurrencyIsoCode' failed on the 'currencyIsoCode' tag",
-					*resp.Detail)
+				lenValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "len" })
+				require.True(t, ok, "expected len validation error")
+				require.Equal(t, "Book.DefaultCurrencyIsoCode", lenValidErr.Field)
+				require.Equal(t, "3", lo.FromPtr(lenValidErr.Param))
 			},
 		},
 	} {

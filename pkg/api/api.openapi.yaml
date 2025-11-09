@@ -5,6 +5,19 @@ info:
 servers:
   - url: http://localhost:8080
     description: Local development server
+x-responses: # Reusable response components. Using `$ref: "#/components/responses/Foo"` yields to strange code gen results.
+  NotFound: &ResponseNotFound
+    description: Not Found
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/Error"
+  UnprocessableEntity: &ResponseUnprocessableEntity
+    description: Unprocessable Entity
+    content:
+      "application/json":
+        schema:
+          $ref: "#/components/schemas/ValidationError"
 paths:
   /books:
     get:
@@ -55,7 +68,7 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/ValidationError"
   "/books/{bookId}":
     parameters:
       - name: bookId
@@ -78,11 +91,7 @@ paths:
                   book:
                     $ref: "#/components/schemas/Book"
         "404":
-          description: Not Found
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/Error"
+          <<: *ResponseNotFound
   /exchanges:
     get:
       responses:
@@ -158,6 +167,41 @@ components:
         detail:
           type: string
           description: A human-readable explanation specific to this occurrence of the problem.
+
+    ValidationError:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          required:
+            - validation_errors
+          properties:
+            validation_errors:
+              type: array
+              description: A list of fields that failed validation.
+              items:
+                $ref: "#/components/schemas/FieldValidationError"
+
+    FieldValidationError:
+      type: object
+      required:
+        - field
+        - message
+        - validation
+      properties:
+        field:
+          type: string
+          description: The name of the invalid field.
+        message:
+          type: string
+          description: A message describing why the field is invalid.
+        validation:
+          type: string
+          description: The validation that failed.
+          example: "len"
+        param:
+          type: string
+          description: Additional configuration related to the validation.
 
     ErrorType:
       type: string

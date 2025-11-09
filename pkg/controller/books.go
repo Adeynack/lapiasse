@@ -15,7 +15,7 @@ import (
 type BooksController struct {
 }
 
-// (GET /books)
+// Implements [api.StrictServerInterface.GetBooks]
 func (c *BooksController) GetBooks(ctx context.Context, request api.GetBooksRequestObject) (api.GetBooksResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
@@ -30,7 +30,7 @@ func (c *BooksController) GetBooks(ctx context.Context, request api.GetBooksRequ
 	return api.GetBooks200JSONResponse{Books: loex.MapE(books, toApiBook)}, nil
 }
 
-// (POST /books)
+// Implements [api.StrictServerInterface.CreateBook]
 func (c *BooksController) CreateBook(ctx context.Context, request api.CreateBookRequestObject) (api.CreateBookResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
@@ -41,8 +41,10 @@ func (c *BooksController) CreateBook(ctx context.Context, request api.CreateBook
 		DefaultCurrencyIsoCode: p.DefaultCurrencyIsoCode,
 	}
 
-	if ok, err := validate(ctx, book); !ok {
-		return api.CreateBook422JSONResponse(err), nil
+	if validErr, err := validate(ctx, book); err != nil {
+		return nil, fmt.Errorf("validating book: %w", err)
+	} else if validErr != nil {
+		return api.CreateBook422JSONResponse(*validErr), nil
 	}
 
 	err := gorm.G[model.Book](db).Create(ctx, &book)
@@ -53,7 +55,7 @@ func (c *BooksController) CreateBook(ctx context.Context, request api.CreateBook
 	return api.CreateBook201JSONResponse{Book: toApiBook(book)}, nil
 }
 
-// (GET /books/{bookId})
+// Implements [api.StrictServerInterface.GetBook]
 func (c *BooksController) GetBook(ctx context.Context, request api.GetBookRequestObject) (api.GetBookResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
