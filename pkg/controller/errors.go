@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"adeynack.net/lapiasse/pkg/api"
 	"github.com/go-playground/validator/v10"
@@ -31,7 +32,7 @@ func api422Error(errs validator.ValidationErrors) *api.ValidationError {
 	validationErrors := lo.Map(errs, func(fe validator.FieldError, _ int) api.FieldValidationError {
 		return api.FieldValidationError{
 			Field:      fe.Namespace(),
-			Message:    fe.Error(),
+			Message:    validationMessage(fe),
 			Validation: fe.ActualTag(),
 			Param:      lo.EmptyableToPtr(fe.Param()),
 		}
@@ -43,4 +44,24 @@ func api422Error(errs validator.ValidationErrors) *api.ValidationError {
 		Status:           http.StatusUnprocessableEntity,
 		ValidationErrors: validationErrors,
 	}
+}
+
+func validationMessage(fe validator.FieldError) string {
+	parts := make([]string, 0, 2)
+
+	switch fe.Tag() {
+	case "currencyIsoCode":
+		parts = append(parts, "currency ISO code")
+	}
+
+	switch fe.ActualTag() {
+	case "required":
+		parts = append(parts, "is required")
+	case "len":
+		parts = append(parts, fmt.Sprintf("must be %s characters long", fe.Param()))
+	default:
+		parts = append(parts, fmt.Sprintf("failed validation %s(%s)", fe.ActualTag(), fe.Param()))
+	}
+
+	return strings.Join(parts, " ")
 }

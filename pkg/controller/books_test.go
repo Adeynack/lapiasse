@@ -120,6 +120,7 @@ func TestCreateBook(t *testing.T) {
 				lenValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "len" })
 				require.True(t, ok, "expected len validation error")
 				require.Equal(t, "Book.DefaultCurrencyIsoCode", lenValidErr.Field)
+				require.Equal(t, "currency ISO code must be 3 characters long", lenValidErr.Message)
 				require.Equal(t, "3", lo.FromPtr(lenValidErr.Param))
 			},
 		},
