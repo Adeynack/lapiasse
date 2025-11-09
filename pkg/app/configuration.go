@@ -142,12 +142,12 @@ func setupDefaultConfigurationEnvironment(ctx context.Context) (string, error) {
 	case env.EnvTest:
 		panic("Use \"CreateTestAppCtx\" for tests, not a real one")
 	default:
-		pwd, err := os.Getwd()
-		if err != nil {
-			return "", fmt.Errorf("obtaining working directory: %w", err)
+		workspace_root := os.Getenv("WORKSPACE_ROOT")
+		if workspace_root == "" {
+			panic("WORKSPACE_ROOT has to be set during development, look at `Makefile` and at `.vscode/settings.json`")
 		}
 
-		appConfigDir = path.Join(pwd, "tmp", runEnv.String(), "configuration")
+		appConfigDir = path.Join(workspace_root, "tmp", runEnv.String(), "configuration")
 	}
 
 	slog.Debug("Ensure app config dir exists", "appConfigDir", appConfigDir)

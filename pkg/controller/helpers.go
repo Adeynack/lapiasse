@@ -14,15 +14,9 @@ func scopePaginate(
 	page *api.Page,
 	pageSize *api.PageSize,
 ) func(tx *gorm.Statement) {
-	limit := lo.FromPtrOr(pageSize, DefaultPageSize)
-	if limit < 1 {
-		limit = DefaultPageSize
-	}
+	limit := max(1, min(lo.FromPtr(pageSize), DefaultPageSize))
 
-	pageNumber := lo.FromPtrOr(page, 1)
-	if pageNumber < 1 {
-		pageNumber = 1
-	}
+	pageNumber := max(lo.FromPtr(page), 1)
 
 	offset := (pageNumber - 1) * limit
 

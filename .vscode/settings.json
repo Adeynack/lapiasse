@@ -2,6 +2,7 @@
   "go.toolsEnvVars": {
     "GOEXPERIMENT": "jsonv2",
     "PWD": "${workspaceFolder}",
+    "WORKSPACE_ROOT": "${workspaceFolder}",
   },
   "go.buildTags": "test"
 }

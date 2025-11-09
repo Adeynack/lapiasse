@@ -2,6 +2,7 @@
 export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2
 
 actual_go_version ?= $(shell go version | awk '{print $$3}' | sed 's/^go//')
+export WORKSPACE_ROOT := $(shell git rev-parse --show-toplevel)
 
 # CODE
 .PHONY: upgrade-deps

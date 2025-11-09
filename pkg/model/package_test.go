@@ -83,9 +83,6 @@ func TestAllGormModelsRegistered(t *testing.T) {
 	if len(extraModels) > 0 {
 		t.Errorf("The following models are registered in Models but don't embed gorm.Model: %v", extraModels)
 	}
-
-	t.Logf("Found %d struct(s) embedding gorm.Model", len(gormModelStructs))
-	t.Logf("Found %d model(s) registered in Models", len(registeredModels))
 }
 
 // embedsGormModel checks if a struct type embeds gorm.Model

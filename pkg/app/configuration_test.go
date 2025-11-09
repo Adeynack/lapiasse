@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 
 	"adeynack.net/lapiasse/pkg/env"
@@ -17,7 +18,7 @@ func TestConfiguration(t *testing.T) {
 		{env: env.EnvTest, expectPanic: true},
 		{env: env.EnvProduction},
 	} {
-		t.Run(tc.env.String(), func(t *testing.T) {
+		t.Run(fmt.Sprintf("in environment %s", tc.env.String()), func(t *testing.T) {
 			ctx := ctxval.RegisterNamed(t.Context(), "run", tc.env)
 
 			if tc.expectPanic {
@@ -31,11 +32,8 @@ func TestConfiguration(t *testing.T) {
 			h, err := InitializeConfiguration(ctx, CliFlags{})
 			require.NoError(t, err)
 
-			t.Run("the Data configuration is properly initialized", func(t *testing.T) {
-				data := h.Configuration.Data
-
-				require.NotEmpty(t, data.BasePath)
-			})
+			data := h.Configuration.Data
+			require.NotEmpty(t, data.BasePath)
 		})
 	}
 }
