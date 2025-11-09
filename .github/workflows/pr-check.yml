@@ -20,3 +20,5 @@ jobs:
         run: make lint
       - name: Test
         run: make test
+        env:
+          TEST_LOG: fail
