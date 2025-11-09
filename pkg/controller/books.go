@@ -32,9 +32,25 @@ func (c *BooksController) GetBooks(ctx context.Context, request api.GetBooksRequ
 
 // (POST /books)
 func (c *BooksController) CreateBook(ctx context.Context, request api.CreateBookRequestObject) (api.CreateBookResponseObject, error) {
-	book := api.Book{}
+	db := ctxval.MustResolve[*gorm.DB](ctx)
 
-	return api.CreateBook201JSONResponse{Book: book}, nil
+	p := request.Body.Book
+
+	book := model.Book{
+		Name:                   p.Name,
+		DefaultCurrencyIsoCode: p.DefaultCurrencyIsoCode,
+	}
+
+	if ok, err := validate(ctx, book); !ok {
+		return api.CreateBook422JSONResponse(err), nil
+	}
+
+	err := gorm.G[model.Book](db).Create(ctx, &book)
+	if err != nil {
+		return nil, fmt.Errorf("creating book in database: %w", err)
+	}
+
+	return api.CreateBook201JSONResponse{Book: toApiBook(book)}, nil
 }
 
 // (GET /books/{bookId})
@@ -43,7 +59,7 @@ func (c *BooksController) GetBook(ctx context.Context, request api.GetBookReques
 
 	book, err := gorm.G[model.Book](db).Where("id = ?", request.BookId).First(ctx)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return api.GetBook404JSONResponse(api404ErrorFromId("Book", "/books", request.BookId)), nil
+		return api.GetBook404JSONResponse(api404ErrorFromId("Book", request.BookId)), nil
 	} else if err != nil {
 		return nil, fmt.Errorf("reading book from database: %w", err)
 	}

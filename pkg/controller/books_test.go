@@ -18,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestBooksController_Table(t *testing.T) {
+func TestGetBooks(t *testing.T) {
 	seedMoreBooksThanMaxPageSize := func(ctx context.Context) {
 		db := ctxval.MustResolve[*gorm.DB](ctx)
 		for _, i := range rand.Perm(controller.DefaultPageSize + 10) {
@@ -93,6 +93,70 @@ func TestBooksController_Table(t *testing.T) {
 				resp200, ok := resp.(api.GetBooks200JSONResponse)
 				require.True(t, ok, "expected GetBooks200JSONResponse, got %T", resp)
 				tc.expecting200(t, resp200)
+			}
+		})
+	}
+}
+
+func TestCreateBook(t *testing.T) {
+	for name, tc := range map[string]struct {
+		seed         func(ctx context.Context)
+		requestBook  api.BookProperties
+		expecting201 func(t *testing.T, resp api.CreateBook201JSONResponse)
+		expecting422 func(t *testing.T, resp api.CreateBook422JSONResponse)
+	}{
+		"simple book creation": {
+			requestBook: api.BookProperties{
+				Name:                   "My Book",
+				DefaultCurrencyIsoCode: "EUR",
+			},
+		},
+		"wrong currency ISO code": {
+			requestBook: api.BookProperties{
+				Name:                   "My Book",
+				DefaultCurrencyIsoCode: "INVALID",
+			},
+			expecting422: func(t *testing.T, resp api.CreateBook422JSONResponse) {
+				require.NotNil(t, resp.Detail)
+				require.Equal(t,
+					"Key: 'Book.DefaultCurrencyIsoCode' Error:Field validation for 'DefaultCurrencyIsoCode' failed on the 'currencyIsoCode' tag",
+					*resp.Detail)
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx := app.CreateTestAppCtx(t)
+
+			if tc.seed != nil {
+				tc.seed(ctx)
+			}
+
+			ctrl := &controller.BooksController{}
+			request := api.CreateBookRequestObject{
+				Body: &api.CreateBookJSONRequestBody{
+					Book: tc.requestBook,
+				},
+			}
+			resp, err := ctrl.CreateBook(ctx, request)
+
+			require.NoError(t, err)
+
+			if tc.expecting201 != nil {
+				resp201, ok := resp.(api.CreateBook201JSONResponse)
+				require.True(t, ok, "expected CreateBook201JSONResponse, got %T", resp)
+				tc.expecting201(t, resp201)
+
+				// Check if book was really created in DB
+				db := ctxval.MustResolve[*gorm.DB](ctx)
+				book, err := gorm.G[model.Book](db).Where("id = ?", resp201.Book.Id).First(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tc.requestBook.Name, book.Name)
+			}
+
+			if tc.expecting422 != nil {
+				resp422, ok := resp.(api.CreateBook422JSONResponse)
+				require.True(t, ok, "expected CreateBook422JSONResponse, got %T", resp)
+				tc.expecting422(t, resp422)
 			}
 		})
 	}
