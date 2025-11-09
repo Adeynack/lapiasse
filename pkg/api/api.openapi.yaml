@@ -132,7 +132,7 @@ components:
         type: integer
         minimum: 1
         maximum: 50 # if this changes, change "controller.DefaultPageSize" as well.
-        default: 20
+        default: 1000 # if this changes, change "controller.MaxPageSize" as well.
       description: The maximum number of items to return per page.
   schemas:
     Error:

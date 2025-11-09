@@ -7,18 +7,22 @@ import (
 )
 
 const (
-	DefaultPageSize = 50 // if this changes, change the maximum in api.openapi.yaml as well for parameter "page_size".
+	DefaultPageSize = 50    // if this changes, change the maximum in api.openapi.yaml as well for parameter "page_size".
+	MaxPageSize     = 1_000 // if this changes, change the maximum in api.openapi.yaml as well for parameter "page_size".
 )
 
 func scopePaginate(
 	page *api.Page,
 	pageSize *api.PageSize,
 ) func(tx *gorm.Statement) {
-	limit := max(1, min(lo.FromPtr(pageSize), DefaultPageSize))
+	limit := lo.FromPtrOr(pageSize, DefaultPageSize) // get or default
+	limit = max(1, limit)                            // at least 1
+	limit = min(limit, DefaultPageSize)              // at most DefaultPageSize
 
-	pageNumber := max(lo.FromPtr(page), 1)
+	pageNumber := lo.FromPtr(page)  // get or default to 0
+	pageNumber = max(pageNumber, 1) // at least 1
 
-	offset := (pageNumber - 1) * limit
+	offset := (pageNumber - 1) * limit // database offset
 
 	return func(db *gorm.Statement) {
 		db.Offset(offset).Limit(limit)
