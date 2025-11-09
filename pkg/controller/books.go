@@ -27,7 +27,7 @@ func (c *BooksController) GetBooks(ctx context.Context, request api.GetBooksRequ
 		return nil, fmt.Errorf("reading books from database: %w", err)
 	}
 
-	return api.GetBooks200JSONResponse{Books: loex.MapE(books, toApiBook)}, errors.New("just for testing failure") // todo: remote error
+	return api.GetBooks200JSONResponse{Books: loex.MapE(books, toApiBook)}, nil
 }
 
 // (POST /books)
