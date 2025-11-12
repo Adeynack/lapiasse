@@ -18,6 +18,7 @@ import (
 
 // Defines values for ErrorType.
 const (
+	ErrorTypeErrorBadRequest    ErrorType = "error:bad_request"
 	ErrorTypeErrorInternalError ErrorType = "error:internal_error"
 	ErrorTypeErrorNotFound      ErrorType = "error:not_found"
 	ErrorTypeErrorValidation    ErrorType = "error:validation"

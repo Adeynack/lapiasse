@@ -2,14 +2,57 @@ package web
 
 import (
 	"context"
+	"encoding/json/v2"
 	"net/http"
+	"runtime/debug"
 
+	"adeynack.net/lapiasse/pkg/api"
 	"adeynack.net/lapiasse/pkg/applog"
 	"adeynack.net/lapiasse/pkg/env"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/samber/lo"
 )
+
+var internalServerJsonError = api.Error{
+	Status: http.StatusInternalServerError,
+	Title:  "Internal Server Error",
+	Type:   api.ErrorTypeErrorInternalError,
+}
+
+var generic500ErrorJson = lo.Must(json.Marshal(internalServerJsonError))
+
+func respondWithJsonError(w http.ResponseWriter, r *http.Request, jsonError api.Error) {
+	w.Header().Set("Content-Type", "application/json")
+
+	json, err := json.Marshal(jsonError)
+	if err != nil {
+		applog.Error(r.Context(), "Failed to marshal error response", "error", err)
+		http.Error(w, string(generic500ErrorJson), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(jsonError.Status)
+	if _, err := w.Write(json); err != nil {
+		applog.Error(r.Context(), "Failed to write error response", "error", err)
+	}
+}
+
+func requestErrorHandlerFunc(w http.ResponseWriter, r *http.Request, err error) {
+	applog.Debug(r.Context(), "Failed to handle request", "error", err)
+	respondWithJsonError(w, r, api.Error{
+		Detail: lo.ToPtr(err.Error()),
+		Status: http.StatusBadRequest,
+		Title:  "Bad Request",
+		Type:   api.ErrorTypeErrorBadRequest,
+	})
+}
+
+func responseErrorHandlerFunc(w http.ResponseWriter, r *http.Request, err error) {
+	applog.Error(r.Context(), "Failed to handle response", "error", err)
+	respondWithJsonError(w, r, internalServerJsonError)
+}
 
 // injectApplicationContext creates a middleware that injects the application context
 // into the request context as a fallback for resolving values. The request's context
@@ -62,4 +105,33 @@ func handleCors(ctx context.Context) func(http.Handler) http.Handler {
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	})
+}
+
+func recoverFromPanicAsJsonErr() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Inspired by [middleware.Recoverer]
+			defer func() {
+				if rvr := recover(); rvr != nil {
+					if rvr == http.ErrAbortHandler {
+						// we don't recover http.ErrAbortHandler so the response
+						// to the client is aborted, this should not be logged
+						panic(rvr)
+					}
+
+					applog.Error(r.Context(), "Panic recovered in HTTP request", "error", rvr)
+
+					if logEntry := middleware.GetLogEntry(r); logEntry != nil {
+						logEntry.Panic(rvr, debug.Stack())
+					}
+
+					if r.Header.Get("Connection") != "Upgrade" {
+						respondWithJsonError(w, r, internalServerJsonError)
+					}
+				}
+			}()
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

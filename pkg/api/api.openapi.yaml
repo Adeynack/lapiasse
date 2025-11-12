@@ -208,9 +208,10 @@ components:
       format: uri-reference
       description: A URI reference that identifies the problem type.
       enum:
-        - "error:validation"
-        - "error:not_found"
-        - "error:internal_error"
+        - "error:bad_request" # 400
+        - "error:not_found" # 404
+        - "error:validation" # 422
+        - "error:internal_error" # 500
     ID:
       type: string
 

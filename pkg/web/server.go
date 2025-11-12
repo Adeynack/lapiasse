@@ -55,12 +55,15 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 		middleware.RequestID,                // assign a request ID to the request
 		requestIDStructuredLog,              // ensure the request ID is part of every log entry
 		logRequest(),                        // log requests
-		middleware.Recoverer,                // recover from panics
+		recoverFromPanicAsJsonErr(),         // recover from panics
 		handleCors(ctx),                     // handle CORS
 		middleware.Timeout(timeoutDuration), // set a timeout for requests
 	)
 
-	strictHandler := api.NewStrictHandler(controller, middlewares)
+	strictHandler := api.NewStrictHandlerWithOptions(controller, middlewares, api.StrictHTTPServerOptions{
+		RequestErrorHandlerFunc:  requestErrorHandlerFunc,
+		ResponseErrorHandlerFunc: responseErrorHandlerFunc,
+	})
 	handler := api.HandlerFromMux(strictHandler, router)
 
 	return handler, nil
