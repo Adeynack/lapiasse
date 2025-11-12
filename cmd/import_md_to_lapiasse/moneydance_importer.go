@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"adeynack.net/lapiasse/pkg/api"
+	"adeynack.net/lapiasse/pkg/applog"
 )
 
 type moneydanceImporter struct {
@@ -24,6 +25,8 @@ type moneydanceImporter struct {
 
 func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	ctx = applog.WithLogger(ctx, logger)
+
 	logger.Info(
 		"Importing MoneyDance Export JSON to La Piasse",
 		slog.String("api-endpoint", mdi.ApiEndpoint),
@@ -33,6 +36,7 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 	)
 
 	for _, step := range []func(context.Context) (context.Context, error){
+		mdi.loadMoneydanceExport,
 		mdi.createApiClient,
 		mdi.createNewBook,
 	} {
@@ -43,6 +47,17 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (mdi *moneydanceImporter) loadMoneydanceExport(ctx context.Context) (context.Context, error) {
+	loader := &moneydanceExportLoader{
+		FilePath: mdi.MoneydanceExportPath,
+	}
+	if err := loader.Load(ctx); err != nil {
+		return ctx, fmt.Errorf("loading Moneydance export: %w", err)
+	}
+
+	return ctx, nil
 }
 
 func (mdi *moneydanceImporter) createApiClient(ctx context.Context) (context.Context, error) {
@@ -71,7 +86,7 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) (context.Conte
 		return ctx, fmt.Errorf("creating new book via API: %v", response.JSON422)
 	}
 	if response.JSON201 == nil {
-		return ctx, fmt.Errorf("creating new book via API failed: %s", response.Status())
+		return ctx, fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
 	slog.Info("Created new book", slog.Group("book",

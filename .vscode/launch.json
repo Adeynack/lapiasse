@@ -37,7 +37,10 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/import_md_to_lapiasse",
             "cwd": "${workspaceFolder}",
-            "args": [],
+            "args": [
+                "--md-source",
+                "${workspaceFolder}/tmp/md.json"
+            ],
             "env": {
                 "GOEXPERIMENT": "jsonv2"
             }

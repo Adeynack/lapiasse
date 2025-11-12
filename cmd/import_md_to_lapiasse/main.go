@@ -21,7 +21,7 @@ func main() {
 
 	rootCmd.Flags().StringVar(&mdImporter.ApiEndpoint, "api", "http://localhost:8080", "Lapiasse API endpoint")
 	rootCmd.Flags().StringVar(&mdImporter.MoneydanceExportPath, "md-source", "", "Path to Moneydance export file (JSON)")
-	rootCmd.Flags().StringVar(&mdImporter.BookName, "book-name", "Moneydance", "Name of the book to create in La Piasse")
+	rootCmd.Flags().StringVar(&mdImporter.BookName, "book-name", "", "Name of the book to create in La Piasse. If empty, the name will be determined from the Moneydance export JSON (metadata->file_name).")
 	rootCmd.Flags().BoolVar(&mdImporter.AddSuffixToBookName, "add-suffix", true, `Whether to add a suffix to the book name to ensure uniqueness (e.g.: "(imported on 2025-11-12 at 17:53:20)")`)
 	rootCmd.Flags().StringVar(&mdImporter.BookCurrencyIsoCode, "cur", "EUR", "ISO code of the imported book's currency")
 
