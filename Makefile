@@ -41,8 +41,8 @@ build: gen
 build-debug:
 	go build -gcflags="all=-N -l" -o tmp/bin/lapiasse ./cmd/lapiasse
 
-.PHONY: run-watch
-run-watch:
+.PHONY: dev
+dev:
 	go tool air -c air_run_watch.toml
 
 .PHONY: gen

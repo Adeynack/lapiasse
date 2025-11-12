@@ -9,4 +9,10 @@ send_interrupt = true
 kill_delay = 5000000
 include_ext = ["go", "yaml", "toml"]
 exclude_regex = [".*\\.gen\\.go"]
-exclude_dir = ["vendor", "node_modules", "out", "tmp"]
+exclude_dir = [
+  "vendor",
+  "node_modules",
+  "out",
+  "tmp",
+  "cmd/import_md_to_lapiasse",
+]

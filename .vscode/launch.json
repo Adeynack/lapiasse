@@ -29,6 +29,18 @@
             "env": {
                 "GOEXPERIMENT": "jsonv2"
             }
+        },
+        {
+            "name": "Moneydance Importer",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/import_md_to_lapiasse",
+            "cwd": "${workspaceFolder}",
+            "args": [],
+            "env": {
+                "GOEXPERIMENT": "jsonv2"
+            }
         }
     ]
 }
