@@ -5,6 +5,8 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"os"
+
+	"adeynack.net/lapiasse/cmd/import_md_to_lapiasse/moneydance"
 )
 
 type moneydanceExportLoader struct {
@@ -18,7 +20,7 @@ func (loader *moneydanceExportLoader) Load(ctx context.Context) error {
 	}
 	defer file.Close()
 
-	var mdExport MdExport
+	var mdExport moneydance.Export
 	if err := json.UnmarshalRead(file, &mdExport); err != nil {
 		return fmt.Errorf("decoding Moneydance export file: %w", err)
 	}
