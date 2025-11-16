@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/samber/lo"
 )
 
 type AllItems struct {
@@ -50,11 +48,11 @@ func (ai *AllItems) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 
 		switch typedItem.ObjType {
 		case "curr":
-			err = ai.unmarshallCurrency(rawValue)
+			err = ai.unmarshalCurrency(rawValue)
 		case "acct":
-			err = ai.unmarshallAccount(rawValue)
+			err = ai.unmarshalAccount(rawValue)
 		default:
-			ai.IgnoredTypes[typedItem.ObjType] = lo.ValueOr(ai.IgnoredTypes, typedItem.ObjType, 0) + 1
+			ai.IgnoredTypes[typedItem.ObjType] = ai.IgnoredTypes[typedItem.ObjType] + 1
 		}
 		if err != nil {
 			return fmt.Errorf("decoding MdAllItems item of type %q: %w", typedItem.ObjType, err)
@@ -69,7 +67,7 @@ func (ai *AllItems) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	return nil
 }
 
-func (ai *AllItems) unmarshallAccount(rawValue jsontext.Value) error {
+func (ai *AllItems) unmarshalCurrency(rawValue jsontext.Value) error {
 	var currency Currency
 	if err := json.Unmarshal(rawValue, &currency); err != nil {
 		return fmt.Errorf("decoding Currency: %w", err)
@@ -80,10 +78,13 @@ func (ai *AllItems) unmarshallAccount(rawValue jsontext.Value) error {
 	return nil
 }
 
-func (ai *AllItems) unmarshallCurrency(rawValue jsontext.Value) error {
+func (ai *AllItems) unmarshalAccount(rawValue jsontext.Value) error {
 	var account Account
 	if err := json.Unmarshal(rawValue, &account); err != nil {
 		return fmt.Errorf("decoding Account: %w", err)
+	}
+	if account.Id == "" {
+		return fmt.Errorf("account has empty ID: %+v", account)
 	}
 
 	ai.accountById[account.Id] = &account
