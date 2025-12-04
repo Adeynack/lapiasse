@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/packages"
-	"gorm.io/gorm"
 )
 
-// TestAllGormModelsRegistered scans the model package for all structs that
-// embed gorm.Model and ensures they are all included in the Models variable.
-func TestAllGormModelsRegistered(t *testing.T) {
+// TestAllModelBaseRegistered scans the model package for all structs that
+// embed model.Base and ensures they are all included in the Models variable.
+func TestAllModelBaseRegistered(t *testing.T) {
 	// Credit for this code goes to Claude Sonnet 4.5.
 
 	// Step 1: Load the current package using go/packages
@@ -31,7 +30,7 @@ func TestAllGormModelsRegistered(t *testing.T) {
 
 	pkg := pkgs[0]
 
-	// Step 2: Collect all struct names that embed gorm.Model
+	// Step 2: Collect all struct names that embed model.Base
 	gormModelStructs := make(map[string]bool)
 	for _, file := range pkg.Syntax {
 		ast.Inspect(file, func(n ast.Node) bool {
@@ -47,7 +46,7 @@ func TestAllGormModelsRegistered(t *testing.T) {
 	}
 
 	if len(gormModelStructs) == 0 {
-		t.Log("No structs embedding gorm.Model found - this test may need adjustment")
+		t.Log("No structs embedding model.Base found - this test may need adjustment")
 	}
 
 	// Step 3: Check which structs are registered in Models
@@ -69,10 +68,10 @@ func TestAllGormModelsRegistered(t *testing.T) {
 	}
 
 	if len(missingModels) > 0 {
-		t.Errorf("The following structs embed gorm.Model but are not registered in Models: %v", missingModels)
+		t.Errorf("The following structs embed model.Base but are not registered in Models: %v", missingModels)
 	}
 
-	// Step 5: Verify that all registered models actually embed gorm.Model
+	// Step 5: Verify that all registered models actually embed model.Base
 	var extraModels []string
 	for modelName := range registeredModels {
 		if !gormModelStructs[modelName] {
@@ -81,33 +80,39 @@ func TestAllGormModelsRegistered(t *testing.T) {
 	}
 
 	if len(extraModels) > 0 {
-		t.Errorf("The following models are registered in Models but don't embed gorm.Model: %v", extraModels)
+		t.Errorf("The following models are registered in Models but don't embed model.Base: %v", extraModels)
 	}
 }
 
-// embedsGormModel checks if a struct type embeds gorm.Model
+// embedsGormModel checks if a struct type embeds model.Base
 func embedsGormModel(structType *ast.StructType) bool {
 	for _, field := range structType.Fields.List {
 		// Embedded fields have no names
 		if len(field.Names) == 0 {
-			// Check if the embedded type is a selector expression (e.g., gorm.Model)
-			if selectorExpr, ok := field.Type.(*ast.SelectorExpr); ok {
-				// Check if it's gorm.Model
-				if ident, ok := selectorExpr.X.(*ast.Ident); ok {
-					if ident.Name == "gorm" && selectorExpr.Sel.Name == "Model" {
-						return true
-					}
+			// Check if the embedded type is a selector identExpression (e.g., model.Base)
+			if identExpression, ok := field.Type.(*ast.Ident); ok {
+				// Check if it's just Base (assuming model is imported without alias)
+				if identExpression.Name == "Base" {
+					return true
 				}
 			}
+			// if selectorExpr, ok := field.Type.(*ast.SelectorExpr); ok {
+			// 	// Check if it's model.Base
+			// 	if ident, ok := selectorExpr.X.(*ast.Ident); ok {
+			// 		if ident.Name == "model" && selectorExpr.Sel.Name == "Base" {
+			// 			return true
+			// 		}
+			// 	}
+			// }
 		}
 	}
 	return false
 }
 
 // TestModelsContainValidGormModels verifies that all items in Models
-// actually embed gorm.Model at runtime using reflection
+// actually embed model.Base at runtime using reflection
 func TestModelsContainValidGormModels(t *testing.T) {
-	gormModelType := reflect.TypeOf(gorm.Model{})
+	gormModelType := reflect.TypeOf(Base{})
 
 	for i, model := range Models {
 		modelType := reflect.TypeOf(model)
@@ -120,7 +125,7 @@ func TestModelsContainValidGormModels(t *testing.T) {
 			continue
 		}
 
-		// Check if the struct has an embedded gorm.Model field
+		// Check if the struct has an embedded model.Base field
 		hasGormModel := false
 		for j := 0; j < modelType.NumField(); j++ {
 			field := modelType.Field(j)
@@ -131,7 +136,7 @@ func TestModelsContainValidGormModels(t *testing.T) {
 		}
 
 		if !hasGormModel {
-			t.Errorf("Models[%d] (%s) does not embed gorm.Model", i, modelType.Name())
+			t.Errorf("Models[%d] (%s) does not embed model.Base", i, modelType.Name())
 		}
 	}
 }
