@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"encoding/json/v2"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 	"time"
 
+	"adeynack.net/lapiasse/cmd/import_md_to_lapiasse/moneydance"
 	"adeynack.net/lapiasse/pkg/api"
 	"adeynack.net/lapiasse/pkg/applog"
 )
@@ -21,13 +23,15 @@ type moneydanceImporter struct {
 
 	apiClient *api.ClientWithResponses
 	book      api.Book
+	md        *moneydance.Export
 }
 
 func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	ctx = applog.WithLogger(ctx, logger)
 
-	logger.Info(
+	applog.Info(
+		ctx,
 		"Importing MoneyDance Export JSON to La Piasse",
 		slog.String("api-endpoint", mdi.ApiEndpoint),
 		slog.String("md-source", mdi.MoneydanceExportPath),
@@ -39,6 +43,7 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 		mdi.loadMoneydanceExport,
 		mdi.createApiClient,
 		mdi.createNewBook,
+		mdi.createRegisters,
 	} {
 		var err error
 		if ctx, err = step(ctx); err != nil {
@@ -50,12 +55,18 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 }
 
 func (mdi *moneydanceImporter) loadMoneydanceExport(ctx context.Context) (context.Context, error) {
-	loader := &moneydanceExportLoader{
-		FilePath: mdi.MoneydanceExportPath,
+	file, err := os.Open(mdi.MoneydanceExportPath)
+	if err != nil {
+		return ctx, fmt.Errorf("opening Moneydance export file: %w", err)
 	}
-	if err := loader.Load(ctx); err != nil {
-		return ctx, fmt.Errorf("loading Moneydance export: %w", err)
+	defer file.Close()
+
+	var mdExport moneydance.Export
+	if err := json.UnmarshalRead(file, &mdExport); err != nil {
+		return ctx, fmt.Errorf("decoding Moneydance export file: %w", err)
 	}
+
+	mdi.md = &mdExport
 
 	return ctx, nil
 }
@@ -89,7 +100,7 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) (context.Conte
 		return ctx, fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
-	slog.Info("Created new book", slog.Group("book",
+	applog.Info(ctx, "Created new book", slog.Group("book",
 		"id", response.JSON201.Book.Id,
 		"name", bookName,
 	))
@@ -104,4 +115,18 @@ func (mdi *moneydanceImporter) determineBookName() string {
 	}
 
 	return mdi.BookName
+}
+
+func (mdi *moneydanceImporter) createRegisters(ctx context.Context) (context.Context, error) {
+	r := registerImport{
+		apiClient: mdi.apiClient,
+		book:      mdi.book,
+		md:        mdi.md,
+	}
+
+	if err := r.run(ctx); err != nil {
+		return ctx, fmt.Errorf("importing registers: %w", err)
+	}
+
+	return ctx, nil
 }

@@ -11,10 +11,10 @@ type Account struct {
 	CurrencyId           string      `json:"currid"`
 	IsInactive           Boolean     `json:"is_inactive"`
 	CreationDate         UnixDate    `json:"creation_date"`
-	InitialBalance       BigInt      `json:"sbal"`
+	InitialBalance       int64       `json:"sbal,string"`
 	DefaultCategoryOldId string      `json:"default_category"`
-	ExpiryYear           BigInt      `json:"exp_year"`
-	ExpiryMonth          BigInt      `json:"exp_month"`
+	ExpiryYear           int         `json:"exp_year,string"`
+	ExpiryMonth          int         `json:"exp_month,string"`
 }
 
 type AccountType string

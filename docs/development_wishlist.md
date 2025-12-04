@@ -12,3 +12,7 @@ A parking for ideas and TODOs for the development.
   - [ ] Perform changes towards _statically typed context_
   - [ ] Benchmark again and observe the gains!
 - [ ] Have oapi-codegen generate `OkResponse` instead of `200Response` (e.g.)
+
+## Upon Go 1.26 release
+
+- [ ] Replace `error.As` by `error.AsType[T]` ([link](https://antonz.org/accepted/errors-astype/))

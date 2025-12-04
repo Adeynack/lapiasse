@@ -35,6 +35,19 @@ const (
 	ExchangeStatusUncleared   ExchangeStatus = "uncleared"
 )
 
+// Defines values for RegisterType.
+const (
+	RegisterTypeAsset       RegisterType = "asset"
+	RegisterTypeBank        RegisterType = "bank"
+	RegisterTypeCard        RegisterType = "card"
+	RegisterTypeExpense     RegisterType = "expense"
+	RegisterTypeIncome      RegisterType = "income"
+	RegisterTypeInstitution RegisterType = "institution"
+	RegisterTypeInvestment  RegisterType = "investment"
+	RegisterTypeLiability   RegisterType = "liability"
+	RegisterTypeLoan        RegisterType = "loan"
+)
+
 // Defines values for ServerHealthStatus.
 const (
 	ServerHealthStatusHealthy   ServerHealthStatus = "healthy"
@@ -140,6 +153,26 @@ type FieldValidationError struct {
 // ID defines model for ID.
 type ID = string
 
+// Register defines model for Register.
+type Register struct {
+	AccountType     RegisterType `json:"account_type"`
+	CreatedAt       time.Time    `json:"created_at"`
+	CurrencyIsoCode string       `json:"currency_iso_code"`
+	Id              ID           `json:"id"`
+	Name            string       `json:"name"`
+	UpdatedAt       time.Time    `json:"updated_at"`
+}
+
+// RegisterProperties defines model for RegisterProperties.
+type RegisterProperties struct {
+	AccountType     RegisterType `json:"account_type"`
+	CurrencyIsoCode string       `json:"currency_iso_code"`
+	Name            string       `json:"name"`
+}
+
+// RegisterType defines model for RegisterType.
+type RegisterType string
+
 // ServerHealthStatus defines model for ServerHealthStatus.
 type ServerHealthStatus string
 
@@ -184,6 +217,9 @@ type ValidationError struct {
 	ValidationErrors []FieldValidationError `json:"validation_errors"`
 }
 
+// BookId defines model for bookId.
+type BookId = string
+
 // Page defines model for page.
 type Page = int
 
@@ -202,6 +238,15 @@ type GetBooksParams struct {
 // CreateBookJSONBody defines parameters for CreateBook.
 type CreateBookJSONBody struct {
 	Book BookProperties `json:"book"`
+}
+
+// GetBookRegistersParams defines parameters for GetBookRegisters.
+type GetBookRegistersParams struct {
+	// Page The page number to retrieve (1-indexed).
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize The maximum number of items to return per page.
+	PageSize *PageSize `form:"page-size,omitempty" json:"page-size,omitempty"`
 }
 
 // CreateBookJSONRequestBody defines body for CreateBook for application/json ContentType.
@@ -289,7 +334,10 @@ type ClientInterface interface {
 	CreateBook(ctx context.Context, body CreateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetBook request
-	GetBook(ctx context.Context, bookId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetBook(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetBookRegisters request
+	GetBookRegisters(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetExchanges request
 	GetExchanges(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -334,8 +382,20 @@ func (c *Client) CreateBook(ctx context.Context, body CreateBookJSONRequestBody,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetBook(ctx context.Context, bookId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetBook(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetBookRequest(c.Server, bookId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetBookRegisters(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBookRegistersRequest(c.Server, bookId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +536,7 @@ func NewCreateBookRequestWithBody(server string, contentType string, body io.Rea
 }
 
 // NewGetBookRequest generates requests for GetBook
-func NewGetBookRequest(server string, bookId string) (*http.Request, error) {
+func NewGetBookRequest(server string, bookId BookId) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -499,6 +559,78 @@ func NewGetBookRequest(server string, bookId string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetBookRegistersRequest generates requests for GetBookRegisters
+func NewGetBookRegistersRequest(server string, bookId BookId, params *GetBookRegistersParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bookId", runtime.ParamLocationPath, bookId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/books/%s/registers", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page-size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -615,7 +747,10 @@ type ClientWithResponsesInterface interface {
 	CreateBookWithResponse(ctx context.Context, body CreateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBookResponse, error)
 
 	// GetBookWithResponse request
-	GetBookWithResponse(ctx context.Context, bookId string, reqEditors ...RequestEditorFn) (*GetBookResponse, error)
+	GetBookWithResponse(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*GetBookResponse, error)
+
+	// GetBookRegistersWithResponse request
+	GetBookRegistersWithResponse(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*GetBookRegistersResponse, error)
 
 	// GetExchangesWithResponse request
 	GetExchangesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetExchangesResponse, error)
@@ -698,6 +833,30 @@ func (r GetBookResponse) StatusCode() int {
 	return 0
 }
 
+type GetBookRegistersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Registers []Register `json:"registers"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBookRegistersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBookRegistersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetExchangesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -774,12 +933,21 @@ func (c *ClientWithResponses) CreateBookWithResponse(ctx context.Context, body C
 }
 
 // GetBookWithResponse request returning *GetBookResponse
-func (c *ClientWithResponses) GetBookWithResponse(ctx context.Context, bookId string, reqEditors ...RequestEditorFn) (*GetBookResponse, error) {
+func (c *ClientWithResponses) GetBookWithResponse(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*GetBookResponse, error) {
 	rsp, err := c.GetBook(ctx, bookId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseGetBookResponse(rsp)
+}
+
+// GetBookRegistersWithResponse request returning *GetBookRegistersResponse
+func (c *ClientWithResponses) GetBookRegistersWithResponse(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*GetBookRegistersResponse, error) {
+	rsp, err := c.GetBookRegisters(ctx, bookId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBookRegistersResponse(rsp)
 }
 
 // GetExchangesWithResponse request returning *GetExchangesResponse
@@ -898,6 +1066,34 @@ func ParseGetBookResponse(rsp *http.Response) (*GetBookResponse, error) {
 	return response, nil
 }
 
+// ParseGetBookRegistersResponse parses an HTTP response from a GetBookRegistersWithResponse call
+func ParseGetBookRegistersResponse(rsp *http.Response) (*GetBookRegistersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBookRegistersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Registers []Register `json:"registers"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetExchangesResponse parses an HTTP response from a GetExchangesWithResponse call
 func ParseGetExchangesResponse(rsp *http.Response) (*GetExchangesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -965,7 +1161,10 @@ type ServerInterface interface {
 	CreateBook(w http.ResponseWriter, r *http.Request)
 
 	// (GET /books/{bookId})
-	GetBook(w http.ResponseWriter, r *http.Request, bookId string)
+	GetBook(w http.ResponseWriter, r *http.Request, bookId BookId)
+
+	// (GET /books/{bookId}/registers)
+	GetBookRegisters(w http.ResponseWriter, r *http.Request, bookId BookId, params GetBookRegistersParams)
 
 	// (GET /exchanges)
 	GetExchanges(w http.ResponseWriter, r *http.Request)
@@ -989,7 +1188,12 @@ func (_ Unimplemented) CreateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 // (GET /books/{bookId})
-func (_ Unimplemented) GetBook(w http.ResponseWriter, r *http.Request, bookId string) {
+func (_ Unimplemented) GetBook(w http.ResponseWriter, r *http.Request, bookId BookId) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /books/{bookId}/registers)
+func (_ Unimplemented) GetBookRegisters(w http.ResponseWriter, r *http.Request, bookId BookId, params GetBookRegistersParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1067,7 +1271,7 @@ func (siw *ServerInterfaceWrapper) GetBook(w http.ResponseWriter, r *http.Reques
 	var err error
 
 	// ------------- Path parameter "bookId" -------------
-	var bookId string
+	var bookId BookId
 
 	err = runtime.BindStyledParameterWithOptions("simple", "bookId", chi.URLParam(r, "bookId"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -1077,6 +1281,50 @@ func (siw *ServerInterfaceWrapper) GetBook(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetBook(w, r, bookId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetBookRegisters operation middleware
+func (siw *ServerInterfaceWrapper) GetBookRegisters(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "bookId" -------------
+	var bookId BookId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "bookId", chi.URLParam(r, "bookId"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetBookRegistersParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", r.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "page-size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page-size", r.URL.Query(), &params.PageSize)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page-size", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBookRegisters(w, r, bookId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1237,6 +1485,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/books/{bookId}", wrapper.GetBook)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/books/{bookId}/registers", wrapper.GetBookRegisters)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/exchanges", wrapper.GetExchanges)
 	})
 	r.Group(func(r chi.Router) {
@@ -1294,7 +1545,7 @@ func (response CreateBook422JSONResponse) VisitCreateBookResponse(w http.Respons
 }
 
 type GetBookRequestObject struct {
-	BookId string `json:"bookId"`
+	BookId BookId `json:"bookId"`
 }
 
 type GetBookResponseObject interface {
@@ -1317,6 +1568,26 @@ type GetBook404JSONResponse Error
 func (response GetBook404JSONResponse) VisitGetBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetBookRegistersRequestObject struct {
+	BookId BookId `json:"bookId"`
+	Params GetBookRegistersParams
+}
+
+type GetBookRegistersResponseObject interface {
+	VisitGetBookRegistersResponse(w http.ResponseWriter) error
+}
+
+type GetBookRegisters200JSONResponse struct {
+	Registers []Register `json:"registers"`
+}
+
+func (response GetBookRegisters200JSONResponse) VisitGetBookRegistersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -1369,6 +1640,9 @@ type StrictServerInterface interface {
 
 	// (GET /books/{bookId})
 	GetBook(ctx context.Context, request GetBookRequestObject) (GetBookResponseObject, error)
+
+	// (GET /books/{bookId}/registers)
+	GetBookRegisters(ctx context.Context, request GetBookRegistersRequestObject) (GetBookRegistersResponseObject, error)
 
 	// (GET /exchanges)
 	GetExchanges(ctx context.Context, request GetExchangesRequestObject) (GetExchangesResponseObject, error)
@@ -1464,7 +1738,7 @@ func (sh *strictHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetBook operation middleware
-func (sh *strictHandler) GetBook(w http.ResponseWriter, r *http.Request, bookId string) {
+func (sh *strictHandler) GetBook(w http.ResponseWriter, r *http.Request, bookId BookId) {
 	var request GetBookRequestObject
 
 	request.BookId = bookId
@@ -1482,6 +1756,33 @@ func (sh *strictHandler) GetBook(w http.ResponseWriter, r *http.Request, bookId 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetBookResponseObject); ok {
 		if err := validResponse.VisitGetBookResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetBookRegisters operation middleware
+func (sh *strictHandler) GetBookRegisters(w http.ResponseWriter, r *http.Request, bookId BookId, params GetBookRegistersParams) {
+	var request GetBookRegistersRequestObject
+
+	request.BookId = bookId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetBookRegisters(ctx, request.(GetBookRegistersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetBookRegisters")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetBookRegistersResponseObject); ok {
+		if err := validResponse.VisitGetBookRegistersResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

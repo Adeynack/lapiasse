@@ -19,7 +19,7 @@ x-responses: # Reusable response components. Using `$ref: "#/components/response
         schema:
           $ref: "#/components/schemas/ValidationError"
 paths:
-  /books:
+  "/books":
     get:
       operationId: GetBooks
       parameters:
@@ -64,18 +64,10 @@ paths:
                   book:
                     $ref: "#/components/schemas/Book"
         "422":
-          description: Unprocessable Entity
-          content:
-            "application/json":
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+          <<: *ResponseUnprocessableEntity
   "/books/{bookId}":
     parameters:
-      - name: bookId
-        in: path
-        required: true
-        schema:
-          type: string
+      - $ref: "#/components/parameters/bookId"
     get:
       operationId: GetBook
       responses:
@@ -92,7 +84,29 @@ paths:
                     $ref: "#/components/schemas/Book"
         "404":
           <<: *ResponseNotFound
-  /exchanges:
+  "/books/{bookId}/registers":
+    parameters:
+      - $ref: "#/components/parameters/bookId"
+    get:
+      operationId: GetBookRegisters
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/page_size"
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                type: object
+                required:
+                  - registers
+                properties:
+                  registers:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Register"
+  "/exchanges":
     get:
       responses:
         "200":
@@ -108,7 +122,7 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/ExchangeWithSplits"
-  /health:
+  "/health":
     get:
       responses:
         "200":
@@ -143,6 +157,12 @@ components:
         maximum: 50 # if this changes, change "controller.DefaultPageSize" as well.
         default: 1000 # if this changes, change "controller.MaxPageSize" as well.
       description: The maximum number of items to return per page.
+    bookId:
+      name: bookId
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     Error:
       type: object
@@ -167,7 +187,6 @@ components:
         detail:
           type: string
           description: A human-readable explanation specific to this occurrence of the problem.
-
     ValidationError:
       type: object
       allOf:
@@ -181,7 +200,6 @@ components:
               description: A list of fields that failed validation.
               items:
                 $ref: "#/components/schemas/FieldValidationError"
-
     FieldValidationError:
       type: object
       required:
@@ -202,7 +220,6 @@ components:
         param:
           type: string
           description: Additional configuration related to the validation.
-
     ErrorType:
       type: string
       format: uri-reference
@@ -214,7 +231,6 @@ components:
         - "error:internal_error" # 500
     ID:
       type: string
-
     ExistingResource:
       type: object
       required:
@@ -230,13 +246,11 @@ components:
         updated_at:
           type: string
           format: date-time
-
     Book:
       type: object
       allOf:
         - $ref: "#/components/schemas/ExistingResource"
         - $ref: "#/components/schemas/BookProperties"
-
     BookProperties:
       type: object
       required:
@@ -247,20 +261,17 @@ components:
           type: string
         default_currency_iso_code:
           type: string
-
     ServerHealthStatus:
       type: string
       enum:
         - healthy
         - unhealthy
-
     ExchangeStatus:
       type: string
       enum:
         - uncleared
         - reconciling
         - cleared
-
     ExchangeWithSplits:
       type: object
       allOf:
@@ -273,7 +284,6 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/Split"
-
     ExchangeProperties:
       type: object
       required:
@@ -295,18 +305,15 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/ExchangeStatus"
-
     Exchange:
       allOf:
         - $ref: "#/components/schemas/ExistingResource"
         - $ref: "#/components/schemas/ExchangeProperties"
-
     Split:
       type: object
       allOf:
         - $ref: "#/components/schemas/ExistingResource"
         - $ref: "#/components/schemas/SplitProperties"
-
     SplitProperties:
       type: object
       required:
@@ -329,7 +336,6 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/ExchangeStatus"
-
     UserProperties:
       type: object
       required:
@@ -337,8 +343,36 @@ components:
       properties:
         display_name:
           type: string
-
     User:
       allOf:
         - $ref: "#/components/schemas/ExistingResource"
         - $ref: "#/components/schemas/UserProperties"
+    RegisterProperties:
+      type: object
+      required:
+        - name
+        - account_type
+        - currency_iso_code
+      properties:
+        name:
+          type: string
+        account_type:
+          $ref: "#/components/schemas/RegisterType"
+        currency_iso_code:
+          type: string
+    Register:
+      allOf:
+        - $ref: "#/components/schemas/ExistingResource"
+        - $ref: "#/components/schemas/RegisterProperties"
+    RegisterType:
+      type: string
+      enum:
+        - expense
+        - income
+        - asset
+        - bank
+        - card
+        - institution
+        - investment
+        - liability
+        - loan

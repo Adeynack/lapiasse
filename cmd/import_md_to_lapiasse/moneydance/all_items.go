@@ -11,16 +11,14 @@ import (
 type AllItems struct {
 	IgnoredTypes map[string]uint // Count of ignored items by type
 
-	currencyById      map[string]*Currency  // Currencies by ID
-	accountById       map[string]*Account   // Accounts by ID
-	accountByParentId map[string][]*Account // Accounts by parent ID
+	CurrencyById map[string]*Currency // Currencies by ID
+	Accounts     []*Account           // Accounts by ID
 }
 
 func (ai *AllItems) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	ai.IgnoredTypes = make(map[string]uint)
-	ai.currencyById = make(map[string]*Currency)
-	ai.accountById = make(map[string]*Account)
-	ai.accountByParentId = make(map[string][]*Account)
+	ai.CurrencyById = make(map[string]*Currency)
+	ai.Accounts = make([]*Account, 0)
 
 	// Read the start of the array
 	token, err := dec.ReadToken()
@@ -73,7 +71,7 @@ func (ai *AllItems) unmarshalCurrency(rawValue jsontext.Value) error {
 		return fmt.Errorf("decoding Currency: %w", err)
 	}
 
-	ai.currencyById[currency.Id] = &currency
+	ai.CurrencyById[currency.Id] = &currency
 
 	return nil
 }
@@ -87,8 +85,7 @@ func (ai *AllItems) unmarshalAccount(rawValue jsontext.Value) error {
 		return fmt.Errorf("account has empty ID: %+v", account)
 	}
 
-	ai.accountById[account.Id] = &account
-	ai.accountByParentId[account.ParentId] = append(ai.accountByParentId[account.ParentId], &account)
+	ai.Accounts = append(ai.Accounts, &account)
 
 	return nil
 }

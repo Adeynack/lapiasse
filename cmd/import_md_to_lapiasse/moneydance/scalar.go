@@ -3,7 +3,6 @@ package moneydance
 import (
 	"encoding/json/v2"
 	"fmt"
-	"math/big"
 	"strconv"
 	"time"
 )
@@ -94,24 +93,6 @@ func (s *TransactionStatus) UnmarshalJSON(data []byte) error {
 	}
 
 	*s = TransactionStatus(strStatus)
-
-	return nil
-}
-
-type BigInt big.Int
-
-func (bi *BigInt) UnmarshalJSON(data []byte) error {
-	var strValue string
-	if err := json.Unmarshal(data, &strValue); err != nil {
-		return err
-	}
-
-	var bigIntValue big.Int
-	if _, ok := bigIntValue.SetString(strValue, 10); !ok {
-		return fmt.Errorf("parsing BigInt value: %q", strValue)
-	}
-
-	*bi = BigInt(bigIntValue)
 
 	return nil
 }

@@ -12,6 +12,7 @@
 /bin
 __debug_bin*
 
+# Programming languages
 /vendor
 /out
 /node_modules
