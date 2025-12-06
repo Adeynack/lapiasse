@@ -7,32 +7,29 @@ import (
 
 	"adeynack.net/lapiasse/pkg/appvalidator"
 	"adeynack.net/lapiasse/pkg/model"
-	"github.com/go-playground/validator/v10"
-	"github.com/stretchr/testify/require"
+	"adeynack.net/lapiasse/pkg/platform/validatorex"
 )
 
-func TestRegisterCreate(t *testing.T) {
-	// ctx := app.CreateTestAppCtx(t)
-	// db := ctxval.MustResolve[*gorm.DB](ctx)
-
-	register := &model.Register{
-		Name: "", // Name is required
+func TestValidateCreate(t *testing.T) {
+	for name, tc := range map[string]struct {
+		register                 model.Register
+		expectedValidationErrors map[string][]string
+	}{
+		"zero value": {
+			register: model.Register{},
+			expectedValidationErrors: map[string][]string{
+				"Name":              {"required"},
+				"CurrencyIsoCode":   {"required"},
+				"BookID":            {"required"},
+				"StartsAt":          {"required"},
+				"DefaultCategoryID": {"required"},
+				"Type":              {"required"},
+				"InitialBalance":    {"required"},
+			},
+		}} {
+		t.Run(name, func(t *testing.T) {
+			err := appvalidator.Default().Struct(tc.register)
+			validatorex.RequireValidationErrorTags(t, err, tc.expectedValidationErrors)
+		})
 	}
-
-	err := appvalidator.Default().Struct(register)
-	requireValidationError(t, err, "Name", "required")
-	requireValidationError(t, err, "Name", "foo")
-}
-
-func requireValidationError(t *testing.T, err error, field string, tag string) {
-	var validationErr validator.ValidationErrors
-	require.ErrorAs(t, err, &validationErr)
-
-	for _, fe := range validationErr {
-		if fe.Field() == field && fe.Tag() == tag {
-			return
-		}
-	}
-
-	require.Failf(t, "Expected validation error not found", "field: %s, tag: %s\nerrors:\n%s", field, tag, validationErr)
 }

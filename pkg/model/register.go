@@ -18,7 +18,7 @@ type Register struct {
 	CurrencyIsoCode    string           `gorm:"type:char(3);not null" json:"currency_iso_code" validate:"required,len=3,uppercase"`
 	Notes              string           `gorm:"type:text(2000);default:null" json:"notes,omitzero" validate:"omitempty,max=2000"`
 	InitialBalance     int64            `gorm:"type:bigint;not null;default:0" json:"initial_balance" validate:"required"`
-	Active             bool             `gorm:"type:boolean;not null;default:true" json:"active" validate:"required"`
+	Active             bool             `gorm:"type:boolean;not null;default:true" json:"active"`
 	DefaultCategoryID  ID               `gorm:"index" json:"default_category_id,omitempty" validate:"required"`                             // The category automatically selected when entering a new exchange from this register.
 	InstitutionName    string           `gorm:"type:text(200);default:null" json:"institution_name,omitempty" validate:"omitempty,max=200"` // Name of the institution (eg: bank) managing the registry (eg: credit card).
 	AccountNumber      string           `gorm:"type:text(100);default:null" json:"account_number,omitempty" validate:"omitempty,max=100"`   // Number by which the register is referred to (eg: bank account number).
