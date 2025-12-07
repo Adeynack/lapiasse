@@ -18,12 +18,18 @@ upgrade-deps:
 	@echo "... in GitHub Actions"
 	sed -i '' "s/go-version: \".*\"/go-version: \"1.25.4\"/" .github/workflows/pr-check.yml
 
-.PHONY: lint
-lint:
+.PHONY: vet
+vet:
 	go vet ./...
+
+.PHONY: golangci-lint
+golangci-lint:
 # golangci-lint run with a separate mod file to avoid dependency issues
 # See https://golangci-lint.run/docs/welcome/install/#install-from-sources
 	go tool -modfile=golangci-lint.mod golangci-lint run
+
+.PHONY: lint
+lint: vet golangci-lint
 
 .PHONY: clean
 clean:

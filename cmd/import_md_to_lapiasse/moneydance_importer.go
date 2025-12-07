@@ -12,6 +12,7 @@ import (
 	"adeynack.net/lapiasse/cmd/import_md_to_lapiasse/moneydance"
 	"adeynack.net/lapiasse/pkg/api"
 	"adeynack.net/lapiasse/pkg/applog"
+	"adeynack.net/lapiasse/pkg/platform/errorex"
 )
 
 type moneydanceImporter struct {
@@ -39,14 +40,14 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 		slog.Bool("add-suffix", mdi.AddSuffixToBookName),
 	)
 
-	for _, step := range []func(context.Context) (context.Context, error){
+	for _, step := range []func(context.Context) error{
 		mdi.loadMoneydanceExport,
 		mdi.createApiClient,
 		mdi.createNewBook,
 		mdi.createRegisters,
 	} {
 		var err error
-		if ctx, err = step(ctx); err != nil {
+		if err = step(ctx); err != nil {
 			return err
 		}
 	}
@@ -54,34 +55,34 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (mdi *moneydanceImporter) loadMoneydanceExport(ctx context.Context) (context.Context, error) {
+func (mdi *moneydanceImporter) loadMoneydanceExport(ctx context.Context) (err error) {
 	file, err := os.Open(mdi.MoneydanceExportPath)
 	if err != nil {
-		return ctx, fmt.Errorf("opening Moneydance export file: %w", err)
+		return fmt.Errorf("opening Moneydance export file: %w", err)
 	}
-	defer file.Close()
+	defer errorex.CallJoinErr(&err, file.Close)
 
 	var mdExport moneydance.Export
 	if err := json.UnmarshalRead(file, &mdExport); err != nil {
-		return ctx, fmt.Errorf("decoding Moneydance export file: %w", err)
+		return fmt.Errorf("decoding Moneydance export file: %w", err)
 	}
 
 	mdi.md = &mdExport
 
-	return ctx, nil
+	return nil
 }
 
-func (mdi *moneydanceImporter) createApiClient(ctx context.Context) (context.Context, error) {
+func (mdi *moneydanceImporter) createApiClient(ctx context.Context) error {
 	apiClient, err := api.NewClientWithResponses(mdi.ApiEndpoint)
 	if err != nil {
-		return ctx, fmt.Errorf("creating the API client: %w", err)
+		return fmt.Errorf("creating the API client: %w", err)
 	}
 	mdi.apiClient = apiClient
 
-	return ctx, nil
+	return nil
 }
 
-func (mdi *moneydanceImporter) createNewBook(ctx context.Context) (context.Context, error) {
+func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 	bookName := mdi.determineBookName()
 
 	response, err := mdi.apiClient.CreateBookWithResponse(ctx, api.CreateBookJSONRequestBody{
@@ -91,13 +92,13 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) (context.Conte
 		},
 	})
 	if err != nil {
-		return ctx, fmt.Errorf("creating new book via API: %w", err)
+		return fmt.Errorf("creating new book via API: %w", err)
 	}
 	if response.JSON422 != nil {
-		return ctx, fmt.Errorf("creating new book via API: %v", response.JSON422)
+		return fmt.Errorf("creating new book via API: %v", response.JSON422)
 	}
 	if response.JSON201 == nil {
-		return ctx, fmt.Errorf("creating new book via API: %s", response.Status())
+		return fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
 	applog.Info(ctx, "Created new book", slog.Group("book",
@@ -106,7 +107,7 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) (context.Conte
 	))
 	mdi.book = response.JSON201.Book
 
-	return ctx, nil
+	return nil
 }
 
 func (mdi *moneydanceImporter) determineBookName() string {
@@ -117,7 +118,7 @@ func (mdi *moneydanceImporter) determineBookName() string {
 	return mdi.BookName
 }
 
-func (mdi *moneydanceImporter) createRegisters(ctx context.Context) (context.Context, error) {
+func (mdi *moneydanceImporter) createRegisters(ctx context.Context) error {
 	r := registerImport{
 		apiClient: mdi.apiClient,
 		book:      mdi.book,
@@ -125,8 +126,8 @@ func (mdi *moneydanceImporter) createRegisters(ctx context.Context) (context.Con
 	}
 
 	if err := r.run(ctx); err != nil {
-		return ctx, fmt.Errorf("importing registers: %w", err)
+		return fmt.Errorf("importing registers: %w", err)
 	}
 
-	return ctx, nil
+	return nil
 }
