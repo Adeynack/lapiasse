@@ -2,6 +2,16 @@
 
 A parking for ideas and TODOs for the development.
 
+## Roadmap
+
+| Feature    | Model | API | MD Import | TUI |
+| ---------- | ----- | --- | --------- | --- |
+| Books      | ✅    | 🛠️  | 🛠️        | 🛑  |
+| Categories | 🛑    | 🛑  | 🛑        | 🛑  |
+| Accounts   | 🛑    | 🛑  | 🛑        | 🛑  |
+| Exchanges  | 🛑    | 🛑  | 🛑        | 🛑  |
+| Reminders  | 🛑    | 🛑  | 🛑        | 🛑  |
+
 ## TODOs for product
 
 ## Ideas / Wishlist
