@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json/jsontext"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -19,12 +21,41 @@ func (i ID) String() string {
 	return strconv.FormatUint(uint64(i), 10)
 }
 
+// Implements [json.MarshalerTo.MarshalJSONTo].
+func (i ID) MarshalJSONTo(e *jsontext.Encoder) error {
+	return e.WriteToken(jsontext.String(i.String()))
+}
+
+// Implements [json.ValueUnmarshaler.UnmarshalJSON].
+func (i *ID) UnmarshalJSONFrom(d *jsontext.Decoder) error {
+	val, err := d.ReadValue()
+	if err != nil {
+		return fmt.Errorf("reading ID value from JSON decoder: %w", err)
+	}
+
+	if val.Kind() != '"' {
+		return fmt.Errorf("invalid kind for ID, expected string but got: %v", val.Kind())
+	}
+
+	strVal := val.String()
+	strVal = strVal[1 : len(strVal)-1] // Remove surrounding quotes
+
+	parsedID, err := strconv.ParseUint(strVal, 10, 64)
+	if err != nil {
+		return fmt.Errorf("parsing ID value from string: %w", err)
+	}
+
+	*i = ID(parsedID)
+
+	return err
+}
+
 // Base model including common fields.
 type Base struct {
-	ID        ID `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID        ID             `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitzero"`
 }
 
 func init() {
