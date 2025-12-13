@@ -8,10 +8,11 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/lapiasse",
             "cwd": "${workspaceFolder}",
-            "args": [],
+            "args": [
+                "tui",
+            ],
             "env": {
                 "GOEXPERIMENT": "jsonv2",
-                "LAPIASSE_CMD": "serve"
             }
         },
         {
