@@ -71,7 +71,7 @@ func (ri *registerImport) importRegisterBatch(ctx context.Context, mdAccounts []
 func (ri *registerImport) importRegisterRecursively(
 	ctx context.Context,
 	mdAccount *moneydance.Account,
-	parentRegister any, // todo: api.Register
+	parentRegister *api.Register,
 ) error {
 	_ = ctx
 	_ = mdAccount

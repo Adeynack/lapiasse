@@ -249,8 +249,16 @@ type GetBookRegistersParams struct {
 	PageSize *PageSize `form:"page-size,omitempty" json:"page-size,omitempty"`
 }
 
+// CreateBookRegisterJSONBody defines parameters for CreateBookRegister.
+type CreateBookRegisterJSONBody struct {
+	Register RegisterProperties `json:"register"`
+}
+
 // CreateBookJSONRequestBody defines body for CreateBook for application/json ContentType.
 type CreateBookJSONRequestBody CreateBookJSONBody
+
+// CreateBookRegisterJSONRequestBody defines body for CreateBookRegister for application/json ContentType.
+type CreateBookRegisterJSONRequestBody CreateBookRegisterJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -339,6 +347,11 @@ type ClientInterface interface {
 	// GetBookRegisters request
 	GetBookRegisters(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateBookRegisterWithBody request with any body
+	CreateBookRegisterWithBody(ctx context.Context, bookId BookId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateBookRegister(ctx context.Context, bookId BookId, body CreateBookRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetExchanges request
 	GetExchanges(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -396,6 +409,30 @@ func (c *Client) GetBook(ctx context.Context, bookId BookId, reqEditors ...Reque
 
 func (c *Client) GetBookRegisters(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetBookRegistersRequest(c.Server, bookId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateBookRegisterWithBody(ctx context.Context, bookId BookId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateBookRegisterRequestWithBody(c.Server, bookId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateBookRegister(ctx context.Context, bookId BookId, body CreateBookRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateBookRegisterRequest(c.Server, bookId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -641,6 +678,53 @@ func NewGetBookRegistersRequest(server string, bookId BookId, params *GetBookReg
 	return req, nil
 }
 
+// NewCreateBookRegisterRequest calls the generic CreateBookRegister builder with application/json body
+func NewCreateBookRegisterRequest(server string, bookId BookId, body CreateBookRegisterJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateBookRegisterRequestWithBody(server, bookId, "application/json", bodyReader)
+}
+
+// NewCreateBookRegisterRequestWithBody generates requests for CreateBookRegister with any type of body
+func NewCreateBookRegisterRequestWithBody(server string, bookId BookId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bookId", runtime.ParamLocationPath, bookId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/books/%s/registers", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetExchangesRequest generates requests for GetExchanges
 func NewGetExchangesRequest(server string) (*http.Request, error) {
 	var err error
@@ -752,6 +836,11 @@ type ClientWithResponsesInterface interface {
 	// GetBookRegistersWithResponse request
 	GetBookRegistersWithResponse(ctx context.Context, bookId BookId, params *GetBookRegistersParams, reqEditors ...RequestEditorFn) (*GetBookRegistersResponse, error)
 
+	// CreateBookRegisterWithBodyWithResponse request with any body
+	CreateBookRegisterWithBodyWithResponse(ctx context.Context, bookId BookId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateBookRegisterResponse, error)
+
+	CreateBookRegisterWithResponse(ctx context.Context, bookId BookId, body CreateBookRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBookRegisterResponse, error)
+
 	// GetExchangesWithResponse request
 	GetExchangesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetExchangesResponse, error)
 
@@ -857,6 +946,31 @@ func (r GetBookRegistersResponse) StatusCode() int {
 	return 0
 }
 
+type CreateBookRegisterResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *struct {
+		Register Register `json:"register"`
+	}
+	JSON422 *ValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateBookRegisterResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateBookRegisterResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetExchangesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -948,6 +1062,23 @@ func (c *ClientWithResponses) GetBookRegistersWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseGetBookRegistersResponse(rsp)
+}
+
+// CreateBookRegisterWithBodyWithResponse request with arbitrary body returning *CreateBookRegisterResponse
+func (c *ClientWithResponses) CreateBookRegisterWithBodyWithResponse(ctx context.Context, bookId BookId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateBookRegisterResponse, error) {
+	rsp, err := c.CreateBookRegisterWithBody(ctx, bookId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateBookRegisterResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateBookRegisterWithResponse(ctx context.Context, bookId BookId, body CreateBookRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBookRegisterResponse, error) {
+	rsp, err := c.CreateBookRegister(ctx, bookId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateBookRegisterResponse(rsp)
 }
 
 // GetExchangesWithResponse request returning *GetExchangesResponse
@@ -1094,6 +1225,41 @@ func ParseGetBookRegistersResponse(rsp *http.Response) (*GetBookRegistersRespons
 	return response, nil
 }
 
+// ParseCreateBookRegisterResponse parses an HTTP response from a CreateBookRegisterWithResponse call
+func ParseCreateBookRegisterResponse(rsp *http.Response) (*CreateBookRegisterResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateBookRegisterResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest struct {
+			Register Register `json:"register"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetExchangesResponse parses an HTTP response from a GetExchangesWithResponse call
 func ParseGetExchangesResponse(rsp *http.Response) (*GetExchangesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1166,6 +1332,9 @@ type ServerInterface interface {
 	// (GET /books/{bookId}/registers)
 	GetBookRegisters(w http.ResponseWriter, r *http.Request, bookId BookId, params GetBookRegistersParams)
 
+	// (POST /books/{bookId}/registers)
+	CreateBookRegister(w http.ResponseWriter, r *http.Request, bookId BookId)
+
 	// (GET /exchanges)
 	GetExchanges(w http.ResponseWriter, r *http.Request)
 
@@ -1194,6 +1363,11 @@ func (_ Unimplemented) GetBook(w http.ResponseWriter, r *http.Request, bookId Bo
 
 // (GET /books/{bookId}/registers)
 func (_ Unimplemented) GetBookRegisters(w http.ResponseWriter, r *http.Request, bookId BookId, params GetBookRegistersParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /books/{bookId}/registers)
+func (_ Unimplemented) CreateBookRegister(w http.ResponseWriter, r *http.Request, bookId BookId) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1325,6 +1499,31 @@ func (siw *ServerInterfaceWrapper) GetBookRegisters(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetBookRegisters(w, r, bookId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateBookRegister operation middleware
+func (siw *ServerInterfaceWrapper) CreateBookRegister(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "bookId" -------------
+	var bookId BookId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "bookId", chi.URLParam(r, "bookId"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateBookRegister(w, r, bookId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1488,6 +1687,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/books/{bookId}/registers", wrapper.GetBookRegisters)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/books/{bookId}/registers", wrapper.CreateBookRegister)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/exchanges", wrapper.GetExchanges)
 	})
 	r.Group(func(r chi.Router) {
@@ -1592,6 +1794,35 @@ func (response GetBookRegisters200JSONResponse) VisitGetBookRegistersResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CreateBookRegisterRequestObject struct {
+	BookId BookId `json:"bookId"`
+	Body   *CreateBookRegisterJSONRequestBody
+}
+
+type CreateBookRegisterResponseObject interface {
+	VisitCreateBookRegisterResponse(w http.ResponseWriter) error
+}
+
+type CreateBookRegister201JSONResponse struct {
+	Register Register `json:"register"`
+}
+
+func (response CreateBookRegister201JSONResponse) VisitCreateBookRegisterResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateBookRegister422JSONResponse ValidationError
+
+func (response CreateBookRegister422JSONResponse) VisitCreateBookRegisterResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetExchangesRequestObject struct {
 }
 
@@ -1643,6 +1874,9 @@ type StrictServerInterface interface {
 
 	// (GET /books/{bookId}/registers)
 	GetBookRegisters(ctx context.Context, request GetBookRegistersRequestObject) (GetBookRegistersResponseObject, error)
+
+	// (POST /books/{bookId}/registers)
+	CreateBookRegister(ctx context.Context, request CreateBookRegisterRequestObject) (CreateBookRegisterResponseObject, error)
 
 	// (GET /exchanges)
 	GetExchanges(ctx context.Context, request GetExchangesRequestObject) (GetExchangesResponseObject, error)
@@ -1783,6 +2017,39 @@ func (sh *strictHandler) GetBookRegisters(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetBookRegistersResponseObject); ok {
 		if err := validResponse.VisitGetBookRegistersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateBookRegister operation middleware
+func (sh *strictHandler) CreateBookRegister(w http.ResponseWriter, r *http.Request, bookId BookId) {
+	var request CreateBookRegisterRequestObject
+
+	request.BookId = bookId
+
+	var body CreateBookRegisterJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateBookRegister(ctx, request.(CreateBookRegisterRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateBookRegister")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateBookRegisterResponseObject); ok {
+		if err := validResponse.VisitCreateBookRegisterResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

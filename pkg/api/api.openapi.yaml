@@ -106,6 +106,32 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Register"
+    post:
+      operationId: CreateBookRegister
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              type: object
+              required:
+                - register
+              properties:
+                register:
+                  $ref: "#/components/schemas/RegisterProperties"
+      responses:
+        "201":
+          description: Created
+          content:
+            "application/json":
+              schema:
+                type: object
+                required:
+                  - register
+                properties:
+                  register:
+                    $ref: "#/components/schemas/Register"
+        "422":
+          <<: *ResponseUnprocessableEntity
   "/exchanges":
     get:
       responses:

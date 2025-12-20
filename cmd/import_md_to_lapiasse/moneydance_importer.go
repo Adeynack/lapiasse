@@ -91,13 +91,12 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 			Name:                   bookName,
 		},
 	})
-	if err != nil {
+	switch {
+	case err != nil:
 		return fmt.Errorf("creating new book via API: %w", err)
-	}
-	if response.JSON422 != nil {
+	case response.JSON422 != nil:
 		return fmt.Errorf("creating new book via API: %v", response.JSON422)
-	}
-	if response.JSON201 == nil {
+	case response.JSON201 == nil:
 		return fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 

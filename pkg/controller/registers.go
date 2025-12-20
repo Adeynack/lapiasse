@@ -40,3 +40,8 @@ func toApiRegister(r model.Register) api.Register {
 		UpdatedAt:       r.UpdatedAt,
 	}
 }
+
+// (GET /books/{bookId}/registers)
+func (c *RegistersController) CreateBookRegister(ctx context.Context, request api.CreateBookRegisterRequestObject) (api.CreateBookRegisterResponseObject, error) {
+	return nil, fmt.Errorf("not implemented")
+}
