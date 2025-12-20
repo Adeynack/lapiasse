@@ -52,8 +52,13 @@ dev:
 	go tool air -c air_run_watch.toml
 
 .PHONY: gen
-gen:
+gen: gen-widget-api
 	go generate ./...
+
+.PHONY: gen-widget-api
+gen-widget-api:
+	npm exec -- tsp compile --config ./pkg/api/tspconfig.yaml --output-dir ./pkg/api ./pkg/api/widget.tsp
+	go tool oapi-codegen --config=pkg/api/widget.oapi-codegen.yaml pkg/api/widget.oas.yaml
 
 # TESTS
 .PHONY: test
