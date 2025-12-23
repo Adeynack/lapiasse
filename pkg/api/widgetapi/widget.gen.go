@@ -36,12 +36,6 @@ type AnalyzeResult struct {
 	Id       string `json:"id"`
 }
 
-// Error defines model for Error.
-type Error struct {
-	Code    int32  `json:"code"`
-	Message string `json:"message"`
-}
-
 // Widget defines model for Widget.
 type Widget struct {
 	Color  WidgetColor `json:"color"`
@@ -551,7 +545,6 @@ type WidgetsListResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *WidgetList
-	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -574,7 +567,6 @@ type WidgetsCreateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Widget
-	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -596,7 +588,6 @@ func (r WidgetsCreateResponse) StatusCode() int {
 type WidgetsDeleteResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -619,7 +610,6 @@ type WidgetsReadResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Widget
-	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -642,7 +632,6 @@ type WidgetsUpdateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Widget
-	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -665,7 +654,6 @@ type WidgetsAnalyzeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *AnalyzeResult
-	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -775,13 +763,6 @@ func ParseWidgetsListResponse(rsp *http.Response) (*WidgetsListResponse, error) 
 		}
 		response.JSON200 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
 	}
 
 	return response, nil
@@ -808,13 +789,6 @@ func ParseWidgetsCreateResponse(rsp *http.Response) (*WidgetsCreateResponse, err
 		}
 		response.JSON200 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
 	}
 
 	return response, nil
@@ -831,16 +805,6 @@ func ParseWidgetsDeleteResponse(rsp *http.Response) (*WidgetsDeleteResponse, err
 	response := &WidgetsDeleteResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
 	}
 
 	return response, nil
@@ -866,13 +830,6 @@ func ParseWidgetsReadResponse(rsp *http.Response) (*WidgetsReadResponse, error) 
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
 
 	}
 
@@ -900,13 +857,6 @@ func ParseWidgetsUpdateResponse(rsp *http.Response) (*WidgetsUpdateResponse, err
 		}
 		response.JSON200 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
 	}
 
 	return response, nil
@@ -932,13 +882,6 @@ func ParseWidgetsAnalyzeResponse(rsp *http.Response) (*WidgetsAnalyzeResponse, e
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
 
 	}
 
@@ -1289,18 +1232,6 @@ func (response WidgetsList200JSONResponse) VisitWidgetsListResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type WidgetsListdefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response WidgetsListdefaultJSONResponse) VisitWidgetsListResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
-}
-
 type WidgetsCreateRequestObject struct {
 	Body *WidgetsCreateJSONRequestBody
 }
@@ -1316,18 +1247,6 @@ func (response WidgetsCreate200JSONResponse) VisitWidgetsCreateResponse(w http.R
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
-}
-
-type WidgetsCreatedefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response WidgetsCreatedefaultJSONResponse) VisitWidgetsCreateResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type WidgetsDeleteRequestObject struct {
@@ -1346,18 +1265,6 @@ func (response WidgetsDelete204Response) VisitWidgetsDeleteResponse(w http.Respo
 	return nil
 }
 
-type WidgetsDeletedefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response WidgetsDeletedefaultJSONResponse) VisitWidgetsDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
-}
-
 type WidgetsReadRequestObject struct {
 	Id string `json:"id"`
 }
@@ -1373,18 +1280,6 @@ func (response WidgetsRead200JSONResponse) VisitWidgetsReadResponse(w http.Respo
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
-}
-
-type WidgetsReaddefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response WidgetsReaddefaultJSONResponse) VisitWidgetsReadResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type WidgetsUpdateRequestObject struct {
@@ -1405,18 +1300,6 @@ func (response WidgetsUpdate200JSONResponse) VisitWidgetsUpdateResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
-type WidgetsUpdatedefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response WidgetsUpdatedefaultJSONResponse) VisitWidgetsUpdateResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
-}
-
 type WidgetsAnalyzeRequestObject struct {
 	Id string `json:"id"`
 }
@@ -1432,18 +1315,6 @@ func (response WidgetsAnalyze200JSONResponse) VisitWidgetsAnalyzeResponse(w http
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
-}
-
-type WidgetsAnalyzedefaultJSONResponse struct {
-	Body       Error
-	StatusCode int
-}
-
-func (response WidgetsAnalyzedefaultJSONResponse) VisitWidgetsAnalyzeResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.StatusCode)
-
-	return json.NewEncoder(w).Encode(response.Body)
 }
 
 // StrictServerInterface represents all server handlers.

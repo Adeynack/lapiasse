@@ -57,7 +57,7 @@ gen: gen-widget-api
 
 .PHONY: gen-widget-api
 gen-widget-api:
-	npm exec -- tsp compile --config ./pkg/api/tspconfig.yaml --output-dir ./pkg/api ./pkg/api/widget.tsp
+	npm exec -- tsp compile --config ./pkg/api/widget.tsp.yaml --output-dir ./pkg/api ./pkg/api/widget.tsp
 	go tool oapi-codegen --config=pkg/api/widget.oapi-codegen.yaml pkg/api/widget.oas.yaml
 
 # TESTS

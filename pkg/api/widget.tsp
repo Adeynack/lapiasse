@@ -14,12 +14,6 @@ model WidgetList {
   items: Widget[];
 }
 
-@error
-model Error {
-  code: int32;
-  message: string;
-}
-
 model AnalyzeResult {
   id: string;
   analysis: string;
@@ -29,19 +23,16 @@ model AnalyzeResult {
 @tag("Widgets")
 interface Widgets {
   /** List widgets */
-  @get list(): WidgetList | Error;
+  @get list(): WidgetList;
   /** Read widgets */
-  @get read(@path id: string): Widget | Error;
+  @get read(@path id: string): Widget;
   /** Create a widget */
-  @post create(@body body: Widget): Widget | Error;
+  @post create(@body body: Widget): Widget;
   /** Update a widget */
-  @patch update(
-    @path id: string,
-    @body body: MergePatchUpdate<Widget>,
-  ): Widget | Error;
+  @patch update(@path id: string, @body body: MergePatchUpdate<Widget>): Widget;
   /** Delete a widget */
-  @delete delete(@path id: string): void | Error;
+  @delete delete(@path id: string): void;
 
   /** Analyze a widget */
-  @route("{id}/analyze") @post analyze(@path id: string): AnalyzeResult | Error;
+  @route("{id}/analyze") @post analyze(@path id: string): AnalyzeResult;
 }

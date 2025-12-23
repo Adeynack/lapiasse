@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
 package: widgetapi
-output: pkg/api/widgetapi/widgetapi.gen.go
+output: pkg/api/widgetapi/widget.gen.go
 generate:
   models: true
   chi-server: true
