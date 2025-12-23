@@ -60,6 +60,11 @@ gen-widget-api:
 	npm exec -- tsp compile --config ./pkg/api/widget.tsp.yaml --output-dir ./pkg/api ./pkg/api/widget.tsp
 	go tool oapi-codegen --config=pkg/api/widget.oapi-codegen.yaml pkg/api/widget.oas.yaml
 
+.PHONY: gen-lapiasse-api
+gen-lapiasse-api:
+	npm exec -- tsp compile --config ./pkg/api/lapiasse.tsp.yaml --output-dir ./pkg/api ./pkg/api/lapiasse.tsp
+	go tool oapi-codegen --config=pkg/api/lapiasse.oapi-codegen.yaml pkg/api/lapiasse.oas.yaml
+
 # TESTS
 .PHONY: test
 test:

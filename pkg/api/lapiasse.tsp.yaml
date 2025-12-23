@@ -3,6 +3,6 @@ emit:
 options:
   "@typespec/openapi3":
     emitter-output-dir: "{output-dir}"
-    output-file: "widget.oas.yaml"
+    output-file: "lapiasse.oas.yaml"
     openapi-versions:
       - 3.0.0
