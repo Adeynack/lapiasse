@@ -15,29 +15,114 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
+)
+
+// Defines values for NotFoundErrorType.
+const (
+	NotFoundErrorTypeErrorNotFound NotFoundErrorType = "error:not_found"
+)
+
+// Defines values for ServerHealthStatus.
+const (
+	ServerHealthStatusHealthy   ServerHealthStatus = "healthy"
+	ServerHealthStatusUnhealthy ServerHealthStatus = "unhealthy"
+)
+
+// Defines values for ValidationErrorType.
+const (
+	ValidationErrorTypeErrorValidation ValidationErrorType = "error:validation"
 )
 
 // Book defines model for Book.
 type Book struct {
-	CreatedAt              time.Time `json:"created_at"`
-	DefaultCurrencyIsoCode string    `json:"default_currency_iso_code"`
-	Id                     string    `json:"id"`
-	Name                   string    `json:"name"`
-	UpdatedAt              time.Time `json:"updated_at"`
+	CreatedAt              *time.Time `json:"created_at,omitempty"`
+	DefaultCurrencyIsoCode string     `json:"default_currency_iso_code"`
+	Id                     *string    `json:"id,omitempty"`
+	Name                   string     `json:"name"`
+	UpdatedAt              *time.Time `json:"updated_at,omitempty"`
 }
 
-// PaginatedRequest defines model for PaginatedRequest.
-type PaginatedRequest struct {
-	Page     int32 `json:"page"`
-	PageSize int32 `json:"page_size"`
+// FieldValidationError defines model for FieldValidationError.
+type FieldValidationError struct {
+	// Field The name of the invalid field.
+	Field string `json:"field"`
+
+	// Message A message describing why the field is invalid.
+	Message string `json:"message"`
+
+	// Param Additional configuration related to the validation.
+	Param *string `json:"param,omitempty"`
+
+	// Validation The validation that failed.
+	Validation string `json:"validation"`
 }
 
-// BooksListJSONRequestBody defines body for BooksList for application/json ContentType.
-type BooksListJSONRequestBody = PaginatedRequest
+// Health defines model for Health.
+type Health struct {
+	Reason *string            `json:"reason,omitempty"`
+	Status ServerHealthStatus `json:"status"`
+}
+
+// ID defines model for ID.
+type ID = string
+
+// NotFoundError A machine-readable format for specifying errors in HTTP API responses
+// based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
+type NotFoundError struct {
+	// Detail A human-readable explanation specific to this occurrence of the problem.
+	Detail *string `json:"detail,omitempty"`
+
+	// Title A short, human-readable summary of the problem type.
+	Title string `json:"title"`
+
+	// Type A URI reference that identifies the problem type.
+	Type NotFoundErrorType `json:"type"`
+}
+
+// NotFoundErrorType A URI reference that identifies the problem type.
+type NotFoundErrorType string
+
+// ServerHealthStatus defines model for ServerHealthStatus.
+type ServerHealthStatus string
+
+// ValidationError A machine-readable format for specifying errors in HTTP API responses
+// based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
+type ValidationError struct {
+	// Detail A human-readable explanation specific to this occurrence of the problem.
+	Detail *string `json:"detail,omitempty"`
+
+	// Title A short, human-readable summary of the problem type.
+	Title string `json:"title"`
+
+	// Type A URI reference that identifies the problem type.
+	Type ValidationErrorType `json:"type"`
+}
+
+// ValidationErrorType A URI reference that identifies the problem type.
+type ValidationErrorType string
+
+// PaginatedPage defines model for Paginated.page.
+type PaginatedPage = int
+
+// PaginatedPageSize defines model for Paginated.page-size.
+type PaginatedPageSize = int
+
+// BooksIndexParams defines parameters for BooksIndex.
+type BooksIndexParams struct {
+	// Page The page number to retrieve (1-indexed).
+	Page *PaginatedPage `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize The maximum number of items to return per page.
+	PageSize *PaginatedPageSize `form:"page-size,omitempty" json:"page-size,omitempty"`
+}
 
 // BooksCreateJSONRequestBody defines body for BooksCreate for application/json ContentType.
 type BooksCreateJSONRequestBody = Book
+
+// BooksUpdateJSONRequestBody defines body for BooksUpdate for application/json ContentType.
+type BooksUpdateJSONRequestBody = Book
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -112,31 +197,31 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// BooksListWithBody request with any body
-	BooksListWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	BooksList(ctx context.Context, body BooksListJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// BooksIndex request
+	BooksIndex(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// BooksCreateWithBody request with any body
 	BooksCreateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	BooksCreate(ctx context.Context, body BooksCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// BooksDelete request
+	BooksDelete(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// BooksShow request
+	BooksShow(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// BooksUpdateWithBody request with any body
+	BooksUpdateWithBody(ctx context.Context, id ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	BooksUpdate(ctx context.Context, id ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// Health request
+	Health(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) BooksListWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksListRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) BooksList(ctx context.Context, body BooksListJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksListRequest(c.Server, body)
+func (c *Client) BooksIndex(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBooksIndexRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -171,19 +256,68 @@ func (c *Client) BooksCreate(ctx context.Context, body BooksCreateJSONRequestBod
 	return c.Client.Do(req)
 }
 
-// NewBooksListRequest calls the generic BooksList builder with application/json body
-func NewBooksListRequest(server string, body BooksListJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
+func (c *Client) BooksDelete(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBooksDeleteRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
-	bodyReader = bytes.NewReader(buf)
-	return NewBooksListRequestWithBody(server, "application/json", bodyReader)
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
-// NewBooksListRequestWithBody generates requests for BooksList with any type of body
-func NewBooksListRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func (c *Client) BooksShow(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBooksShowRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) BooksUpdateWithBody(ctx context.Context, id ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBooksUpdateRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) BooksUpdate(ctx context.Context, id ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBooksUpdateRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) Health(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewHealthRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewBooksIndexRequest generates requests for BooksIndex
+func NewBooksIndexRequest(server string, params *BooksIndexParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -191,7 +325,7 @@ func NewBooksListRequestWithBody(server string, contentType string, body io.Read
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/books")
+	operationPath := fmt.Sprintf("/book")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -201,12 +335,48 @@ func NewBooksListRequestWithBody(server string, contentType string, body io.Read
 		return nil, err
 	}
 
-	req, err := http.NewRequest("GET", queryURL.String(), body)
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", false, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", false, "page-size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -231,7 +401,7 @@ func NewBooksCreateRequestWithBody(server string, contentType string, body io.Re
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/books")
+	operationPath := fmt.Sprintf("/book")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -247,6 +417,148 @@ func NewBooksCreateRequestWithBody(server string, contentType string, body io.Re
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewBooksDeleteRequest generates requests for BooksDelete
+func NewBooksDeleteRequest(server string, id ID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/book/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewBooksShowRequest generates requests for BooksShow
+func NewBooksShowRequest(server string, id ID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/book/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewBooksUpdateRequest calls the generic BooksUpdate builder with application/json body
+func NewBooksUpdateRequest(server string, id ID, body BooksUpdateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewBooksUpdateRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewBooksUpdateRequestWithBody generates requests for BooksUpdate with any type of body
+func NewBooksUpdateRequestWithBody(server string, id ID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/book/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewHealthRequest generates requests for Health
+func NewHealthRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/health")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -294,18 +606,30 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// BooksListWithBodyWithResponse request with any body
-	BooksListWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksListResponse, error)
-
-	BooksListWithResponse(ctx context.Context, body BooksListJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksListResponse, error)
+	// BooksIndexWithResponse request
+	BooksIndexWithResponse(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*BooksIndexResponse, error)
 
 	// BooksCreateWithBodyWithResponse request with any body
 	BooksCreateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksCreateResponse, error)
 
 	BooksCreateWithResponse(ctx context.Context, body BooksCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksCreateResponse, error)
+
+	// BooksDeleteWithResponse request
+	BooksDeleteWithResponse(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*BooksDeleteResponse, error)
+
+	// BooksShowWithResponse request
+	BooksShowWithResponse(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*BooksShowResponse, error)
+
+	// BooksUpdateWithBodyWithResponse request with any body
+	BooksUpdateWithBodyWithResponse(ctx context.Context, id ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error)
+
+	BooksUpdateWithResponse(ctx context.Context, id ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error)
+
+	// HealthWithResponse request
+	HealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthResponse, error)
 }
 
-type BooksListResponse struct {
+type BooksIndexResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
@@ -314,7 +638,7 @@ type BooksListResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r BooksListResponse) Status() string {
+func (r BooksIndexResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -322,7 +646,7 @@ func (r BooksListResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r BooksListResponse) StatusCode() int {
+func (r BooksIndexResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -332,9 +656,8 @@ func (r BooksListResponse) StatusCode() int {
 type BooksCreateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *struct {
-		Item Book `json:"item"`
-	}
+	JSON201      *Book
+	JSON422      *ValidationError
 }
 
 // Status returns HTTPResponse.Status
@@ -353,21 +676,103 @@ func (r BooksCreateResponse) StatusCode() int {
 	return 0
 }
 
-// BooksListWithBodyWithResponse request with arbitrary body returning *BooksListResponse
-func (c *ClientWithResponses) BooksListWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksListResponse, error) {
-	rsp, err := c.BooksListWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseBooksListResponse(rsp)
+type BooksDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *NotFoundError
 }
 
-func (c *ClientWithResponses) BooksListWithResponse(ctx context.Context, body BooksListJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksListResponse, error) {
-	rsp, err := c.BooksList(ctx, body, reqEditors...)
+// Status returns HTTPResponse.Status
+func (r BooksDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BooksDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type BooksShowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Book
+	JSON404      *NotFoundError
+}
+
+// Status returns HTTPResponse.Status
+func (r BooksShowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BooksShowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type BooksUpdateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *NotFoundError
+	JSON422      *ValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r BooksUpdateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BooksUpdateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type HealthResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Health
+}
+
+// Status returns HTTPResponse.Status
+func (r HealthResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r HealthResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// BooksIndexWithResponse request returning *BooksIndexResponse
+func (c *ClientWithResponses) BooksIndexWithResponse(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*BooksIndexResponse, error) {
+	rsp, err := c.BooksIndex(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBooksListResponse(rsp)
+	return ParseBooksIndexResponse(rsp)
 }
 
 // BooksCreateWithBodyWithResponse request with arbitrary body returning *BooksCreateResponse
@@ -387,15 +792,59 @@ func (c *ClientWithResponses) BooksCreateWithResponse(ctx context.Context, body 
 	return ParseBooksCreateResponse(rsp)
 }
 
-// ParseBooksListResponse parses an HTTP response from a BooksListWithResponse call
-func ParseBooksListResponse(rsp *http.Response) (*BooksListResponse, error) {
+// BooksDeleteWithResponse request returning *BooksDeleteResponse
+func (c *ClientWithResponses) BooksDeleteWithResponse(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*BooksDeleteResponse, error) {
+	rsp, err := c.BooksDelete(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBooksDeleteResponse(rsp)
+}
+
+// BooksShowWithResponse request returning *BooksShowResponse
+func (c *ClientWithResponses) BooksShowWithResponse(ctx context.Context, id ID, reqEditors ...RequestEditorFn) (*BooksShowResponse, error) {
+	rsp, err := c.BooksShow(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBooksShowResponse(rsp)
+}
+
+// BooksUpdateWithBodyWithResponse request with arbitrary body returning *BooksUpdateResponse
+func (c *ClientWithResponses) BooksUpdateWithBodyWithResponse(ctx context.Context, id ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error) {
+	rsp, err := c.BooksUpdateWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBooksUpdateResponse(rsp)
+}
+
+func (c *ClientWithResponses) BooksUpdateWithResponse(ctx context.Context, id ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error) {
+	rsp, err := c.BooksUpdate(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBooksUpdateResponse(rsp)
+}
+
+// HealthWithResponse request returning *HealthResponse
+func (c *ClientWithResponses) HealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthResponse, error) {
+	rsp, err := c.Health(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseHealthResponse(rsp)
+}
+
+// ParseBooksIndexResponse parses an HTTP response from a BooksIndexWithResponse call
+func ParseBooksIndexResponse(rsp *http.Response) (*BooksIndexResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &BooksListResponse{
+	response := &BooksIndexResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -430,13 +879,136 @@ func ParseBooksCreateResponse(rsp *http.Response) (*BooksCreateResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Item Book `json:"item"`
-		}
+		var dest Book
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBooksDeleteResponse parses an HTTP response from a BooksDeleteWithResponse call
+func ParseBooksDeleteResponse(rsp *http.Response) (*BooksDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BooksDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBooksShowResponse parses an HTTP response from a BooksShowWithResponse call
+func ParseBooksShowResponse(rsp *http.Response) (*BooksShowResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BooksShowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Book
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBooksUpdateResponse parses an HTTP response from a BooksUpdateWithResponse call
+func ParseBooksUpdateResponse(rsp *http.Response) (*BooksUpdateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BooksUpdateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseHealthResponse parses an HTTP response from a HealthWithResponse call
+func ParseHealthResponse(rsp *http.Response) (*HealthResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &HealthResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Health
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 
@@ -446,24 +1018,56 @@ func ParseBooksCreateResponse(rsp *http.Response) (*BooksCreateResponse, error) 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
-	// (GET /books)
-	BooksList(w http.ResponseWriter, r *http.Request)
+	// (GET /book)
+	BooksIndex(w http.ResponseWriter, r *http.Request, params BooksIndexParams)
 
-	// (POST /books)
+	// (POST /book)
 	BooksCreate(w http.ResponseWriter, r *http.Request)
+
+	// (DELETE /book/{id})
+	BooksDelete(w http.ResponseWriter, r *http.Request, id ID)
+
+	// (GET /book/{id})
+	BooksShow(w http.ResponseWriter, r *http.Request, id ID)
+
+	// (PUT /book/{id})
+	BooksUpdate(w http.ResponseWriter, r *http.Request, id ID)
+
+	// (GET /health)
+	Health(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
-// (GET /books)
-func (_ Unimplemented) BooksList(w http.ResponseWriter, r *http.Request) {
+// (GET /book)
+func (_ Unimplemented) BooksIndex(w http.ResponseWriter, r *http.Request, params BooksIndexParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// (POST /books)
+// (POST /book)
 func (_ Unimplemented) BooksCreate(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (DELETE /book/{id})
+func (_ Unimplemented) BooksDelete(w http.ResponseWriter, r *http.Request, id ID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /book/{id})
+func (_ Unimplemented) BooksShow(w http.ResponseWriter, r *http.Request, id ID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /book/{id})
+func (_ Unimplemented) BooksUpdate(w http.ResponseWriter, r *http.Request, id ID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /health)
+func (_ Unimplemented) Health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -476,11 +1080,32 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// BooksList operation middleware
-func (siw *ServerInterfaceWrapper) BooksList(w http.ResponseWriter, r *http.Request) {
+// BooksIndex operation middleware
+func (siw *ServerInterfaceWrapper) BooksIndex(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params BooksIndexParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", false, false, "page", r.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "page-size" -------------
+
+	err = runtime.BindQueryParameter("form", false, false, "page-size", r.URL.Query(), &params.PageSize)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page-size", Err: err})
+		return
+	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BooksList(w, r)
+		siw.Handler.BooksIndex(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -495,6 +1120,95 @@ func (siw *ServerInterfaceWrapper) BooksCreate(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.BooksCreate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BooksDelete operation middleware
+func (siw *ServerInterfaceWrapper) BooksDelete(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id ID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BooksDelete(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BooksShow operation middleware
+func (siw *ServerInterfaceWrapper) BooksShow(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id ID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BooksShow(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BooksUpdate operation middleware
+func (siw *ServerInterfaceWrapper) BooksUpdate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id ID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BooksUpdate(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Health operation middleware
+func (siw *ServerInterfaceWrapper) Health(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Health(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -618,28 +1332,40 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/books", wrapper.BooksList)
+		r.Get(options.BaseURL+"/book", wrapper.BooksIndex)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/books", wrapper.BooksCreate)
+		r.Post(options.BaseURL+"/book", wrapper.BooksCreate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/book/{id}", wrapper.BooksDelete)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/book/{id}", wrapper.BooksShow)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/book/{id}", wrapper.BooksUpdate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/health", wrapper.Health)
 	})
 
 	return r
 }
 
-type BooksListRequestObject struct {
-	Body *BooksListJSONRequestBody
+type BooksIndexRequestObject struct {
+	Params BooksIndexParams
 }
 
-type BooksListResponseObject interface {
-	VisitBooksListResponse(w http.ResponseWriter) error
+type BooksIndexResponseObject interface {
+	VisitBooksIndexResponse(w http.ResponseWriter) error
 }
 
-type BooksList200JSONResponse struct {
+type BooksIndex200JSONResponse struct {
 	Items []Book `json:"items"`
 }
 
-func (response BooksList200JSONResponse) VisitBooksListResponse(w http.ResponseWriter) error {
+func (response BooksIndex200JSONResponse) VisitBooksIndexResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
@@ -654,9 +1380,7 @@ type BooksCreateResponseObject interface {
 	VisitBooksCreateResponse(w http.ResponseWriter) error
 }
 
-type BooksCreate201JSONResponse struct {
-	Item Book `json:"item"`
-}
+type BooksCreate201JSONResponse Book
 
 func (response BooksCreate201JSONResponse) VisitBooksCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -665,14 +1389,137 @@ func (response BooksCreate201JSONResponse) VisitBooksCreateResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type BooksCreate422JSONResponse ValidationError
+
+func (response BooksCreate422JSONResponse) VisitBooksCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type BooksDeleteRequestObject struct {
+	Id ID `json:"id"`
+}
+
+type BooksDeleteResponseObject interface {
+	VisitBooksDeleteResponse(w http.ResponseWriter) error
+}
+
+type BooksDelete204Response struct {
+}
+
+func (response BooksDelete204Response) VisitBooksDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type BooksDelete404JSONResponse NotFoundError
+
+func (response BooksDelete404JSONResponse) VisitBooksDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type BooksShowRequestObject struct {
+	Id ID `json:"id"`
+}
+
+type BooksShowResponseObject interface {
+	VisitBooksShowResponse(w http.ResponseWriter) error
+}
+
+type BooksShow200JSONResponse Book
+
+func (response BooksShow200JSONResponse) VisitBooksShowResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type BooksShow404JSONResponse NotFoundError
+
+func (response BooksShow404JSONResponse) VisitBooksShowResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type BooksUpdateRequestObject struct {
+	Id   ID `json:"id"`
+	Body *BooksUpdateJSONRequestBody
+}
+
+type BooksUpdateResponseObject interface {
+	VisitBooksUpdateResponse(w http.ResponseWriter) error
+}
+
+type BooksUpdate204Response struct {
+}
+
+func (response BooksUpdate204Response) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type BooksUpdate404JSONResponse NotFoundError
+
+func (response BooksUpdate404JSONResponse) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type BooksUpdate422JSONResponse ValidationError
+
+func (response BooksUpdate422JSONResponse) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HealthRequestObject struct {
+}
+
+type HealthResponseObject interface {
+	VisitHealthResponse(w http.ResponseWriter) error
+}
+
+type Health200JSONResponse Health
+
+func (response Health200JSONResponse) VisitHealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
-	// (GET /books)
-	BooksList(ctx context.Context, request BooksListRequestObject) (BooksListResponseObject, error)
+	// (GET /book)
+	BooksIndex(ctx context.Context, request BooksIndexRequestObject) (BooksIndexResponseObject, error)
 
-	// (POST /books)
+	// (POST /book)
 	BooksCreate(ctx context.Context, request BooksCreateRequestObject) (BooksCreateResponseObject, error)
+
+	// (DELETE /book/{id})
+	BooksDelete(ctx context.Context, request BooksDeleteRequestObject) (BooksDeleteResponseObject, error)
+
+	// (GET /book/{id})
+	BooksShow(ctx context.Context, request BooksShowRequestObject) (BooksShowResponseObject, error)
+
+	// (PUT /book/{id})
+	BooksUpdate(ctx context.Context, request BooksUpdateRequestObject) (BooksUpdateResponseObject, error)
+
+	// (GET /health)
+	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -704,30 +1551,25 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
-// BooksList operation middleware
-func (sh *strictHandler) BooksList(w http.ResponseWriter, r *http.Request) {
-	var request BooksListRequestObject
+// BooksIndex operation middleware
+func (sh *strictHandler) BooksIndex(w http.ResponseWriter, r *http.Request, params BooksIndexParams) {
+	var request BooksIndexRequestObject
 
-	var body BooksListJSONRequestBody
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
-		return
-	}
-	request.Body = &body
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.BooksList(ctx, request.(BooksListRequestObject))
+		return sh.ssi.BooksIndex(ctx, request.(BooksIndexRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "BooksList")
+		handler = middleware(handler, "BooksIndex")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(BooksListResponseObject); ok {
-		if err := validResponse.VisitBooksListResponse(w); err != nil {
+	} else if validResponse, ok := response.(BooksIndexResponseObject); ok {
+		if err := validResponse.VisitBooksIndexResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -759,6 +1601,115 @@ func (sh *strictHandler) BooksCreate(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(BooksCreateResponseObject); ok {
 		if err := validResponse.VisitBooksCreateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// BooksDelete operation middleware
+func (sh *strictHandler) BooksDelete(w http.ResponseWriter, r *http.Request, id ID) {
+	var request BooksDeleteRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.BooksDelete(ctx, request.(BooksDeleteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "BooksDelete")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(BooksDeleteResponseObject); ok {
+		if err := validResponse.VisitBooksDeleteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// BooksShow operation middleware
+func (sh *strictHandler) BooksShow(w http.ResponseWriter, r *http.Request, id ID) {
+	var request BooksShowRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.BooksShow(ctx, request.(BooksShowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "BooksShow")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(BooksShowResponseObject); ok {
+		if err := validResponse.VisitBooksShowResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// BooksUpdate operation middleware
+func (sh *strictHandler) BooksUpdate(w http.ResponseWriter, r *http.Request, id ID) {
+	var request BooksUpdateRequestObject
+
+	request.Id = id
+
+	var body BooksUpdateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.BooksUpdate(ctx, request.(BooksUpdateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "BooksUpdate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(BooksUpdateResponseObject); ok {
+		if err := validResponse.VisitBooksUpdateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// Health operation middleware
+func (sh *strictHandler) Health(w http.ResponseWriter, r *http.Request) {
+	var request HealthRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.Health(ctx, request.(HealthRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "Health")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(HealthResponseObject); ok {
+		if err := validResponse.VisitHealthResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
