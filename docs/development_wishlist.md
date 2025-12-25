@@ -22,6 +22,7 @@ A parking for ideas and TODOs for the development.
   - [ ] Perform changes towards _statically typed context_
   - [ ] Benchmark again and observe the gains!
 - [ ] Have oapi-codegen generate `OkResponse` instead of `200Response` (e.g.)
+- [ ] Use [xdg](https://pkg.go.dev/github.com/adrg/xdg#section-readme) to simplify user config/data directory management.
 
 ## Upon Go 1.26 release
 
