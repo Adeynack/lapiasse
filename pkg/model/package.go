@@ -4,5 +4,5 @@ package model
 
 var Models = []any{
 	&Book{},
-	&Register{},
+	// &Register{},
 }

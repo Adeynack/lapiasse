@@ -39,14 +39,14 @@ func (i *Instance) Run() error {
 	// Placeholder TUI
 	repo := ctxval.MustResolve[api.StrictServerInterface](ctx)
 
-	booksResponse, err := repo.GetBooks(ctx, api.GetBooksRequestObject{})
+	booksResponse, err := repo.BooksIndex(ctx, api.BooksIndexRequestObject{})
 	if err != nil {
 		return fmt.Errorf("failed to get books: %w", err)
 	}
 	switch resp := booksResponse.(type) {
-	case api.GetBooks200JSONResponse:
+	case api.BooksIndex200JSONResponse:
 		fmt.Println("Books:")
-		for i, book := range resp.Books {
+		for i, book := range resp.Items {
 			fmt.Printf("%d: %s\n", i+1, book.Name)
 		}
 	default:

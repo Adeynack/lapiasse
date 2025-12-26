@@ -23,7 +23,7 @@ type moneydanceImporter struct {
 	BookCurrencyIsoCode  string
 
 	apiClient *api.ClientWithResponses
-	book      api.Book
+	book      api.BookShow
 	md        *moneydance.Export
 }
 
@@ -85,11 +85,9 @@ func (mdi *moneydanceImporter) createApiClient(ctx context.Context) error {
 func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 	bookName := mdi.determineBookName()
 
-	response, err := mdi.apiClient.CreateBookWithResponse(ctx, api.CreateBookJSONRequestBody{
-		Book: api.BookProperties{
-			DefaultCurrencyIsoCode: strings.ToUpper(mdi.BookCurrencyIsoCode),
-			Name:                   bookName,
-		},
+	response, err := mdi.apiClient.BooksCreateWithResponse(ctx, api.BooksCreateJSONRequestBody{
+		DefaultCurrencyIsoCode: strings.ToUpper(mdi.BookCurrencyIsoCode),
+		Name:                   bookName,
 	})
 	switch {
 	case err != nil:
@@ -100,11 +98,13 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 		return fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
+	book := response.JSON201
 	applog.Info(ctx, "Created new book", slog.Group("book",
-		"id", response.JSON201.Book.Id,
-		"name", bookName,
+		"id", book.Id,
+		"name", book.Name,
 	))
-	mdi.book = response.JSON201.Book
+
+	mdi.book = *book
 
 	return nil
 }
@@ -118,15 +118,15 @@ func (mdi *moneydanceImporter) determineBookName() string {
 }
 
 func (mdi *moneydanceImporter) createRegisters(ctx context.Context) error {
-	r := registerImport{
-		apiClient: mdi.apiClient,
-		book:      mdi.book,
-		md:        mdi.md,
-	}
+	// r := registerImport{
+	// 	apiClient: mdi.apiClient,
+	// 	book:      mdi.book,
+	// 	md:        mdi.md,
+	// }
 
-	if err := r.run(ctx); err != nil {
-		return fmt.Errorf("importing registers: %w", err)
-	}
+	// if err := r.run(ctx); err != nil {
+	// 	return fmt.Errorf("importing registers: %w", err)
+	// }
 
 	return nil
 }

@@ -13,6 +13,7 @@ import (
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 
 	"adeynack.net/lapiasse/pkg/web"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -40,7 +41,7 @@ func TestServer(t *testing.T) {
 			urlPath:        "/books",
 			method:         http.MethodGet,
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"books":[]}`,
+			expectedBody:   `{"items":[]}`,
 		},
 		"a path returning a Not Found error - GET /books/nonexistent-id": {
 			urlPath:        "/books/nonexistent-id",
@@ -106,7 +107,7 @@ func TestServer(t *testing.T) {
 			server, err := web.StartServer(ctx, config)
 			require.NoError(t, err)
 			t.Cleanup(func() {
-				_ = server.Close()
+				lo.Must0(server.Close())
 			})
 
 			request := httptest.NewRequest(tc.method, tc.urlPath, strings.NewReader(tc.requestBody))

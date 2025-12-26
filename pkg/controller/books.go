@@ -2,79 +2,31 @@ package controller
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"adeynack.net/lapiasse/pkg/api"
-	"adeynack.net/lapiasse/pkg/model"
-	"adeynack.net/lapiasse/pkg/platform/ctxval"
-	"adeynack.net/lapiasse/pkg/platform/loex"
-	"gorm.io/gorm"
 )
 
-type BooksController struct {
+// BooksCreate implements api.StrictServerInterface.
+func (t *ApplicationController) BooksCreate(ctx context.Context, request api.BooksCreateRequestObject) (api.BooksCreateResponseObject, error) {
+	panic("unimplemented")
 }
 
-// Implements [api.StrictServerInterface.GetBooks]
-func (c *BooksController) GetBooks(ctx context.Context, request api.GetBooksRequestObject) (api.GetBooksResponseObject, error) {
-	db := ctxval.MustResolve[*gorm.DB](ctx)
-
-	books, err := gorm.G[model.Book](db).
-		Scopes(scopePaginate(request.Params.Page, request.Params.PageSize)).
-		Order("books.name").
-		Find(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("reading books from database: %w", err)
-	}
-
-	return api.GetBooks200JSONResponse{Books: loex.MapE(books, toApiBook)}, nil
+// BooksDelete implements api.StrictServerInterface.
+func (t *ApplicationController) BooksDelete(ctx context.Context, request api.BooksDeleteRequestObject) (api.BooksDeleteResponseObject, error) {
+	panic("unimplemented")
 }
 
-// Implements [api.StrictServerInterface.CreateBook]
-func (c *BooksController) CreateBook(ctx context.Context, request api.CreateBookRequestObject) (api.CreateBookResponseObject, error) {
-	db := ctxval.MustResolve[*gorm.DB](ctx)
-
-	p := request.Body.Book
-
-	book := model.Book{
-		Name:                   p.Name,
-		DefaultCurrencyIsoCode: p.DefaultCurrencyIsoCode,
-	}
-
-	if validErr, err := validate(ctx, book); err != nil {
-		return nil, fmt.Errorf("validating book: %w", err)
-	} else if validErr != nil {
-		return api.CreateBook422JSONResponse(*validErr), nil
-	}
-
-	err := gorm.G[model.Book](db).Create(ctx, &book)
-	if err != nil {
-		return nil, fmt.Errorf("creating book in database: %w", err)
-	}
-
-	return api.CreateBook201JSONResponse{Book: toApiBook(book)}, nil
+// BooksIndex implements api.StrictServerInterface.
+func (t *ApplicationController) BooksIndex(ctx context.Context, request api.BooksIndexRequestObject) (api.BooksIndexResponseObject, error) {
+	panic("unimplemented")
 }
 
-// Implements [api.StrictServerInterface.GetBook]
-func (c *BooksController) GetBook(ctx context.Context, request api.GetBookRequestObject) (api.GetBookResponseObject, error) {
-	db := ctxval.MustResolve[*gorm.DB](ctx)
-
-	book, err := gorm.G[model.Book](db).Where("id = ?", request.BookId).First(ctx)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return api.GetBook404JSONResponse(api404ErrorFromId("Book", request.BookId)), nil
-	} else if err != nil {
-		return nil, fmt.Errorf("reading book from database: %w", err)
-	}
-
-	return api.GetBook200JSONResponse{Book: toApiBook(book)}, nil
+// BooksShow implements api.StrictServerInterface.
+func (t *ApplicationController) BooksShow(ctx context.Context, request api.BooksShowRequestObject) (api.BooksShowResponseObject, error) {
+	panic("unimplemented")
 }
 
-func toApiBook(b model.Book) api.Book {
-	return api.Book{
-		CreatedAt:              b.CreatedAt,
-		DefaultCurrencyIsoCode: b.DefaultCurrencyIsoCode,
-		Id:                     fmt.Sprintf("%d", b.ID),
-		Name:                   b.Name,
-		UpdatedAt:              b.UpdatedAt,
-	}
+// BooksUpdate implements api.StrictServerInterface.
+func (t *ApplicationController) BooksUpdate(ctx context.Context, request api.BooksUpdateRequestObject) (api.BooksUpdateResponseObject, error) {
+	panic("unimplemented")
 }

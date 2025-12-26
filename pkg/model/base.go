@@ -6,10 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"adeynack.net/lapiasse/pkg/api"
-	"adeynack.net/lapiasse/pkg/appvalidator"
-	"github.com/go-playground/validator/v10"
-	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -60,17 +56,17 @@ type Base struct {
 
 func init() {
 	// Register custom validations
-	v := appvalidator.Default()
-	lo.Must0(v.RegisterValidation("register_type", validateRegisterType))
+	// v := appvalidator.Default()
+	// lo.Must0(v.RegisterValidation("register_type", validateRegisterType))
 }
 
-func validateRegisterType(fl validator.FieldLevel) bool {
-	registerType, ok := fl.Field().Interface().(api.RegisterType)
-	if !ok {
-		return false
-	}
+// func validateRegisterType(fl validator.FieldLevel) bool {
+// 	registerType, ok := fl.Field().Interface().(api.RegisterType)
+// 	if !ok {
+// 		return false
+// 	}
 
-	_, err := registerType.Value()
+// 	_, err := registerType.Value()
 
-	return err == nil
-}
+// 	return err == nil
+// }

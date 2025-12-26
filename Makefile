@@ -52,11 +52,11 @@ dev:
 	go tool air -c air_run_watch.toml
 
 .PHONY: gen
-gen: gen-widget-api
+gen: gen-api
 	go generate ./...
 
-.PHONY: gen-lapiasse-api
-gen-lapiasse-api:
+.PHONY: gen-api
+gen-api:
 	npm exec -- tsp compile --config ./pkg/api/lapiasse.tsp.yaml --output-dir ./pkg/api ./pkg/api/lapiasse.tsp
 	go tool oapi-codegen --config=pkg/api/lapiasse.oapi-codegen.yaml pkg/api/lapiasse.oas.yaml
 
