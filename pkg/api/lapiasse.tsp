@@ -189,17 +189,15 @@ namespace Res {
     pagination: Pagination;
   }
 
-  alias Show<T> = {
-    data: T;
-  } | NotFoundError;
+  alias Show<T> = T | NotFoundError;
 
   alias Create<T> = {
     @statusCode statusCode: 201;
-    data: T;
+    @body body: T;
   } | ValidationError;
 
   alias Update<T> = {
-    data: T;
+    @body body: T;
   } | NotFoundError | ValidationError;
 
   alias Delete = NoContentResponse | NotFoundError;
@@ -213,9 +211,9 @@ interface Books {
 
   Show(@path bookId: ID): Res.Show<Book.Show>;
 
-  @post Create(book: Book.Edit): Res.Create<Book.Show>;
+  @post Create(...Book.Edit): Res.Create<Book.Show>;
 
-  @put Update(@path bookId: ID, @body book: Book.Edit): Res.Update<Book.Show>;
+  @put Update(@path bookId: ID, ...Book.Edit): Res.Update<Book.Show>;
 
   @delete Delete(@path bookId: ID): Res.Delete;
 }

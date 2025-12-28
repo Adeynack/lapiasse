@@ -101,18 +101,18 @@ func TestGetBooks(t *testing.T) {
 func TestCreateBook(t *testing.T) {
 	for name, tc := range map[string]struct {
 		seed         func(ctx context.Context)
-		requestBook  api.BookEdit
+		requestBook  *api.BooksCreateJSONRequestBody
 		expecting201 func(t *testing.T, resp api.BooksCreate201JSONResponse)
 		expecting422 func(t *testing.T, resp api.BooksCreate422JSONResponse)
 	}{
 		"simple book creation": {
-			requestBook: api.BookEdit{
+			requestBook: &api.BooksCreateJSONRequestBody{
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "EUR",
 			},
 		},
 		"wrong currency ISO code": {
-			requestBook: api.BookEdit{
+			requestBook: &api.BooksCreateJSONRequestBody{
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "INVALID",
 			},
@@ -134,9 +134,7 @@ func TestCreateBook(t *testing.T) {
 
 			ctrl := &controller.ApplicationController{}
 			request := api.BooksCreateRequestObject{
-				Body: &api.BooksCreateJSONRequestBody{
-					Book: tc.requestBook,
-				},
+				Body: tc.requestBook,
 			}
 			resp, err := ctrl.BooksCreate(ctx, request)
 
@@ -149,7 +147,7 @@ func TestCreateBook(t *testing.T) {
 
 				// Check if book was really created in DB
 				db := ctxval.MustResolve[*gorm.DB](ctx)
-				book, err := gorm.G[model.Book](db).Where("id = ?", resp201.Data.Id).First(ctx)
+				book, err := gorm.G[model.Book](db).Where("id = ?", resp201.Id).First(ctx)
 				require.NoError(t, err)
 				require.Equal(t, tc.requestBook.Name, book.Name)
 			}

@@ -133,13 +133,8 @@ type BooksIndexParams struct {
 	PageSize *ReqPaginatedPageSize `form:"page-size,omitempty" json:"page-size,omitempty"`
 }
 
-// BooksCreateJSONBody defines parameters for BooksCreate.
-type BooksCreateJSONBody struct {
-	Book BookEdit `json:"book"`
-}
-
 // BooksCreateJSONRequestBody defines body for BooksCreate for application/json ContentType.
-type BooksCreateJSONRequestBody BooksCreateJSONBody
+type BooksCreateJSONRequestBody = BookEdit
 
 // BooksUpdateJSONRequestBody defines body for BooksUpdate for application/json ContentType.
 type BooksUpdateJSONRequestBody = BookEdit
@@ -677,10 +672,8 @@ func (r BooksIndexResponse) StatusCode() int {
 type BooksCreateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *struct {
-		Data BookShow `json:"data"`
-	}
-	JSON422 *ValidationError
+	JSON201      *BookShow
+	JSON422      *ValidationError
 }
 
 // Status returns HTTPResponse.Status
@@ -724,10 +717,8 @@ func (r BooksDeleteResponse) StatusCode() int {
 type BooksShowResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Data BookShow `json:"data"`
-	}
-	JSON404 *Error
+	JSON200      *BookShow
+	JSON404      *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -749,11 +740,9 @@ func (r BooksShowResponse) StatusCode() int {
 type BooksUpdateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Data BookShow `json:"data"`
-	}
-	JSON404 *Error
-	JSON422 *ValidationError
+	JSON200      *BookShow
+	JSON404      *Error
+	JSON422      *ValidationError
 }
 
 // Status returns HTTPResponse.Status
@@ -908,9 +897,7 @@ func ParseBooksCreateResponse(rsp *http.Response) (*BooksCreateResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Data BookShow `json:"data"`
-		}
+		var dest BookShow
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -969,9 +956,7 @@ func ParseBooksShowResponse(rsp *http.Response) (*BooksShowResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Data BookShow `json:"data"`
-		}
+		var dest BookShow
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1004,9 +989,7 @@ func ParseBooksUpdateResponse(rsp *http.Response) (*BooksUpdateResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Data BookShow `json:"data"`
-		}
+		var dest BookShow
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1423,9 +1406,7 @@ type BooksCreateResponseObject interface {
 	VisitBooksCreateResponse(w http.ResponseWriter) error
 }
 
-type BooksCreate201JSONResponse struct {
-	Data BookShow `json:"data"`
-}
+type BooksCreate201JSONResponse BookShow
 
 func (response BooksCreate201JSONResponse) VisitBooksCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -1476,9 +1457,7 @@ type BooksShowResponseObject interface {
 	VisitBooksShowResponse(w http.ResponseWriter) error
 }
 
-type BooksShow200JSONResponse struct {
-	Data BookShow `json:"data"`
-}
+type BooksShow200JSONResponse BookShow
 
 func (response BooksShow200JSONResponse) VisitBooksShowResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -1505,9 +1484,7 @@ type BooksUpdateResponseObject interface {
 	VisitBooksUpdateResponse(w http.ResponseWriter) error
 }
 
-type BooksUpdate200JSONResponse struct {
-	Data BookShow `json:"data"`
-}
+type BooksUpdate200JSONResponse BookShow
 
 func (response BooksUpdate200JSONResponse) VisitBooksUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

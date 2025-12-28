@@ -23,7 +23,7 @@ type moneydanceImporter struct {
 	BookCurrencyIsoCode  string
 
 	apiClient *api.ClientWithResponses
-	book      api.BookShow
+	book      *api.BookShow
 	md        *moneydance.Export
 }
 
@@ -86,10 +86,8 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 	bookName := mdi.determineBookName()
 
 	response, err := mdi.apiClient.BooksCreateWithResponse(ctx, api.BooksCreateJSONRequestBody{
-		Book: api.BookEdit{
-			DefaultCurrencyIsoCode: strings.ToUpper(mdi.BookCurrencyIsoCode),
-			Name:                   bookName,
-		},
+		DefaultCurrencyIsoCode: strings.ToUpper(mdi.BookCurrencyIsoCode),
+		Name:                   bookName,
 	})
 	switch {
 	case err != nil:
@@ -100,7 +98,7 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 		return fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
-	book := response.JSON201.Data
+	book := response.JSON201
 	applog.Info(ctx, "Created new book", slog.Group("book",
 		"id", book.Id,
 		"name", book.Name,

@@ -36,12 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Book.Show'
-                required:
-                  - data
+                $ref: '#/components/schemas/Book.Show'
         '422':
           description: Client error
           content:
@@ -53,12 +48,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                book:
-                  $ref: '#/components/schemas/Book.Edit'
-              required:
-                - book
+              $ref: '#/components/schemas/Book.Edit'
   /books/{bookId}:
     get:
       operationId: Books_Show
@@ -74,12 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Book.Show'
-                required:
-                  - data
+                $ref: '#/components/schemas/Book.Show'
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -100,12 +85,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Book.Show'
-                required:
-                  - data
+                $ref: '#/components/schemas/Book.Show'
         '404':
           description: The server cannot find the requested resource.
           content:

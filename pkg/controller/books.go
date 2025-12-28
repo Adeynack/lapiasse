@@ -42,9 +42,7 @@ func (t *ApplicationController) BooksShow(ctx context.Context, request api.Books
 		return nil, fmt.Errorf("reading book from database: %w", err)
 	}
 
-	response := api.BooksShow200JSONResponse{
-		Data: toApiBookShow(book),
-	}
+	response := api.BooksShow200JSONResponse(toApiBookShow(book))
 
 	return response, nil
 }
@@ -53,11 +51,9 @@ func (t *ApplicationController) BooksShow(ctx context.Context, request api.Books
 func (t *ApplicationController) BooksCreate(ctx context.Context, request api.BooksCreateRequestObject) (api.BooksCreateResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
-	p := request.Body.Book
-
 	book := model.Book{
-		Name:                   p.Name,
-		DefaultCurrencyIsoCode: p.DefaultCurrencyIsoCode,
+		Name:                   request.Body.Name,
+		DefaultCurrencyIsoCode: request.Body.DefaultCurrencyIsoCode,
 	}
 
 	if validErr, err := validate(ctx, book); err != nil {
@@ -71,9 +67,7 @@ func (t *ApplicationController) BooksCreate(ctx context.Context, request api.Boo
 		return nil, fmt.Errorf("creating book in database: %w", err)
 	}
 
-	response := api.BooksCreate201JSONResponse{
-		Data: toApiBookShow(book),
-	}
+	response := api.BooksCreate201JSONResponse(toApiBookShow(book))
 
 	return response, nil
 }
