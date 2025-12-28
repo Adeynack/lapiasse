@@ -15,8 +15,6 @@ namespace LapiasseAPI;
  * based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
  */
 model Error {
-  @statusCode statusCode: integer = 500;
-
   /** A short, human-readable summary of the problem type. */
   title: string;
 
@@ -39,22 +37,27 @@ enum ErrorType {
   InternalError: "error:internal_error",
   BadRequest: "error:bad_request",
   NotFound: "error:not_found",
+  MethodNotAllowed: "error:method_not_allowed",
   Validation: "error:validation",
 }
 
-model InternalError extends Error {
+model InternalError {
+  ...Error;
   @statusCode statusCode: 500;
 }
 
-model BadRequestError extends Error {
+model BadRequestError {
+  ...Error;
   @statusCode statusCode: 400;
 }
 
-model NotFoundError extends Error {
+model NotFoundError {
+  ...Error;
   @statusCode statusCode: 404;
 }
 
-model ValidationError extends Error {
+model ValidationError {
+  ...Error;
   @statusCode statusCode: 422;
 
   /** A list of fields that failed validation. */
@@ -89,17 +92,13 @@ model Resource {
 namespace Book {
   model Show {
     ...Resource;
-    ...Create;
+    ...Edit;
   }
 
-  model Index is Show;
-
-  model Create {
+  model Edit {
     name: string;
     default_currency_iso_code: string;
   }
-
-  model Update is Create;
 }
 
 enum ServerHealthStatus {
@@ -144,11 +143,7 @@ model User extends Resource {
 
 model Register extends Resource {
   name: string;
-
-  @removeVisibility(Lifecycle.Update)
   account_type: RegisterType;
-
-  @removeVisibility(Lifecycle.Update)
   currency_iso_code: string;
 }
 
@@ -169,49 +164,60 @@ model Health {
   reason?: string;
 }
 
-@route("/health") op health(): Health;
-
-model PageResult<T> {
-  items: T[];
+model Pagination {
+  hasNext: boolean;
 }
 
-model Paginated {
-  /** The page number to retrieve (1-indexed). */
-  @query
-  @minValue(1)
-  page?: integer = 1;
+namespace Req {
+  model Paginated {
+    /** The page number to retrieve (1-indexed). */
+    @query
+    @minValue(1)
+    page?: integer = 1;
 
-  /** The maximum number of items to return per page. */
-  @query
-  @minValue(1)
-  @maxValue(1000)
-  `page-size`?: integer = 50;
+    /** The maximum number of items to return per page. */
+    @query
+    @minValue(1)
+    @maxValue(1000)
+    `page-size`?: integer = 50;
+  }
 }
 
 namespace Res {
-  alias Show<T> = T | NotFoundError;
+  model IndexPage<T> {
+    data: T[];
+    pagination: Pagination;
+  }
+
+  alias Show<T> = {
+    data: T;
+  } | NotFoundError;
 
   alias Create<T> = {
     @statusCode statusCode: 201;
-    @body body: T;
+    data: T;
   } | ValidationError;
 
-  alias Update<T> = T | NotFoundError | ValidationError;
+  alias Update<T> = {
+    data: T;
+  } | NotFoundError | ValidationError;
 
   alias Delete = NoContentResponse | NotFoundError;
 }
 
-@route("/book")
+@route("/health") op health(): Health;
+
+@route("/books")
 interface Books {
-  Index(...Paginated): PageResult<Book.Index>;
+  Index(...Req.Paginated): Res.IndexPage<Book.Show>;
 
-  Show(@path id: ID): Res.Show<Book.Show>;
+  Show(@path bookId: ID): Res.Show<Book.Show>;
 
-  @post Create(@body book: Book.Create): Res.Create<Book.Show>;
+  @post Create(@body book: Book.Edit): Res.Create<Book.Show>;
 
-  @put Update(@path id: ID, @body book: Book.Update): Res.Update<Book.Show>;
+  @put Update(@path bookId: ID, @body book: Book.Edit): Res.Update<Book.Show>;
 
-  @delete Delete(@path id: ID): Res.Delete;
+  @delete Delete(@path bookId: ID): Res.Delete;
 }
 
 // @route("/book/{bookId}/registers")

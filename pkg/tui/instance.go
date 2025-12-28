@@ -46,7 +46,7 @@ func (i *Instance) Run() error {
 	switch resp := booksResponse.(type) {
 	case api.BooksIndex200JSONResponse:
 		fmt.Println("Books:")
-		for i, book := range resp.Items {
+		for i, book := range resp.Data {
 			fmt.Printf("%d: %s\n", i+1, book.Name)
 		}
 	default:

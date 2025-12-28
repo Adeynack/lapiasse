@@ -98,13 +98,13 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 		return fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
-	book := response.JSON201
+	book := response.JSON201.Data
 	applog.Info(ctx, "Created new book", slog.Group("book",
 		"id", book.Id,
 		"name", book.Name,
 	))
 
-	mdi.book = *book
+	mdi.book = book
 
 	return nil
 }

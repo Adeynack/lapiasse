@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"encoding/json/v2"
+	"fmt"
 	"net/http"
 	"runtime/debug"
 
@@ -39,19 +40,23 @@ func respondWithJsonError(w http.ResponseWriter, r *http.Request, jsonError api.
 	}
 }
 
-func requestErrorHandlerFunc(w http.ResponseWriter, r *http.Request, err error) {
-	applog.Debug(r.Context(), "Failed to handle request", "error", err)
-	respondWithJsonError(w, r, api.Error{
-		Detail: lo.ToPtr(err.Error()),
-		Status: http.StatusBadRequest,
-		Title:  "Bad Request",
-		Type:   api.ErrorTypeErrorBadRequest,
-	})
+func requestErrorHandler() func(w http.ResponseWriter, r *http.Request, err error) {
+	return func(w http.ResponseWriter, r *http.Request, err error) {
+		applog.Debug(r.Context(), "Failed to handle request", "error", err)
+		respondWithJsonError(w, r, api.Error{
+			Detail: lo.ToPtr(err.Error()),
+			Status: http.StatusBadRequest,
+			Title:  "Bad Request",
+			Type:   api.ErrorTypeErrorBadRequest,
+		})
+	}
 }
 
-func responseErrorHandlerFunc(w http.ResponseWriter, r *http.Request, err error) {
-	applog.Error(r.Context(), "Failed to handle response", "error", err)
-	respondWithJsonError(w, r, internalServerJsonError)
+func responseErrorHandler() func(w http.ResponseWriter, r *http.Request, err error) {
+	return func(w http.ResponseWriter, r *http.Request, err error) {
+		applog.Error(r.Context(), "Failed to handle response", "error", err)
+		respondWithJsonError(w, r, internalServerJsonError)
+	}
 }
 
 // injectApplicationContext creates a middleware that injects the application context
@@ -132,6 +137,28 @@ func recoverFromPanicAsJsonErr() func(http.Handler) http.Handler {
 			}()
 
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func handleNotFound() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		respondWithJsonError(w, r, api.Error{
+			Status: http.StatusNotFound,
+			Title:  "Not Found",
+			Type:   api.ErrorTypeErrorNotFound,
+			Detail: lo.ToPtr(fmt.Sprintf("Path %q not found", r.URL.Path)),
+		})
+	}
+}
+
+func handleMethodNotAllowed() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		respondWithJsonError(w, r, api.Error{
+			Status: http.StatusMethodNotAllowed,
+			Title:  "Method Not Allowed",
+			Type:   api.ErrorTypeErrorMethodNotAllowed,
+			Detail: lo.ToPtr(fmt.Sprintf("Path %q does not allow verb %q", r.URL.Path, r.Method)),
 		})
 	}
 }

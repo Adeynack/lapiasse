@@ -31,31 +31,43 @@ func TestServer(t *testing.T) {
 		expectedStatus int
 		expectedBody   string
 	}{
-		"a path returning a simple response - GET /health": {
+		"a path returning a simple response - GET health": {
 			urlPath:        "/health",
 			method:         http.MethodGet,
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"status":"healthy"}`,
 		},
-		"a path querying the database - GET /books": {
+		"a non existing path - GET nonexistent-path": {
+			urlPath:        "/nonexistent-path",
+			method:         http.MethodGet,
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"type":"error:not_found","title":"Not Found","status":404,"detail":"Path \"/nonexistent-path\" not found"}`,
+		},
+		"an existing path on a non supported method - PATCH health": {
+			urlPath:        "/health",
+			method:         http.MethodPatch,
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedBody:   `{"type":"error:method_not_allowed","title":"Method Not Allowed","status":405,"detail":"Path \"/health\" does not allow verb \"PATCH\""}`,
+		},
+		"a path querying the database - GET books": {
 			urlPath:        "/books",
 			method:         http.MethodGet,
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"items":[]}`,
+			expectedBody:   `{"data":[],"pagination":{"hasNext":false}}`,
 		},
-		"a path returning a Not Found error - GET /books/nonexistent-id": {
+		"a path returning a Not Found error - GET books nonexistent-id": {
 			urlPath:        "/books/nonexistent-id",
 			method:         http.MethodGet,
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"type":"error:not_found","title":"Not Found","status":404,"detail":"Book with ID \"nonexistent-id\" not found"}`,
 		},
-		"a POST without a JSON request body - POST /books": {
+		"a POST without a JSON request body - POST books": {
 			urlPath:        "/books",
 			method:         http.MethodPost,
 			expectedStatus: http.StatusBadRequest,
 			expectedBody:   `{"type":"error:bad_request","title":"Bad Request","status":400,"detail":"can't decode JSON body: EOF"}`,
 		},
-		"a path returning an Unprocessable Entity error - POST /books with invalid data": {
+		"a path returning an Unprocessable Entity error - POST books with invalid data": {
 			urlPath:        "/books",
 			method:         http.MethodPost,
 			requestBody:    `{"book": {"name": ""}}`,
@@ -118,8 +130,8 @@ func TestServer(t *testing.T) {
 			responseBody := recorder.Body.String()
 			response := recorder.Result()
 
-			require.Equal(t, "application/json", response.Header.Get("Content-Type"), "Response:\n%s", responseBody)
 			require.Equalf(t, tc.expectedStatus, response.StatusCode, "Body:\n%s", responseBody)
+			require.Equal(t, "application/json", response.Header.Get("Content-Type"), "Response:\n%s", responseBody)
 
 			require.JSONEqf(t, tc.expectedBody, responseBody, "Body:\n%s", responseBody)
 		})

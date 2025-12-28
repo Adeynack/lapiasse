@@ -60,9 +60,12 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 		middleware.Timeout(timeoutDuration), // set a timeout for requests
 	)
 
+	router.NotFound(handleNotFound())
+	router.MethodNotAllowed(handleMethodNotAllowed())
+
 	strictHandler := api.NewStrictHandlerWithOptions(controller, middlewares, api.StrictHTTPServerOptions{
-		RequestErrorHandlerFunc:  requestErrorHandlerFunc,
-		ResponseErrorHandlerFunc: responseErrorHandlerFunc,
+		RequestErrorHandlerFunc:  requestErrorHandler(),
+		ResponseErrorHandlerFunc: responseErrorHandler(),
 	})
 	handler := api.HandlerFromMux(strictHandler, router)
 
