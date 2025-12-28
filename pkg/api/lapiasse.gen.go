@@ -133,8 +133,13 @@ type BooksIndexParams struct {
 	PageSize *ReqPaginatedPageSize `form:"page-size,omitempty" json:"page-size,omitempty"`
 }
 
+// BooksCreateJSONBody defines parameters for BooksCreate.
+type BooksCreateJSONBody struct {
+	Book BookEdit `json:"book"`
+}
+
 // BooksCreateJSONRequestBody defines body for BooksCreate for application/json ContentType.
-type BooksCreateJSONRequestBody = BookEdit
+type BooksCreateJSONRequestBody BooksCreateJSONBody
 
 // BooksUpdateJSONRequestBody defines body for BooksUpdate for application/json ContentType.
 type BooksUpdateJSONRequestBody = BookEdit

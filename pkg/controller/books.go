@@ -53,7 +53,7 @@ func (t *ApplicationController) BooksShow(ctx context.Context, request api.Books
 func (t *ApplicationController) BooksCreate(ctx context.Context, request api.BooksCreateRequestObject) (api.BooksCreateResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
-	p := request.Body
+	p := request.Body.Book
 
 	book := model.Book{
 		Name:                   p.Name,

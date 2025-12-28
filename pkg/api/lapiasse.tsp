@@ -213,7 +213,7 @@ interface Books {
 
   Show(@path bookId: ID): Res.Show<Book.Show>;
 
-  @post Create(@body book: Book.Edit): Res.Create<Book.Show>;
+  @post Create(book: Book.Edit): Res.Create<Book.Show>;
 
   @put Update(@path bookId: ID, @body book: Book.Edit): Res.Update<Book.Show>;
 

@@ -53,7 +53,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Book.Edit'
+              type: object
+              properties:
+                book:
+                  $ref: '#/components/schemas/Book.Edit'
+              required:
+                - book
   /books/{bookId}:
     get:
       operationId: Books_Show
