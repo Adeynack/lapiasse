@@ -1,11 +1,15 @@
 package model
 
 import (
+	"context"
 	"encoding/json/jsontext"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
+	"adeynack.net/lapiasse/pkg/appvalidator"
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
 
@@ -54,6 +58,30 @@ type Base struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitzero"`
 }
 
+func (b *Base) ValidateBase(
+	ctx context.Context,
+	db *gorm.DB,
+	reason ValidationReason,
+	outer any,
+) (
+	validationErrors ValidationErrorBuilder,
+	err error,
+) {
+	var validatorValidationErrors validator.ValidationErrors
+
+	// Validate the Outer (real) struct.
+	err = appvalidator.Default().StructCtx(ctx, outer)
+	if err != nil {
+		if !errors.As(err, &validatorValidationErrors) {
+			return nil, err
+		}
+
+		validationErrors.AddFromValidator(validatorValidationErrors)
+	}
+
+	return validationErrors, nil
+}
+
 func init() {
 	// Register custom validations
 	// v := appvalidator.Default()
@@ -70,3 +98,12 @@ func init() {
 
 // 	return err == nil
 // }
+
+type ValidationReason rune
+
+const (
+	ValidationReasonSkip   ValidationReason = '-' // Validation should be skipped.
+	ValidationReasonCreate ValidationReason = 'C' // Validation for creation (insert).
+	ValidationReasonUpdate ValidationReason = 'U' // Validation for update.
+	ValidationReasonDelete ValidationReason = 'D' // Validation for deletion.
+)

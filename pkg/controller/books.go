@@ -56,7 +56,7 @@ func (t *ApplicationController) BooksCreate(ctx context.Context, request api.Boo
 		DefaultCurrencyIsoCode: request.Body.DefaultCurrencyIsoCode,
 	}
 
-	if validErr, err := validate(ctx, book); err != nil {
+	if validErr, err := validate(ctx, &book, model.ValidationReasonCreate); err != nil {
 		return nil, fmt.Errorf("validating book: %w", err)
 	} else if validErr != nil {
 		return api.BooksCreate422JSONResponse(*validErr), nil

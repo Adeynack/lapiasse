@@ -5,8 +5,7 @@ import (
 	"errors"
 
 	"adeynack.net/lapiasse/pkg/api"
-	"adeynack.net/lapiasse/pkg/appvalidator"
-	"github.com/go-playground/validator/v10"
+	"adeynack.net/lapiasse/pkg/model"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
@@ -37,13 +36,14 @@ func scopePaginate(
 
 // validate ensures that a model is validated and otherwise returns
 // a pre-filled [api.Error] containing the details of the validation fail.
-func validate(ctx context.Context, value any) (*api.ValidationError, error) {
-	err := appvalidator.Default().StructCtx(ctx, value)
+func validate(ctx context.Context, value model.ModelValidatable, reason model.ValidationReason) (*api.ValidationError, error) {
+	err := value.Validate(ctx, reason)
+
 	if err == nil {
 		return nil, nil
 	}
 
-	var validationErr validator.ValidationErrors
+	var validationErr model.ValidationError
 	if errors.As(err, &validationErr) {
 		return api422Error(validationErr), nil
 	}

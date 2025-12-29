@@ -13,12 +13,13 @@ import (
 	"adeynack.net/lapiasse/pkg/controller"
 	"adeynack.net/lapiasse/pkg/model"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
+	"adeynack.net/lapiasse/pkg/repository"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
-func TestGetBooks(t *testing.T) {
+func TestBooksIndex(t *testing.T) {
 	seedMoreBooksThanMaxPageSize := func(ctx context.Context) {
 		db := ctxval.MustResolve[*gorm.DB](ctx)
 		for _, i := range rand.Perm(controller.DefaultPageSize + 10) {
@@ -98,9 +99,9 @@ func TestGetBooks(t *testing.T) {
 	}
 }
 
-func TestCreateBook(t *testing.T) {
+func TestBooksCreate(t *testing.T) {
 	for name, tc := range map[string]struct {
-		seed         func(ctx context.Context)
+		seed         func(ctx context.Context, db *gorm.DB)
 		requestBook  *api.BooksCreateJSONRequestBody
 		expecting201 func(t *testing.T, resp api.BooksCreate201JSONResponse)
 		expecting422 func(t *testing.T, resp api.BooksCreate422JSONResponse)
@@ -124,12 +125,28 @@ func TestCreateBook(t *testing.T) {
 				require.Equal(t, "3", lo.FromPtr(lenValidErr.Param))
 			},
 		},
+		"duplicate name": {
+			seed: func(ctx context.Context, db *gorm.DB) {
+				repository.MustCreate0(ctx, &model.Book{Name: "My Book", DefaultCurrencyIsoCode: "EUR"})
+			},
+			requestBook: &api.BooksCreateJSONRequestBody{
+				Name:                   "My Book",
+				DefaultCurrencyIsoCode: "USD",
+			},
+			expecting422: func(t *testing.T, resp api.BooksCreate422JSONResponse) {
+				uniqueValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "unique" })
+				require.True(t, ok, "expected unique validation error")
+				require.Equal(t, "Book.Name", uniqueValidErr.Field)
+				require.Equal(t, "book name must be unique", uniqueValidErr.Message)
+			},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			ctx := app.CreateTestAppCtx(t)
+			db := ctxval.MustResolve[*gorm.DB](ctx)
 
 			if tc.seed != nil {
-				tc.seed(ctx)
+				tc.seed(ctx, db)
 			}
 
 			ctrl := &controller.ApplicationController{}
