@@ -1,17 +1,21 @@
 openapi: 3.0.0
 info:
   title: La Piasse API
-  version: '1.0'
-tags: []
+  version: "1.0"
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080
+    description: Local development server
 paths:
   /books:
     get:
       operationId: Books_Index
       parameters:
-        - $ref: '#/components/parameters/Req.Paginated.page'
-        - $ref: '#/components/parameters/Req.Paginated.page-size'
+        - $ref: "#/components/parameters/Req.Paginated.page"
+        - $ref: "#/components/parameters/Req.Paginated.page-size"
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
@@ -24,31 +28,31 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Book.Show'
+                      $ref: "#/components/schemas/Book.Show"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: "#/components/schemas/Pagination"
     post:
       operationId: Books_Create
       parameters: []
       responses:
-        '201':
+        "201":
           description: The request has succeeded and a new resource has been created as a result.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book.Show'
-        '422':
+                $ref: "#/components/schemas/Book.Show"
+        "422":
           description: Client error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Book.Edit'
+              $ref: "#/components/schemas/Book.Edit"
   /books/{bookId}:
     get:
       operationId: Books_Show
@@ -57,20 +61,20 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/ID'
+            $ref: "#/components/schemas/ID"
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book.Show'
-        '404':
+                $ref: "#/components/schemas/Book.Show"
+        "404":
           description: The server cannot find the requested resource.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     put:
       operationId: Books_Update
       parameters:
@@ -78,32 +82,32 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/ID'
+            $ref: "#/components/schemas/ID"
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book.Show'
-        '404':
+                $ref: "#/components/schemas/Book.Show"
+        "404":
           description: The server cannot find the requested resource.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '422':
+                $ref: "#/components/schemas/Error"
+        "422":
           description: Client error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationError'
+                $ref: "#/components/schemas/ValidationError"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Book.Edit'
+              $ref: "#/components/schemas/Book.Edit"
     delete:
       operationId: Books_Delete
       parameters:
@@ -111,27 +115,27 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/ID'
+            $ref: "#/components/schemas/ID"
       responses:
-        '204':
+        "204":
           description: There is no content to send for this request, but the headers may be useful.
-        '404':
+        "404":
           description: The server cannot find the requested resource.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
   /health:
     get:
       operationId: health
       parameters: []
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Health'
+                $ref: "#/components/schemas/Health"
 components:
   parameters:
     Req.Paginated.page:
@@ -175,7 +179,7 @@ components:
           example: 422
         type:
           allOf:
-            - $ref: '#/components/schemas/ErrorType'
+            - $ref: "#/components/schemas/ErrorType"
           description: A URI reference that identifies the problem type.
           example: error:validation
         detail:
@@ -229,7 +233,7 @@ components:
           example: 422
         type:
           allOf:
-            - $ref: '#/components/schemas/ErrorType'
+            - $ref: "#/components/schemas/ErrorType"
           description: A URI reference that identifies the problem type.
           example: error:validation
         detail:
@@ -258,7 +262,7 @@ components:
           type: string
           format: date
         register_id:
-          $ref: '#/components/schemas/ID'
+          $ref: "#/components/schemas/ID"
         cheque:
           type: string
         description:
@@ -266,9 +270,9 @@ components:
         memo:
           type: string
         status:
-          $ref: '#/components/schemas/ExchangeStatus'
+          $ref: "#/components/schemas/ExchangeStatus"
       allOf:
-        - $ref: '#/components/schemas/Resource'
+        - $ref: "#/components/schemas/Resource"
     ExchangeStatus:
       type: string
       enum:
@@ -283,9 +287,9 @@ components:
         splits:
           type: array
           items:
-            $ref: '#/components/schemas/Split'
+            $ref: "#/components/schemas/Split"
       allOf:
-        - $ref: '#/components/schemas/Exchange'
+        - $ref: "#/components/schemas/Exchange"
     FieldValidationError:
       type: object
       required:
@@ -311,7 +315,7 @@ components:
         - status
       properties:
         status:
-          $ref: '#/components/schemas/ServerHealthStatus'
+          $ref: "#/components/schemas/ServerHealthStatus"
         reason:
           type: string
     ID:
@@ -332,7 +336,7 @@ components:
           example: 422
         type:
           allOf:
-            - $ref: '#/components/schemas/ErrorType'
+            - $ref: "#/components/schemas/ErrorType"
           description: A URI reference that identifies the problem type.
           example: error:validation
         detail:
@@ -355,11 +359,11 @@ components:
         name:
           type: string
         account_type:
-          $ref: '#/components/schemas/RegisterType'
+          $ref: "#/components/schemas/RegisterType"
         currency_iso_code:
           type: string
       allOf:
-        - $ref: '#/components/schemas/Resource'
+        - $ref: "#/components/schemas/Resource"
     RegisterType:
       type: string
       enum:
@@ -402,19 +406,19 @@ components:
         - status
       properties:
         exchange_id:
-          $ref: '#/components/schemas/ID'
+          $ref: "#/components/schemas/ID"
         destination_register_id:
-          $ref: '#/components/schemas/ID'
+          $ref: "#/components/schemas/ID"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         counterpart_amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         memo:
           type: string
         status:
-          $ref: '#/components/schemas/ExchangeStatus'
+          $ref: "#/components/schemas/ExchangeStatus"
       allOf:
-        - $ref: '#/components/schemas/Resource'
+        - $ref: "#/components/schemas/Resource"
     User:
       type: object
       required:
@@ -423,7 +427,7 @@ components:
         display_name:
           type: string
       allOf:
-        - $ref: '#/components/schemas/Resource'
+        - $ref: "#/components/schemas/Resource"
     ValidationError:
       type: object
       required:
@@ -441,7 +445,7 @@ components:
           example: 422
         type:
           allOf:
-            - $ref: '#/components/schemas/ErrorType'
+            - $ref: "#/components/schemas/ErrorType"
           description: A URI reference that identifies the problem type.
           example: error:validation
         detail:
@@ -450,10 +454,6 @@ components:
         validation_errors:
           type: array
           items:
-            $ref: '#/components/schemas/FieldValidationError'
+            $ref: "#/components/schemas/FieldValidationError"
           description: A list of fields that failed validation.
       x-go-no-type-alias: true
-servers:
-  - url: http://localhost:8080
-    description: Local development server
-    variables: {}

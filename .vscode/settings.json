@@ -4,5 +4,8 @@
     "PWD": "${workspaceFolder}",
     "WORKSPACE_ROOT": "${workspaceFolder}",
   },
-  "go.buildTags": "test"
+  "go.buildTags": "test",
+  "yaml.schemas": {
+    "openapi:v3": "file:///Users/adeynack/src/github.com/Adeynack/lapiasse/pkg/api/lapiasse.oas.yaml"
+  }
 }
