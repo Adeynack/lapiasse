@@ -28,8 +28,8 @@ func api404ErrorFromId(
 }
 
 func api422Error(errs model.ValidationError) api.ValidationError {
-	validationErrors := lo.Map(errs.FieldErrors, func(e model.FieldError, _ int) api.FieldValidationError {
-		return api.FieldValidationError(e)
+	validationErrors := lo.Map(errs.FieldErrors, func(e model.FieldError, _ int) api.FieldValidationFailure {
+		return api.FieldValidationFailure(e)
 	})
 
 	return api.ValidationError{

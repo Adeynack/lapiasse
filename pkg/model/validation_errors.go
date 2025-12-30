@@ -22,7 +22,7 @@ type ModelValidatable interface {
 	Validate(ctx context.Context, reason ValidationReason) error
 }
 
-type FieldError api.FieldValidationError
+type FieldError api.FieldValidationFailure
 
 type ValidationErrorBuilder []FieldError
 

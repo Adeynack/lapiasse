@@ -118,7 +118,7 @@ func TestBooksCreate(t *testing.T) {
 				DefaultCurrencyIsoCode: "INVALID",
 			},
 			expecting422: func(t *testing.T, resp api.ValidationError) {
-				lenValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "len" })
+				lenValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationFailure) bool { return fe.Validation == "len" })
 				require.True(t, ok, "expected len validation error")
 				require.Equal(t, "Book.DefaultCurrencyIsoCode", lenValidErr.Field)
 				require.Equal(t, "currency ISO code must be 3 characters long", lenValidErr.Message)
@@ -134,7 +134,7 @@ func TestBooksCreate(t *testing.T) {
 				DefaultCurrencyIsoCode: "USD",
 			},
 			expecting422: func(t *testing.T, resp api.ValidationError) {
-				uniqueValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "unique" })
+				uniqueValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationFailure) bool { return fe.Validation == "unique" })
 				require.True(t, ok, "expected unique validation error")
 				require.Equal(t, "Book.Name", uniqueValidErr.Field)
 				require.Equal(t, "book name must be unique", uniqueValidErr.Message)

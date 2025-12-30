@@ -65,11 +65,11 @@ type Error struct {
 	Type ErrorType `json:"type"`
 }
 
-// ErrorType defines model for ErrorType.
+// ErrorType A URI reference that identifies the problem type.
 type ErrorType string
 
-// FieldValidationError defines model for FieldValidationError.
-type FieldValidationError struct {
+// FieldValidationFailure defines model for FieldValidationFailure.
+type FieldValidationFailure struct {
 	// Field The name of the invalid field.
 	Field string `json:"field"`
 
@@ -115,7 +115,7 @@ type ValidationError struct {
 	Type ErrorType `json:"type"`
 
 	// ValidationErrors A list of fields that failed validation.
-	ValidationErrors []FieldValidationError `json:"validation_errors"`
+	ValidationErrors []FieldValidationFailure `json:"validation_errors"`
 }
 
 // ReqPaginatedPage defines model for Req.Paginated.page.
