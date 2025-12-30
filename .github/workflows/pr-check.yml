@@ -20,14 +20,15 @@ jobs:
           node-version: "24.8" # align with /.nvmrc
       - name: Install JS dependencies
         run: npm ci
-      - name: Generate
-        run:
-          make gen && ./scripts/git_tracked_are_unmodified
       - name: Build
         run: make build
+      - name: Ensure build did not update tracked files
+        run: ./scripts/git_tracked_are_unmodified
       - name: Lint
         run: make lint
       - name: Test
         run: make test
         env:
           TEST_LOG: fail
+      - name: Ensure tests did not update tracked files
+        run: ./scripts/git_tracked_are_unmodified
