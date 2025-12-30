@@ -37,7 +37,7 @@ func (t *ApplicationController) GetBook(ctx context.Context, request api.GetBook
 
 	book, err := gorm.G[model.Book](db).Where("id = ?", request.BookId).First(ctx)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return api.GetBook404JSONResponse(api404ErrorFromId("Book", request.BookId)), nil
+		return api404ErrorFromId("Book", request.BookId), nil
 	} else if err != nil {
 		return nil, fmt.Errorf("reading book from database: %w", err)
 	}

@@ -8,18 +8,24 @@ servers:
   - url: http://localhost:8080
     description: Local development server
 x-responses:
+  - &response400
+    description: The server cannot process the request due to a client error.
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/BadRequestError"
+  - &response404
+    description: The server cannot find the requested resource.
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/NotFoundError"
   - &response422
     description: Unprocessable Entity
     content:
       application/json:
         schema:
           $ref: "#/components/schemas/ValidationError"
-  - &response404
-    description: The server cannot find the requested resource.
-    content:
-      application/json:
-        schema:
-          $ref: "#/components/schemas/Error"
 paths:
   /books:
     get:
@@ -44,6 +50,7 @@ paths:
                       $ref: "#/components/schemas/Book.Show"
                   pagination:
                     $ref: "#/components/schemas/Pagination"
+        "400": *response400
     post:
       operationId: CreateBook
       requestBody:
@@ -59,6 +66,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book.Show"
+        "400": *response400
         "422": *response422
   /books/{bookId}:
     parameters:
@@ -86,6 +94,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book.Show"
+        "400": *response400
         "404": *response404
         "422": *response422
       requestBody:
@@ -160,6 +169,9 @@ components:
         A machine-readable format for specifying errors in HTTP API responses
         based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
     BadRequestError:
+      x-go-no-type-alias: true
+      <<: *error
+    NotFoundError:
       x-go-no-type-alias: true
       <<: *error
     Book.Edit:

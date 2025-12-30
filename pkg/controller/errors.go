@@ -9,8 +9,8 @@ import (
 	"github.com/samber/lo"
 )
 
-func api404Error(detail string) api.Error {
-	return api.Error{
+func api404Error(detail string) api.NotFoundError {
+	return api.NotFoundError{
 		Status: 404,
 		Title:  "Not Found",
 		Detail: &detail,
@@ -21,7 +21,7 @@ func api404Error(detail string) api.Error {
 func api404ErrorFromId(
 	resourceName string, // e.g. "Book"
 	id string,
-) api.Error {
+) api.NotFoundError {
 	return api404Error(
 		fmt.Sprintf("%s with ID %q not found", resourceName, id),
 	)
