@@ -14,6 +14,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.25.4"
+      - name: Generate
+        run:
+          make gen && ./scripts/git_tracked_are_unmodified
       - name: Build
         run: make build
       - name: Lint
