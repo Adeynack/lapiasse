@@ -31,18 +31,18 @@ func (t *ApplicationController) ListBooks(ctx context.Context, request api.ListB
 	return response, nil
 }
 
-// BooksShow implements [api.StrictServerInterface.BooksShow].
-func (t *ApplicationController) BooksShow(ctx context.Context, request api.BooksShowRequestObject) (api.BooksShowResponseObject, error) {
+// GetBook implements [api.StrictServerInterface.GetBook].
+func (t *ApplicationController) GetBook(ctx context.Context, request api.GetBookRequestObject) (api.GetBookResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
 	book, err := gorm.G[model.Book](db).Where("id = ?", request.BookId).First(ctx)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return api.BooksShow404JSONResponse(api404ErrorFromId("Book", request.BookId)), nil
+		return api.GetBook404JSONResponse(api404ErrorFromId("Book", request.BookId)), nil
 	} else if err != nil {
 		return nil, fmt.Errorf("reading book from database: %w", err)
 	}
 
-	response := api.BooksShow200JSONResponse(toApiBookShow(book))
+	response := api.GetBook200JSONResponse(toApiBookShow(book))
 
 	return response, nil
 }
@@ -70,13 +70,13 @@ func (t *ApplicationController) CreateBook(ctx context.Context, request api.Crea
 	return response, nil
 }
 
-// BooksUpdate implements [api.StrictServerInterface.BooksUpdate].
-func (t *ApplicationController) BooksUpdate(ctx context.Context, request api.BooksUpdateRequestObject) (api.BooksUpdateResponseObject, error) {
+// UpdateBook implements [api.StrictServerInterface.UpdateBook].
+func (t *ApplicationController) UpdateBook(ctx context.Context, request api.UpdateBookRequestObject) (api.UpdateBookResponseObject, error) {
 	panic("unimplemented")
 }
 
-// BooksDelete implements [api.StrictServerInterface.BooksDelete].
-func (t *ApplicationController) BooksDelete(ctx context.Context, request api.BooksDeleteRequestObject) (api.BooksDeleteResponseObject, error) {
+// DeleteBook implements [api.StrictServerInterface.DeleteBook].
+func (t *ApplicationController) DeleteBook(ctx context.Context, request api.DeleteBookRequestObject) (api.DeleteBookResponseObject, error) {
 	panic("unimplemented")
 }
 

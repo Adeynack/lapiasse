@@ -14,6 +14,12 @@ x-responses:
       application/json:
         schema:
           $ref: "#/components/schemas/ValidationError"
+  - &response404
+    description: The server cannot find the requested resource.
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/Error"
 paths:
   /books:
     get:
@@ -23,7 +29,7 @@ paths:
         - $ref: "#/components/parameters/Req.Paginated.page-size"
       responses:
         "200":
-          description: The request has succeeded.
+          description: The books were successfully retrieved.
           content:
             application/json:
               schema:
@@ -55,54 +61,33 @@ paths:
                 $ref: "#/components/schemas/Book.Show"
         "422": *response422
   /books/{bookId}:
+    parameters:
+      - name: bookId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/ID"
     get:
-      operationId: Books_Show
-      parameters:
-        - name: bookId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/ID"
+      operationId: GetBook
       responses:
         "200":
-          description: The request has succeeded.
+          description: The book was successfully retrieved.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book.Show"
-        "404":
-          description: The server cannot find the requested resource.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        "404": *response404
     put:
-      operationId: Books_Update
-      parameters:
-        - name: bookId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/ID"
+      operationId: UpdateBook
       responses:
         "200":
-          description: The request has succeeded.
+          description: The book was successfully updated.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book.Show"
-        "404":
-          description: The server cannot find the requested resource.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "422":
-          description: Client error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+        "404": *response404
+        "422": *response422
       requestBody:
         required: true
         content:
@@ -110,22 +95,11 @@ paths:
             schema:
               $ref: "#/components/schemas/Book.Edit"
     delete:
-      operationId: Books_Delete
-      parameters:
-        - name: bookId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/ID"
+      operationId: DeleteBook
       responses:
         "204":
-          description: There is no content to send for this request, but the headers may be useful.
-        "404":
-          description: The server cannot find the requested resource.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          description: The book was successfully deleted.
+        "404": *response404
   /health:
     get:
       operationId: health

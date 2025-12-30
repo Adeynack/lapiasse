@@ -136,8 +136,8 @@ type ListBooksParams struct {
 // CreateBookJSONRequestBody defines body for CreateBook for application/json ContentType.
 type CreateBookJSONRequestBody = BookEdit
 
-// BooksUpdateJSONRequestBody defines body for BooksUpdate for application/json ContentType.
-type BooksUpdateJSONRequestBody = BookEdit
+// UpdateBookJSONRequestBody defines body for UpdateBook for application/json ContentType.
+type UpdateBookJSONRequestBody = BookEdit
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -220,16 +220,16 @@ type ClientInterface interface {
 
 	CreateBook(ctx context.Context, body CreateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// BooksDelete request
-	BooksDelete(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteBook request
+	DeleteBook(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// BooksShow request
-	BooksShow(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetBook request
+	GetBook(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// BooksUpdateWithBody request with any body
-	BooksUpdateWithBody(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// UpdateBookWithBody request with any body
+	UpdateBookWithBody(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	BooksUpdate(ctx context.Context, bookId ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	UpdateBook(ctx context.Context, bookId ID, body UpdateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// Health request
 	Health(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -271,8 +271,8 @@ func (c *Client) CreateBook(ctx context.Context, body CreateBookJSONRequestBody,
 	return c.Client.Do(req)
 }
 
-func (c *Client) BooksDelete(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksDeleteRequest(c.Server, bookId)
+func (c *Client) DeleteBook(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteBookRequest(c.Server, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -283,8 +283,8 @@ func (c *Client) BooksDelete(ctx context.Context, bookId ID, reqEditors ...Reque
 	return c.Client.Do(req)
 }
 
-func (c *Client) BooksShow(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksShowRequest(c.Server, bookId)
+func (c *Client) GetBook(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBookRequest(c.Server, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +295,8 @@ func (c *Client) BooksShow(ctx context.Context, bookId ID, reqEditors ...Request
 	return c.Client.Do(req)
 }
 
-func (c *Client) BooksUpdateWithBody(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksUpdateRequestWithBody(c.Server, bookId, contentType, body)
+func (c *Client) UpdateBookWithBody(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateBookRequestWithBody(c.Server, bookId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -307,8 +307,8 @@ func (c *Client) BooksUpdateWithBody(ctx context.Context, bookId ID, contentType
 	return c.Client.Do(req)
 }
 
-func (c *Client) BooksUpdate(ctx context.Context, bookId ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksUpdateRequest(c.Server, bookId, body)
+func (c *Client) UpdateBook(ctx context.Context, bookId ID, body UpdateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateBookRequest(c.Server, bookId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -436,8 +436,8 @@ func NewCreateBookRequestWithBody(server string, contentType string, body io.Rea
 	return req, nil
 }
 
-// NewBooksDeleteRequest generates requests for BooksDelete
-func NewBooksDeleteRequest(server string, bookId ID) (*http.Request, error) {
+// NewDeleteBookRequest generates requests for DeleteBook
+func NewDeleteBookRequest(server string, bookId ID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -470,8 +470,8 @@ func NewBooksDeleteRequest(server string, bookId ID) (*http.Request, error) {
 	return req, nil
 }
 
-// NewBooksShowRequest generates requests for BooksShow
-func NewBooksShowRequest(server string, bookId ID) (*http.Request, error) {
+// NewGetBookRequest generates requests for GetBook
+func NewGetBookRequest(server string, bookId ID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -504,19 +504,19 @@ func NewBooksShowRequest(server string, bookId ID) (*http.Request, error) {
 	return req, nil
 }
 
-// NewBooksUpdateRequest calls the generic BooksUpdate builder with application/json body
-func NewBooksUpdateRequest(server string, bookId ID, body BooksUpdateJSONRequestBody) (*http.Request, error) {
+// NewUpdateBookRequest calls the generic UpdateBook builder with application/json body
+func NewUpdateBookRequest(server string, bookId ID, body UpdateBookJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewBooksUpdateRequestWithBody(server, bookId, "application/json", bodyReader)
+	return NewUpdateBookRequestWithBody(server, bookId, "application/json", bodyReader)
 }
 
-// NewBooksUpdateRequestWithBody generates requests for BooksUpdate with any type of body
-func NewBooksUpdateRequestWithBody(server string, bookId ID, contentType string, body io.Reader) (*http.Request, error) {
+// NewUpdateBookRequestWithBody generates requests for UpdateBook with any type of body
+func NewUpdateBookRequestWithBody(server string, bookId ID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -629,16 +629,16 @@ type ClientWithResponsesInterface interface {
 
 	CreateBookWithResponse(ctx context.Context, body CreateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBookResponse, error)
 
-	// BooksDeleteWithResponse request
-	BooksDeleteWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*BooksDeleteResponse, error)
+	// DeleteBookWithResponse request
+	DeleteBookWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*DeleteBookResponse, error)
 
-	// BooksShowWithResponse request
-	BooksShowWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*BooksShowResponse, error)
+	// GetBookWithResponse request
+	GetBookWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*GetBookResponse, error)
 
-	// BooksUpdateWithBodyWithResponse request with any body
-	BooksUpdateWithBodyWithResponse(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error)
+	// UpdateBookWithBodyWithResponse request with any body
+	UpdateBookWithBodyWithResponse(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateBookResponse, error)
 
-	BooksUpdateWithResponse(ctx context.Context, bookId ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error)
+	UpdateBookWithResponse(ctx context.Context, bookId ID, body UpdateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateBookResponse, error)
 
 	// HealthWithResponse request
 	HealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthResponse, error)
@@ -692,14 +692,14 @@ func (r CreateBookResponse) StatusCode() int {
 	return 0
 }
 
-type BooksDeleteResponse struct {
+type DeleteBookResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON404      *Error
 }
 
 // Status returns HTTPResponse.Status
-func (r BooksDeleteResponse) Status() string {
+func (r DeleteBookResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -707,14 +707,14 @@ func (r BooksDeleteResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r BooksDeleteResponse) StatusCode() int {
+func (r DeleteBookResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type BooksShowResponse struct {
+type GetBookResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *BookShow
@@ -722,7 +722,7 @@ type BooksShowResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r BooksShowResponse) Status() string {
+func (r GetBookResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -730,14 +730,14 @@ func (r BooksShowResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r BooksShowResponse) StatusCode() int {
+func (r GetBookResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type BooksUpdateResponse struct {
+type UpdateBookResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *BookShow
@@ -746,7 +746,7 @@ type BooksUpdateResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r BooksUpdateResponse) Status() string {
+func (r UpdateBookResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -754,7 +754,7 @@ func (r BooksUpdateResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r BooksUpdateResponse) StatusCode() int {
+func (r UpdateBookResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -809,39 +809,39 @@ func (c *ClientWithResponses) CreateBookWithResponse(ctx context.Context, body C
 	return ParseCreateBookResponse(rsp)
 }
 
-// BooksDeleteWithResponse request returning *BooksDeleteResponse
-func (c *ClientWithResponses) BooksDeleteWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*BooksDeleteResponse, error) {
-	rsp, err := c.BooksDelete(ctx, bookId, reqEditors...)
+// DeleteBookWithResponse request returning *DeleteBookResponse
+func (c *ClientWithResponses) DeleteBookWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*DeleteBookResponse, error) {
+	rsp, err := c.DeleteBook(ctx, bookId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBooksDeleteResponse(rsp)
+	return ParseDeleteBookResponse(rsp)
 }
 
-// BooksShowWithResponse request returning *BooksShowResponse
-func (c *ClientWithResponses) BooksShowWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*BooksShowResponse, error) {
-	rsp, err := c.BooksShow(ctx, bookId, reqEditors...)
+// GetBookWithResponse request returning *GetBookResponse
+func (c *ClientWithResponses) GetBookWithResponse(ctx context.Context, bookId ID, reqEditors ...RequestEditorFn) (*GetBookResponse, error) {
+	rsp, err := c.GetBook(ctx, bookId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBooksShowResponse(rsp)
+	return ParseGetBookResponse(rsp)
 }
 
-// BooksUpdateWithBodyWithResponse request with arbitrary body returning *BooksUpdateResponse
-func (c *ClientWithResponses) BooksUpdateWithBodyWithResponse(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error) {
-	rsp, err := c.BooksUpdateWithBody(ctx, bookId, contentType, body, reqEditors...)
+// UpdateBookWithBodyWithResponse request with arbitrary body returning *UpdateBookResponse
+func (c *ClientWithResponses) UpdateBookWithBodyWithResponse(ctx context.Context, bookId ID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateBookResponse, error) {
+	rsp, err := c.UpdateBookWithBody(ctx, bookId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBooksUpdateResponse(rsp)
+	return ParseUpdateBookResponse(rsp)
 }
 
-func (c *ClientWithResponses) BooksUpdateWithResponse(ctx context.Context, bookId ID, body BooksUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*BooksUpdateResponse, error) {
-	rsp, err := c.BooksUpdate(ctx, bookId, body, reqEditors...)
+func (c *ClientWithResponses) UpdateBookWithResponse(ctx context.Context, bookId ID, body UpdateBookJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateBookResponse, error) {
+	rsp, err := c.UpdateBook(ctx, bookId, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBooksUpdateResponse(rsp)
+	return ParseUpdateBookResponse(rsp)
 }
 
 // HealthWithResponse request returning *HealthResponse
@@ -915,15 +915,15 @@ func ParseCreateBookResponse(rsp *http.Response) (*CreateBookResponse, error) {
 	return response, nil
 }
 
-// ParseBooksDeleteResponse parses an HTTP response from a BooksDeleteWithResponse call
-func ParseBooksDeleteResponse(rsp *http.Response) (*BooksDeleteResponse, error) {
+// ParseDeleteBookResponse parses an HTTP response from a DeleteBookWithResponse call
+func ParseDeleteBookResponse(rsp *http.Response) (*DeleteBookResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &BooksDeleteResponse{
+	response := &DeleteBookResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -941,15 +941,15 @@ func ParseBooksDeleteResponse(rsp *http.Response) (*BooksDeleteResponse, error) 
 	return response, nil
 }
 
-// ParseBooksShowResponse parses an HTTP response from a BooksShowWithResponse call
-func ParseBooksShowResponse(rsp *http.Response) (*BooksShowResponse, error) {
+// ParseGetBookResponse parses an HTTP response from a GetBookWithResponse call
+func ParseGetBookResponse(rsp *http.Response) (*GetBookResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &BooksShowResponse{
+	response := &GetBookResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -974,15 +974,15 @@ func ParseBooksShowResponse(rsp *http.Response) (*BooksShowResponse, error) {
 	return response, nil
 }
 
-// ParseBooksUpdateResponse parses an HTTP response from a BooksUpdateWithResponse call
-func ParseBooksUpdateResponse(rsp *http.Response) (*BooksUpdateResponse, error) {
+// ParseUpdateBookResponse parses an HTTP response from a UpdateBookWithResponse call
+func ParseUpdateBookResponse(rsp *http.Response) (*UpdateBookResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &BooksUpdateResponse{
+	response := &UpdateBookResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1050,13 +1050,13 @@ type ServerInterface interface {
 	CreateBook(w http.ResponseWriter, r *http.Request)
 
 	// (DELETE /books/{bookId})
-	BooksDelete(w http.ResponseWriter, r *http.Request, bookId ID)
+	DeleteBook(w http.ResponseWriter, r *http.Request, bookId ID)
 
 	// (GET /books/{bookId})
-	BooksShow(w http.ResponseWriter, r *http.Request, bookId ID)
+	GetBook(w http.ResponseWriter, r *http.Request, bookId ID)
 
 	// (PUT /books/{bookId})
-	BooksUpdate(w http.ResponseWriter, r *http.Request, bookId ID)
+	UpdateBook(w http.ResponseWriter, r *http.Request, bookId ID)
 
 	// (GET /health)
 	Health(w http.ResponseWriter, r *http.Request)
@@ -1077,17 +1077,17 @@ func (_ Unimplemented) CreateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 // (DELETE /books/{bookId})
-func (_ Unimplemented) BooksDelete(w http.ResponseWriter, r *http.Request, bookId ID) {
+func (_ Unimplemented) DeleteBook(w http.ResponseWriter, r *http.Request, bookId ID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // (GET /books/{bookId})
-func (_ Unimplemented) BooksShow(w http.ResponseWriter, r *http.Request, bookId ID) {
+func (_ Unimplemented) GetBook(w http.ResponseWriter, r *http.Request, bookId ID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // (PUT /books/{bookId})
-func (_ Unimplemented) BooksUpdate(w http.ResponseWriter, r *http.Request, bookId ID) {
+func (_ Unimplemented) UpdateBook(w http.ResponseWriter, r *http.Request, bookId ID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1154,8 +1154,8 @@ func (siw *ServerInterfaceWrapper) CreateBook(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
-// BooksDelete operation middleware
-func (siw *ServerInterfaceWrapper) BooksDelete(w http.ResponseWriter, r *http.Request) {
+// DeleteBook operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
@@ -1169,7 +1169,7 @@ func (siw *ServerInterfaceWrapper) BooksDelete(w http.ResponseWriter, r *http.Re
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BooksDelete(w, r, bookId)
+		siw.Handler.DeleteBook(w, r, bookId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1179,8 +1179,8 @@ func (siw *ServerInterfaceWrapper) BooksDelete(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
-// BooksShow operation middleware
-func (siw *ServerInterfaceWrapper) BooksShow(w http.ResponseWriter, r *http.Request) {
+// GetBook operation middleware
+func (siw *ServerInterfaceWrapper) GetBook(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
@@ -1194,7 +1194,7 @@ func (siw *ServerInterfaceWrapper) BooksShow(w http.ResponseWriter, r *http.Requ
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BooksShow(w, r, bookId)
+		siw.Handler.GetBook(w, r, bookId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1204,8 +1204,8 @@ func (siw *ServerInterfaceWrapper) BooksShow(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
-// BooksUpdate operation middleware
-func (siw *ServerInterfaceWrapper) BooksUpdate(w http.ResponseWriter, r *http.Request) {
+// UpdateBook operation middleware
+func (siw *ServerInterfaceWrapper) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
@@ -1219,7 +1219,7 @@ func (siw *ServerInterfaceWrapper) BooksUpdate(w http.ResponseWriter, r *http.Re
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BooksUpdate(w, r, bookId)
+		siw.Handler.UpdateBook(w, r, bookId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1363,13 +1363,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/books", wrapper.CreateBook)
 	})
 	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/books/{bookId}", wrapper.BooksDelete)
+		r.Delete(options.BaseURL+"/books/{bookId}", wrapper.DeleteBook)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/books/{bookId}", wrapper.BooksShow)
+		r.Get(options.BaseURL+"/books/{bookId}", wrapper.GetBook)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/books/{bookId}", wrapper.BooksUpdate)
+		r.Put(options.BaseURL+"/books/{bookId}", wrapper.UpdateBook)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/health", wrapper.Health)
@@ -1422,85 +1422,85 @@ func (response ValidationError) VisitCreateBookResponse(w http.ResponseWriter) e
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksDeleteRequestObject struct {
+type DeleteBookRequestObject struct {
 	BookId ID `json:"bookId"`
 }
 
-type BooksDeleteResponseObject interface {
-	VisitBooksDeleteResponse(w http.ResponseWriter) error
+type DeleteBookResponseObject interface {
+	VisitDeleteBookResponse(w http.ResponseWriter) error
 }
 
-type BooksDelete204Response struct {
+type DeleteBook204Response struct {
 }
 
-func (response BooksDelete204Response) VisitBooksDeleteResponse(w http.ResponseWriter) error {
+func (response DeleteBook204Response) VisitDeleteBookResponse(w http.ResponseWriter) error {
 	w.WriteHeader(204)
 	return nil
 }
 
-type BooksDelete404JSONResponse Error
+type DeleteBook404JSONResponse Error
 
-func (response BooksDelete404JSONResponse) VisitBooksDeleteResponse(w http.ResponseWriter) error {
+func (response DeleteBook404JSONResponse) VisitDeleteBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksShowRequestObject struct {
+type GetBookRequestObject struct {
 	BookId ID `json:"bookId"`
 }
 
-type BooksShowResponseObject interface {
-	VisitBooksShowResponse(w http.ResponseWriter) error
+type GetBookResponseObject interface {
+	VisitGetBookResponse(w http.ResponseWriter) error
 }
 
-type BooksShow200JSONResponse BookShow
+type GetBook200JSONResponse BookShow
 
-func (response BooksShow200JSONResponse) VisitBooksShowResponse(w http.ResponseWriter) error {
+func (response GetBook200JSONResponse) VisitGetBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksShow404JSONResponse Error
+type GetBook404JSONResponse Error
 
-func (response BooksShow404JSONResponse) VisitBooksShowResponse(w http.ResponseWriter) error {
+func (response GetBook404JSONResponse) VisitGetBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksUpdateRequestObject struct {
+type UpdateBookRequestObject struct {
 	BookId ID `json:"bookId"`
-	Body   *BooksUpdateJSONRequestBody
+	Body   *UpdateBookJSONRequestBody
 }
 
-type BooksUpdateResponseObject interface {
-	VisitBooksUpdateResponse(w http.ResponseWriter) error
+type UpdateBookResponseObject interface {
+	VisitUpdateBookResponse(w http.ResponseWriter) error
 }
 
-type BooksUpdate200JSONResponse BookShow
+type UpdateBook200JSONResponse BookShow
 
-func (response BooksUpdate200JSONResponse) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+func (response UpdateBook200JSONResponse) VisitUpdateBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksUpdate404JSONResponse Error
+type UpdateBook404JSONResponse Error
 
-func (response BooksUpdate404JSONResponse) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+func (response UpdateBook404JSONResponse) VisitUpdateBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-func (response ValidationError) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+func (response ValidationError) VisitUpdateBookResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 
@@ -1533,13 +1533,13 @@ type StrictServerInterface interface {
 	CreateBook(ctx context.Context, request CreateBookRequestObject) (CreateBookResponseObject, error)
 
 	// (DELETE /books/{bookId})
-	BooksDelete(ctx context.Context, request BooksDeleteRequestObject) (BooksDeleteResponseObject, error)
+	DeleteBook(ctx context.Context, request DeleteBookRequestObject) (DeleteBookResponseObject, error)
 
 	// (GET /books/{bookId})
-	BooksShow(ctx context.Context, request BooksShowRequestObject) (BooksShowResponseObject, error)
+	GetBook(ctx context.Context, request GetBookRequestObject) (GetBookResponseObject, error)
 
 	// (PUT /books/{bookId})
-	BooksUpdate(ctx context.Context, request BooksUpdateRequestObject) (BooksUpdateResponseObject, error)
+	UpdateBook(ctx context.Context, request UpdateBookRequestObject) (UpdateBookResponseObject, error)
 
 	// (GET /health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
@@ -1631,25 +1631,25 @@ func (sh *strictHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// BooksDelete operation middleware
-func (sh *strictHandler) BooksDelete(w http.ResponseWriter, r *http.Request, bookId ID) {
-	var request BooksDeleteRequestObject
+// DeleteBook operation middleware
+func (sh *strictHandler) DeleteBook(w http.ResponseWriter, r *http.Request, bookId ID) {
+	var request DeleteBookRequestObject
 
 	request.BookId = bookId
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.BooksDelete(ctx, request.(BooksDeleteRequestObject))
+		return sh.ssi.DeleteBook(ctx, request.(DeleteBookRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "BooksDelete")
+		handler = middleware(handler, "DeleteBook")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(BooksDeleteResponseObject); ok {
-		if err := validResponse.VisitBooksDeleteResponse(w); err != nil {
+	} else if validResponse, ok := response.(DeleteBookResponseObject); ok {
+		if err := validResponse.VisitDeleteBookResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -1657,25 +1657,25 @@ func (sh *strictHandler) BooksDelete(w http.ResponseWriter, r *http.Request, boo
 	}
 }
 
-// BooksShow operation middleware
-func (sh *strictHandler) BooksShow(w http.ResponseWriter, r *http.Request, bookId ID) {
-	var request BooksShowRequestObject
+// GetBook operation middleware
+func (sh *strictHandler) GetBook(w http.ResponseWriter, r *http.Request, bookId ID) {
+	var request GetBookRequestObject
 
 	request.BookId = bookId
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.BooksShow(ctx, request.(BooksShowRequestObject))
+		return sh.ssi.GetBook(ctx, request.(GetBookRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "BooksShow")
+		handler = middleware(handler, "GetBook")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(BooksShowResponseObject); ok {
-		if err := validResponse.VisitBooksShowResponse(w); err != nil {
+	} else if validResponse, ok := response.(GetBookResponseObject); ok {
+		if err := validResponse.VisitGetBookResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -1683,13 +1683,13 @@ func (sh *strictHandler) BooksShow(w http.ResponseWriter, r *http.Request, bookI
 	}
 }
 
-// BooksUpdate operation middleware
-func (sh *strictHandler) BooksUpdate(w http.ResponseWriter, r *http.Request, bookId ID) {
-	var request BooksUpdateRequestObject
+// UpdateBook operation middleware
+func (sh *strictHandler) UpdateBook(w http.ResponseWriter, r *http.Request, bookId ID) {
+	var request UpdateBookRequestObject
 
 	request.BookId = bookId
 
-	var body BooksUpdateJSONRequestBody
+	var body UpdateBookJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
 		return
@@ -1697,18 +1697,18 @@ func (sh *strictHandler) BooksUpdate(w http.ResponseWriter, r *http.Request, boo
 	request.Body = &body
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.BooksUpdate(ctx, request.(BooksUpdateRequestObject))
+		return sh.ssi.UpdateBook(ctx, request.(UpdateBookRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "BooksUpdate")
+		handler = middleware(handler, "UpdateBook")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(BooksUpdateResponseObject); ok {
-		if err := validResponse.VisitBooksUpdateResponse(w); err != nil {
+	} else if validResponse, ok := response.(UpdateBookResponseObject); ok {
+		if err := validResponse.VisitUpdateBookResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
