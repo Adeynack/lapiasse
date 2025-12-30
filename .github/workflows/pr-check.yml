@@ -39,6 +39,8 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: ${{ steps.golangci-lint-version.outputs.golangci-lint-version }}
+        env:
+          GOEXPERIMENT: "jsonv2" # align with `Makefile` (export GOEXPERIMENT)
   build:
     runs-on: ubuntu-latest
     steps:
