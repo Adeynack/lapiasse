@@ -17,6 +17,11 @@ const (
 	MaxPageSize     = 1_000 // if this changes, change the maximum in api.openapi.yaml as well for parameter "page_size".
 )
 
+// toId converts a model's uint ID to its string representation for the API.
+func apiId(modelId model.ID) string {
+	return fmt.Sprintf("%d", modelId)
+}
+
 // scopePaginate applies pagination to a GORM query based on API pagination parameters.
 func scopePaginate(
 	page *api.ReqPaginatedPage,

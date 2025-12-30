@@ -82,10 +82,10 @@ func (t *ApplicationController) DeleteBook(ctx context.Context, request api.Dele
 
 func toApiBookShow(b model.Book) api.BookShow {
 	return api.BookShow{
+		Id:                     apiId(b.ID),
 		CreatedAt:              b.CreatedAt,
-		DefaultCurrencyIsoCode: b.DefaultCurrencyIsoCode,
-		Id:                     fmt.Sprintf("%d", b.ID),
-		Name:                   b.Name,
 		UpdatedAt:              b.UpdatedAt,
+		Name:                   b.Name,
+		DefaultCurrencyIsoCode: b.DefaultCurrencyIsoCode,
 	}
 }
