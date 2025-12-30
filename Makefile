@@ -51,8 +51,12 @@ golangci-lint:
 # See https://golangci-lint.run/docs/welcome/install/#install-from-sources
 	go tool -modfile=golangci-lint.mod golangci-lint run
 
+.PHONY: lint-ci
+lint-ci: vet
+# golangci-lint is executed as a GitHub Action
+
 .PHONY: lint
-lint: vet golangci-lint
+lint: lint-ci golangci-lint
 
 .PHONY: clean
 clean:
@@ -61,7 +65,7 @@ clean:
 	go clean -cache -testcache
 
 .PHONY: check
-check: clean install-deps build lint test
+check: clean install-deps gen build lint test
 
 .PHONY: build
 build: gen
