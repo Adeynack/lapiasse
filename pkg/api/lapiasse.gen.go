@@ -124,8 +124,8 @@ type ReqPaginatedPage = int
 // ReqPaginatedPageSize defines model for Req.Paginated.page-size.
 type ReqPaginatedPageSize = int
 
-// BooksIndexParams defines parameters for BooksIndex.
-type BooksIndexParams struct {
+// ListBooksParams defines parameters for ListBooks.
+type ListBooksParams struct {
 	// Page The page number to retrieve (1-indexed).
 	Page *ReqPaginatedPage `form:"page,omitempty" json:"page,omitempty"`
 
@@ -212,8 +212,8 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// BooksIndex request
-	BooksIndex(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// ListBooks request
+	ListBooks(ctx context.Context, params *ListBooksParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// BooksCreateWithBody request with any body
 	BooksCreateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -235,8 +235,8 @@ type ClientInterface interface {
 	Health(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) BooksIndex(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBooksIndexRequest(c.Server, params)
+func (c *Client) ListBooks(ctx context.Context, params *ListBooksParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListBooksRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -331,8 +331,8 @@ func (c *Client) Health(ctx context.Context, reqEditors ...RequestEditorFn) (*ht
 	return c.Client.Do(req)
 }
 
-// NewBooksIndexRequest generates requests for BooksIndex
-func NewBooksIndexRequest(server string, params *BooksIndexParams) (*http.Request, error) {
+// NewListBooksRequest generates requests for ListBooks
+func NewListBooksRequest(server string, params *ListBooksParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -621,8 +621,8 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// BooksIndexWithResponse request
-	BooksIndexWithResponse(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*BooksIndexResponse, error)
+	// ListBooksWithResponse request
+	ListBooksWithResponse(ctx context.Context, params *ListBooksParams, reqEditors ...RequestEditorFn) (*ListBooksResponse, error)
 
 	// BooksCreateWithBodyWithResponse request with any body
 	BooksCreateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BooksCreateResponse, error)
@@ -644,17 +644,17 @@ type ClientWithResponsesInterface interface {
 	HealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthResponse, error)
 }
 
-type BooksIndexResponse struct {
+type ListBooksResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		Data       []BookShow `json:"data"`
+		Books      []BookShow `json:"books"`
 		Pagination Pagination `json:"pagination"`
 	}
 }
 
 // Status returns HTTPResponse.Status
-func (r BooksIndexResponse) Status() string {
+func (r ListBooksResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -662,7 +662,7 @@ func (r BooksIndexResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r BooksIndexResponse) StatusCode() int {
+func (r ListBooksResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -783,13 +783,13 @@ func (r HealthResponse) StatusCode() int {
 	return 0
 }
 
-// BooksIndexWithResponse request returning *BooksIndexResponse
-func (c *ClientWithResponses) BooksIndexWithResponse(ctx context.Context, params *BooksIndexParams, reqEditors ...RequestEditorFn) (*BooksIndexResponse, error) {
-	rsp, err := c.BooksIndex(ctx, params, reqEditors...)
+// ListBooksWithResponse request returning *ListBooksResponse
+func (c *ClientWithResponses) ListBooksWithResponse(ctx context.Context, params *ListBooksParams, reqEditors ...RequestEditorFn) (*ListBooksResponse, error) {
+	rsp, err := c.ListBooks(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBooksIndexResponse(rsp)
+	return ParseListBooksResponse(rsp)
 }
 
 // BooksCreateWithBodyWithResponse request with arbitrary body returning *BooksCreateResponse
@@ -853,15 +853,15 @@ func (c *ClientWithResponses) HealthWithResponse(ctx context.Context, reqEditors
 	return ParseHealthResponse(rsp)
 }
 
-// ParseBooksIndexResponse parses an HTTP response from a BooksIndexWithResponse call
-func ParseBooksIndexResponse(rsp *http.Response) (*BooksIndexResponse, error) {
+// ParseListBooksResponse parses an HTTP response from a ListBooksWithResponse call
+func ParseListBooksResponse(rsp *http.Response) (*ListBooksResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &BooksIndexResponse{
+	response := &ListBooksResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -869,7 +869,7 @@ func ParseBooksIndexResponse(rsp *http.Response) (*BooksIndexResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			Data       []BookShow `json:"data"`
+			Books      []BookShow `json:"books"`
 			Pagination Pagination `json:"pagination"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1044,7 +1044,7 @@ func ParseHealthResponse(rsp *http.Response) (*HealthResponse, error) {
 type ServerInterface interface {
 
 	// (GET /books)
-	BooksIndex(w http.ResponseWriter, r *http.Request, params BooksIndexParams)
+	ListBooks(w http.ResponseWriter, r *http.Request, params ListBooksParams)
 
 	// (POST /books)
 	BooksCreate(w http.ResponseWriter, r *http.Request)
@@ -1067,7 +1067,7 @@ type ServerInterface interface {
 type Unimplemented struct{}
 
 // (GET /books)
-func (_ Unimplemented) BooksIndex(w http.ResponseWriter, r *http.Request, params BooksIndexParams) {
+func (_ Unimplemented) ListBooks(w http.ResponseWriter, r *http.Request, params ListBooksParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1105,13 +1105,13 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// BooksIndex operation middleware
-func (siw *ServerInterfaceWrapper) BooksIndex(w http.ResponseWriter, r *http.Request) {
+// ListBooks operation middleware
+func (siw *ServerInterfaceWrapper) ListBooks(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params BooksIndexParams
+	var params ListBooksParams
 
 	// ------------- Optional query parameter "page" -------------
 
@@ -1130,7 +1130,7 @@ func (siw *ServerInterfaceWrapper) BooksIndex(w http.ResponseWriter, r *http.Req
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BooksIndex(w, r, params)
+		siw.Handler.ListBooks(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1357,7 +1357,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/books", wrapper.BooksIndex)
+		r.Get(options.BaseURL+"/books", wrapper.ListBooks)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/books", wrapper.BooksCreate)
@@ -1378,20 +1378,20 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	return r
 }
 
-type BooksIndexRequestObject struct {
-	Params BooksIndexParams
+type ListBooksRequestObject struct {
+	Params ListBooksParams
 }
 
-type BooksIndexResponseObject interface {
-	VisitBooksIndexResponse(w http.ResponseWriter) error
+type ListBooksResponseObject interface {
+	VisitListBooksResponse(w http.ResponseWriter) error
 }
 
-type BooksIndex200JSONResponse struct {
-	Data       []BookShow `json:"data"`
+type ListBooks200JSONResponse struct {
+	Books      []BookShow `json:"books"`
 	Pagination Pagination `json:"pagination"`
 }
 
-func (response BooksIndex200JSONResponse) VisitBooksIndexResponse(w http.ResponseWriter) error {
+func (response ListBooks200JSONResponse) VisitListBooksResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
@@ -1527,7 +1527,7 @@ func (response Health200JSONResponse) VisitHealthResponse(w http.ResponseWriter)
 type StrictServerInterface interface {
 
 	// (GET /books)
-	BooksIndex(ctx context.Context, request BooksIndexRequestObject) (BooksIndexResponseObject, error)
+	ListBooks(ctx context.Context, request ListBooksRequestObject) (ListBooksResponseObject, error)
 
 	// (POST /books)
 	BooksCreate(ctx context.Context, request BooksCreateRequestObject) (BooksCreateResponseObject, error)
@@ -1574,25 +1574,25 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
-// BooksIndex operation middleware
-func (sh *strictHandler) BooksIndex(w http.ResponseWriter, r *http.Request, params BooksIndexParams) {
-	var request BooksIndexRequestObject
+// ListBooks operation middleware
+func (sh *strictHandler) ListBooks(w http.ResponseWriter, r *http.Request, params ListBooksParams) {
+	var request ListBooksRequestObject
 
 	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.BooksIndex(ctx, request.(BooksIndexRequestObject))
+		return sh.ssi.ListBooks(ctx, request.(ListBooksRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "BooksIndex")
+		handler = middleware(handler, "ListBooks")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(BooksIndexResponseObject); ok {
-		if err := validResponse.VisitBooksIndexResponse(w); err != nil {
+	} else if validResponse, ok := response.(ListBooksResponseObject); ok {
+		if err := validResponse.VisitListBooksResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -12,8 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// BooksIndex implements api.StrictServerInterface.
-func (t *ApplicationController) BooksIndex(ctx context.Context, request api.BooksIndexRequestObject) (api.BooksIndexResponseObject, error) {
+// ListBooks implements [api.StrictServerInterface.ListBooks].
+func (t *ApplicationController) ListBooks(ctx context.Context, request api.ListBooksRequestObject) (api.ListBooksResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
 	books, err := gorm.G[model.Book](db).
@@ -24,14 +24,14 @@ func (t *ApplicationController) BooksIndex(ctx context.Context, request api.Book
 		return nil, fmt.Errorf("reading books from database: %w", err)
 	}
 
-	response := api.BooksIndex200JSONResponse{
-		Data: loex.MapE(books, toApiBookShow),
+	response := api.ListBooks200JSONResponse{
+		Books: loex.MapE(books, toApiBookShow),
 	}
 
 	return response, nil
 }
 
-// BooksShow implements api.StrictServerInterface.
+// BooksShow implements [api.StrictServerInterface.BooksShow].
 func (t *ApplicationController) BooksShow(ctx context.Context, request api.BooksShowRequestObject) (api.BooksShowResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
@@ -70,12 +70,12 @@ func (t *ApplicationController) BooksCreate(ctx context.Context, request api.Boo
 	return response, nil
 }
 
-// BooksUpdate implements api.StrictServerInterface.
+// BooksUpdate implements [api.StrictServerInterface.BooksUpdate].
 func (t *ApplicationController) BooksUpdate(ctx context.Context, request api.BooksUpdateRequestObject) (api.BooksUpdateResponseObject, error) {
 	panic("unimplemented")
 }
 
-// BooksDelete implements api.StrictServerInterface.
+// BooksDelete implements [api.StrictServerInterface.BooksDelete].
 func (t *ApplicationController) BooksDelete(ctx context.Context, request api.BooksDeleteRequestObject) (api.BooksDeleteResponseObject, error) {
 	panic("unimplemented")
 }

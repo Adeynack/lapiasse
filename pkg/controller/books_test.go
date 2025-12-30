@@ -27,26 +27,26 @@ func TestBooksIndex(t *testing.T) {
 		}
 	}
 
-	responseBookNames := func(resp api.BooksIndex200JSONResponse) []string {
-		return lo.Map(resp.Data, func(b api.BookShow, _ int) string { return b.Name })
+	responseBookNames := func(resp api.ListBooks200JSONResponse) []string {
+		return lo.Map(resp.Books, func(b api.BookShow, _ int) string { return b.Name })
 	}
 
 	for _, tc := range []struct {
 		name         string
 		seed         func(ctx context.Context)
-		request      api.BooksIndexRequestObject
-		expecting200 func(t *testing.T, resp api.BooksIndex200JSONResponse)
+		request      api.ListBooksRequestObject
+		expecting200 func(t *testing.T, resp api.ListBooks200JSONResponse)
 	}{
 		{
 			name: "no books exist, response is empty",
-			expecting200: func(t *testing.T, resp api.BooksIndex200JSONResponse) {
-				require.Empty(t, resp.Data)
+			expecting200: func(t *testing.T, resp api.ListBooks200JSONResponse) {
+				require.Empty(t, resp.Books)
 			},
 		},
 		{
 			name: "some books exist, response contains limited number of books (default page size)",
 			seed: seedMoreBooksThanMaxPageSize,
-			expecting200: func(t *testing.T, resp api.BooksIndex200JSONResponse) {
+			expecting200: func(t *testing.T, resp api.ListBooks200JSONResponse) {
 				expectedBookNames := lo.Map(lo.RangeFrom(1, controller.DefaultPageSize), func(i int, _ int) string {
 					return fmt.Sprintf("Book %04d", i)
 				})
@@ -56,25 +56,25 @@ func TestBooksIndex(t *testing.T) {
 		{
 			name: "some books exist, request specifies limit, response contains correct books",
 			seed: seedMoreBooksThanMaxPageSize,
-			request: api.BooksIndexRequestObject{
-				Params: api.BooksIndexParams{
+			request: api.ListBooksRequestObject{
+				Params: api.ListBooksParams{
 					PageSize: lo.ToPtr(3),
 				},
 			},
-			expecting200: func(t *testing.T, resp api.BooksIndex200JSONResponse) {
+			expecting200: func(t *testing.T, resp api.ListBooks200JSONResponse) {
 				require.Equal(t, []string{"Book 0001", "Book 0002", "Book 0003"}, responseBookNames(resp))
 			},
 		},
 		{
 			name: "some books exist, request specifies limit and page, response contains correct books",
 			seed: seedMoreBooksThanMaxPageSize,
-			request: api.BooksIndexRequestObject{
-				Params: api.BooksIndexParams{
+			request: api.ListBooksRequestObject{
+				Params: api.ListBooksParams{
 					PageSize: lo.ToPtr(3),
 					Page:     lo.ToPtr(2),
 				},
 			},
-			expecting200: func(t *testing.T, resp api.BooksIndex200JSONResponse) {
+			expecting200: func(t *testing.T, resp api.ListBooks200JSONResponse) {
 				require.Equal(t, []string{"Book 0004", "Book 0005", "Book 0006"}, responseBookNames(resp))
 			},
 		},
@@ -86,13 +86,13 @@ func TestBooksIndex(t *testing.T) {
 			}
 
 			ctrl := &controller.ApplicationController{}
-			resp, err := ctrl.BooksIndex(ctx, tc.request)
+			resp, err := ctrl.ListBooks(ctx, tc.request)
 
 			require.NoError(t, err)
 
 			if tc.expecting200 != nil {
-				resp200, ok := resp.(api.BooksIndex200JSONResponse)
-				require.True(t, ok, "expected BooksIndex200JSONResponse, got %T", resp)
+				resp200, ok := resp.(api.ListBooks200JSONResponse)
+				require.True(t, ok, "expected ListBooks200JSONResponse, got %T", resp)
 				tc.expecting200(t, resp200)
 			}
 		})

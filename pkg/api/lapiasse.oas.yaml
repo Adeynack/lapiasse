@@ -10,7 +10,7 @@ servers:
 paths:
   /books:
     get:
-      operationId: Books_Index
+      operationId: ListBooks
       parameters:
         - $ref: "#/components/parameters/Req.Paginated.page"
         - $ref: "#/components/parameters/Req.Paginated.page-size"
@@ -22,10 +22,10 @@ paths:
               schema:
                 type: object
                 required:
-                  - data
+                  - books
                   - pagination
                 properties:
-                  data:
+                  books:
                     type: array
                     items:
                       $ref: "#/components/schemas/Book.Show"
