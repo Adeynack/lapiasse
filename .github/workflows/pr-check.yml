@@ -7,11 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy: &strategy
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+  gen:
+    runs-on: ubuntu-latest
     steps:
       - &checkout
         uses: actions/checkout@v4
@@ -20,20 +17,14 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
-      - name: Test
-        run: make test
-        env:
-          TEST_LOG: fail
-      - name: Ensure tracked files were up to date
-        run: ./scripts/git_tracked_are_unmodified
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy: *strategy
-    steps:
-      - *checkout
-      - *setup-go
-      - name: Build
-        run: make build-only
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.8" # align with /.nvmrc
+      - name: Install JS dependencies
+        run: npm ci
+      - name: Generate
+        run: make gen
       - &check-no-mod
         name: Ensure tracked files were up to date
         run: ./scripts/git_tracked_are_unmodified
@@ -55,17 +46,26 @@ jobs:
         env:
           GOEXPERIMENT: "jsonv2" # align with `Makefile` (export GOEXPERIMENT)
       - *check-no-mod
-  gen:
-    runs-on: ubuntu-latest
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy: &strategy
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - *checkout
       - *setup-go
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24.8" # align with /.nvmrc
-      - name: Install JS dependencies
-        run: npm ci
-      - name: Generate
-        run: make gen
+      - name: Test
+        run: make test
+        env:
+          TEST_LOG: fail
+      - name: Ensure tracked files were up to date
+        run: ./scripts/git_tracked_are_unmodified
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy: *strategy
+    steps:
+      - *checkout
+      - *setup-go
+      - name: Build
+        run: make build-only
       - *check-no-mod
