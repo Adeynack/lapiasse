@@ -37,31 +37,26 @@ func scopePaginate(
 }
 
 // validate ensures that a model is validated for a given reason.
-func validate(ctx context.Context, value model.ModelValidatable, reason model.ValidationReason) validationResult {
-	err := value.Validate(ctx, reason)
+func validate(
+	ctx context.Context,
+	value model.ModelValidatable,
+	reason model.ValidationReason,
+) (
+	done bool,
+	result api.ValidationError,
+	err error,
+) {
+	err = value.Validate(ctx, reason)
 
 	if err == nil {
-		return validationResult{}
+		return false, api.ValidationError{}, nil
 	}
 
 	var validationErr model.ValidationError
 	if errors.As(err, &validationErr) {
-		return validationResult{apiError: api422Error(validationErr)}
+		return true, api422Error(validationErr), nil
 	}
 
 	modelName := strings.TrimPrefix(fmt.Sprintf("%T", value), "*model.")
-	return validationResult{err: fmt.Errorf("validating %s", modelName)}
-}
-
-type validationResult struct {
-	apiError *api.ValidationError
-	err      error
-}
-
-func (v validationResult) IsError() bool {
-	return v.apiError != nil || v.err != nil
-}
-
-func (v validationResult) Unwrap() (api.ValidationError, error) {
-	return lo.FromPtr(v.apiError), v.err
+	return false, api.ValidationError{}, fmt.Errorf("validating %s: %v", modelName, err)
 }

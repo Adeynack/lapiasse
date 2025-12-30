@@ -27,12 +27,12 @@ func api404ErrorFromId(
 	)
 }
 
-func api422Error(errs model.ValidationError) *api.ValidationError {
+func api422Error(errs model.ValidationError) api.ValidationError {
 	validationErrors := lo.Map(errs.FieldErrors, func(e model.FieldError, _ int) api.FieldValidationError {
 		return api.FieldValidationError(e)
 	})
 
-	return &api.ValidationError{
+	return api.ValidationError{
 		Type:             api.ErrorTypeErrorValidation,
 		Title:            "Resource did not validate",
 		Status:           http.StatusUnprocessableEntity,

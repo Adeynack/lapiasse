@@ -47,7 +47,7 @@ func (t *ApplicationController) BooksShow(ctx context.Context, request api.Books
 	return response, nil
 }
 
-// BooksCreate implements api.StrictServerInterface.
+// BooksCreate implements [api.StrictServerInterface.BooksCreate].
 func (t *ApplicationController) BooksCreate(ctx context.Context, request api.BooksCreateRequestObject) (api.BooksCreateResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
@@ -56,8 +56,8 @@ func (t *ApplicationController) BooksCreate(ctx context.Context, request api.Boo
 		DefaultCurrencyIsoCode: request.Body.DefaultCurrencyIsoCode,
 	}
 
-	if v := validate(ctx, &book, model.ValidationReasonCreate); v.IsError() {
-		return v.Unwrap()
+	if done, res, err := validate(ctx, &book, model.ValidationReasonCreate); done {
+		return res, err
 	}
 
 	err := gorm.G[model.Book](db).Create(ctx, &book)
