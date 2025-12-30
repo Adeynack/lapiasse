@@ -140,7 +140,7 @@ func setupDefaultConfigurationEnvironment(ctx context.Context) (string, error) {
 
 		appConfigDir = path.Join(userConfigDir, "LaPiasse")
 	case env.EnvTest:
-		panic("Use \"CreateTestAppCtx\" for tests, not a real one")
+		panic(`Use "CreateTestAppCtx" for tests, not a real one`)
 	default:
 		workspace_root := os.Getenv("WORKSPACE_ROOT")
 		if workspace_root == "" {
