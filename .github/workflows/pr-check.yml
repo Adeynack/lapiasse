@@ -8,10 +8,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy: &strategy
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
+      - &checkout
+        uses: actions/checkout@v4
+      - &setup-go
+        name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
@@ -21,14 +26,22 @@ jobs:
           TEST_LOG: fail
       - name: Ensure tracked files were up to date
         run: ./scripts/git_tracked_are_unmodified
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy: *strategy
+    steps:
+      - *checkout
+      - *setup-go
+      - name: Build
+        run: make build-only
+      - &check-no-mod
+        name: Ensure tracked files were up to date
+        run: ./scripts/git_tracked_are_unmodified
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: "go.mod"
+      - *checkout
+      - *setup-go
       - name: Lint
         run: make lint-ci
       - name: Determine golangci-lint version
@@ -41,28 +54,12 @@ jobs:
           version: ${{ steps.golangci-lint-version.outputs.golangci-lint-version }}
         env:
           GOEXPERIMENT: "jsonv2" # align with `Makefile` (export GOEXPERIMENT)
-      - name: Ensure tracked files were up to date
-        run: ./scripts/git_tracked_are_unmodified
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: "go.mod"
-      - name: Build
-        run: make build-only
-      - name: Ensure tracked files were up to date
-        run: ./scripts/git_tracked_are_unmodified
+      - *check-no-mod
   gen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: "go.mod"
+      - *checkout
+      - *setup-go
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -71,5 +68,4 @@ jobs:
         run: npm ci
       - name: Generate
         run: make gen
-      - name: Ensure tracked files were up to date
-        run: ./scripts/git_tracked_are_unmodified
+      - *check-no-mod
