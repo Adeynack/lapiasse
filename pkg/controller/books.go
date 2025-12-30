@@ -47,8 +47,8 @@ func (t *ApplicationController) BooksShow(ctx context.Context, request api.Books
 	return response, nil
 }
 
-// BooksCreate implements [api.StrictServerInterface.BooksCreate].
-func (t *ApplicationController) BooksCreate(ctx context.Context, request api.BooksCreateRequestObject) (api.BooksCreateResponseObject, error) {
+// CreateBook implements [api.StrictServerInterface.CreateBook].
+func (t *ApplicationController) CreateBook(ctx context.Context, request api.CreateBookRequestObject) (api.CreateBookResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
 	book := model.Book{
@@ -65,7 +65,7 @@ func (t *ApplicationController) BooksCreate(ctx context.Context, request api.Boo
 		return nil, fmt.Errorf("creating book in database: %w", err)
 	}
 
-	response := api.BooksCreate201JSONResponse(toApiBookShow(book))
+	response := api.CreateBook201JSONResponse(toApiBookShow(book))
 
 	return response, nil
 }

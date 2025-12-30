@@ -85,7 +85,7 @@ func (mdi *moneydanceImporter) createApiClient(ctx context.Context) error {
 func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 	bookName := mdi.determineBookName()
 
-	response, err := mdi.apiClient.BooksCreateWithResponse(ctx, api.BooksCreateJSONRequestBody{
+	response, err := mdi.apiClient.CreateBookWithResponse(ctx, api.CreateBookJSONRequestBody{
 		DefaultCurrencyIsoCode: strings.ToUpper(mdi.BookCurrencyIsoCode),
 		Name:                   bookName,
 	})

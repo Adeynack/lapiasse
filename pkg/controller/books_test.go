@@ -102,18 +102,18 @@ func TestBooksIndex(t *testing.T) {
 func TestBooksCreate(t *testing.T) {
 	for name, tc := range map[string]struct {
 		seed         func(ctx context.Context, db *gorm.DB)
-		requestBook  *api.BooksCreateJSONRequestBody
-		expecting201 func(t *testing.T, resp api.BooksCreate201JSONResponse)
+		requestBook  *api.CreateBookJSONRequestBody
+		expecting201 func(t *testing.T, resp api.CreateBook201JSONResponse)
 		expecting422 func(t *testing.T, resp api.ValidationError)
 	}{
 		"simple book creation": {
-			requestBook: &api.BooksCreateJSONRequestBody{
+			requestBook: &api.CreateBookJSONRequestBody{
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "EUR",
 			},
 		},
 		"wrong currency ISO code": {
-			requestBook: &api.BooksCreateJSONRequestBody{
+			requestBook: &api.CreateBookJSONRequestBody{
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "INVALID",
 			},
@@ -129,7 +129,7 @@ func TestBooksCreate(t *testing.T) {
 			seed: func(ctx context.Context, db *gorm.DB) {
 				repository.MustCreate0(ctx, &model.Book{Name: "My Book", DefaultCurrencyIsoCode: "EUR"})
 			},
-			requestBook: &api.BooksCreateJSONRequestBody{
+			requestBook: &api.CreateBookJSONRequestBody{
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "USD",
 			},
@@ -150,16 +150,16 @@ func TestBooksCreate(t *testing.T) {
 			}
 
 			ctrl := &controller.ApplicationController{}
-			request := api.BooksCreateRequestObject{
+			request := api.CreateBookRequestObject{
 				Body: tc.requestBook,
 			}
-			resp, err := ctrl.BooksCreate(ctx, request)
+			resp, err := ctrl.CreateBook(ctx, request)
 
 			require.NoError(t, err)
 
 			if tc.expecting201 != nil {
-				resp201, ok := resp.(api.BooksCreate201JSONResponse)
-				require.True(t, ok, "expected BooksCreate201JSONResponse, got %T", resp)
+				resp201, ok := resp.(api.CreateBook201JSONResponse)
+				require.True(t, ok, "expected CreateBook201JSONResponse, got %T", resp)
 				tc.expecting201(t, resp201)
 
 				// Check if book was really created in DB

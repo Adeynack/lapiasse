@@ -7,6 +7,13 @@ info:
 servers:
   - url: http://localhost:8080
     description: Local development server
+x-responses:
+  - &response422
+    description: Unprocessable Entity
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/ValidationError"
 paths:
   /books:
     get:
@@ -32,27 +39,21 @@ paths:
                   pagination:
                     $ref: "#/components/schemas/Pagination"
     post:
-      operationId: Books_Create
-      parameters: []
-      responses:
-        "201":
-          description: The request has succeeded and a new resource has been created as a result.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Book.Show"
-        "422":
-          description: Client error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+      operationId: CreateBook
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/Book.Edit"
+      responses:
+        "201":
+          description: The book was successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book.Show"
+        "422": *response422
   /books/{bookId}:
     get:
       operationId: Books_Show
