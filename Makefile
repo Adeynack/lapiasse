@@ -67,12 +67,15 @@ clean:
 .PHONY: check
 check: clean install-deps gen build lint test
 
-.PHONY: build
-build: gen
+.PHONY: build-only
+build-only:
 	@echo "Building binaries..."
 	mkdir -p tmp/bin
 	go build -o tmp/bin/lapiasse ./cmd/lapiasse
 	go build -o tmp/bin/import_md_to_lapiasse ./cmd/import_md_to_lapiasse
+
+.PHONY: build
+build: gen build-only
 
 .PHONY: build-debug
 build-debug: gen
