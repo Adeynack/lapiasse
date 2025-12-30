@@ -3,6 +3,8 @@ package controller
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"adeynack.net/lapiasse/pkg/api"
 	"adeynack.net/lapiasse/pkg/model"
@@ -34,19 +36,32 @@ func scopePaginate(
 	}
 }
 
-// validate ensures that a model is validated and otherwise returns
-// a pre-filled [api.Error] containing the details of the validation fail.
-func validate(ctx context.Context, value model.ModelValidatable, reason model.ValidationReason) (*api.ValidationError, error) {
+// validate ensures that a model is validated for a given reason.
+func validate(ctx context.Context, value model.ModelValidatable, reason model.ValidationReason) validationResult {
 	err := value.Validate(ctx, reason)
 
 	if err == nil {
-		return nil, nil
+		return validationResult{}
 	}
 
 	var validationErr model.ValidationError
 	if errors.As(err, &validationErr) {
-		return api422Error(validationErr), nil
+		return validationResult{apiError: api422Error(validationErr)}
 	}
 
-	return nil, err
+	modelName := strings.TrimPrefix(fmt.Sprintf("%T", value), "*model.")
+	return validationResult{err: fmt.Errorf("validating %s", modelName)}
+}
+
+type validationResult struct {
+	apiError *api.ValidationError
+	err      error
+}
+
+func (v validationResult) IsError() bool {
+	return v.apiError != nil || v.err != nil
+}
+
+func (v validationResult) Unwrap() (api.ValidationError, error) {
+	return lo.FromPtr(v.apiError), v.err
 }

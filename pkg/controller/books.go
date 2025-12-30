@@ -56,10 +56,8 @@ func (t *ApplicationController) BooksCreate(ctx context.Context, request api.Boo
 		DefaultCurrencyIsoCode: request.Body.DefaultCurrencyIsoCode,
 	}
 
-	if validErr, err := validate(ctx, &book, model.ValidationReasonCreate); err != nil {
-		return nil, fmt.Errorf("validating book: %w", err)
-	} else if validErr != nil {
-		return api.BooksCreate422JSONResponse(*validErr), nil
+	if v := validate(ctx, &book, model.ValidationReasonCreate); v.IsError() {
+		return v.Unwrap()
 	}
 
 	err := gorm.G[model.Book](db).Create(ctx, &book)

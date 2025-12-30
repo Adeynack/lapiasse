@@ -8,3 +8,6 @@ generate:
   client: true
 compatibility:
   always-prefix-enum-values: true
+output-options:
+  user-templates:
+    strict/strict-interface.tmpl: pkg/api/templates/strict/strict-interface.tmpl

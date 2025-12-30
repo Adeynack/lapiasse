@@ -46,16 +46,19 @@ model InternalError {
   @statusCode statusCode: 500;
 }
 
+@extension("x-go-no-type-alias", true)
 model BadRequestError {
   ...Error;
   @statusCode statusCode: 400;
 }
 
+@extension("x-go-no-type-alias", true)
 model NotFoundError {
   ...Error;
   @statusCode statusCode: 404;
 }
 
+@extension("x-go-no-type-alias", true)
 model ValidationError {
   ...Error;
   @statusCode statusCode: 422;

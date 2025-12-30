@@ -104,7 +104,7 @@ func TestBooksCreate(t *testing.T) {
 		seed         func(ctx context.Context, db *gorm.DB)
 		requestBook  *api.BooksCreateJSONRequestBody
 		expecting201 func(t *testing.T, resp api.BooksCreate201JSONResponse)
-		expecting422 func(t *testing.T, resp api.BooksCreate422JSONResponse)
+		expecting422 func(t *testing.T, resp api.ValidationError)
 	}{
 		"simple book creation": {
 			requestBook: &api.BooksCreateJSONRequestBody{
@@ -117,7 +117,7 @@ func TestBooksCreate(t *testing.T) {
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "INVALID",
 			},
-			expecting422: func(t *testing.T, resp api.BooksCreate422JSONResponse) {
+			expecting422: func(t *testing.T, resp api.ValidationError) {
 				lenValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "len" })
 				require.True(t, ok, "expected len validation error")
 				require.Equal(t, "Book.DefaultCurrencyIsoCode", lenValidErr.Field)
@@ -133,7 +133,7 @@ func TestBooksCreate(t *testing.T) {
 				Name:                   "My Book",
 				DefaultCurrencyIsoCode: "USD",
 			},
-			expecting422: func(t *testing.T, resp api.BooksCreate422JSONResponse) {
+			expecting422: func(t *testing.T, resp api.ValidationError) {
 				uniqueValidErr, ok := lo.Find(resp.ValidationErrors, func(fe api.FieldValidationError) bool { return fe.Validation == "unique" })
 				require.True(t, ok, "expected unique validation error")
 				require.Equal(t, "Book.Name", uniqueValidErr.Field)
@@ -170,8 +170,8 @@ func TestBooksCreate(t *testing.T) {
 			}
 
 			if tc.expecting422 != nil {
-				resp422, ok := resp.(api.BooksCreate422JSONResponse)
-				require.True(t, ok, "expected BooksCreate422JSONResponse, got %T", resp)
+				resp422, ok := resp.(api.ValidationError)
+				require.True(t, ok, "expected ValidationError, got %T", resp)
 				tc.expecting422(t, resp422)
 			}
 		})

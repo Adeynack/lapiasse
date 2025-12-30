@@ -181,6 +181,7 @@ components:
         detail:
           type: string
           description: A human-readable explanation specific to this occurrence of the problem.
+      x-go-no-type-alias: true
     Book.Edit:
       type: object
       required:
@@ -451,6 +452,7 @@ components:
           items:
             $ref: '#/components/schemas/FieldValidationError'
           description: A list of fields that failed validation.
+      x-go-no-type-alias: true
 servers:
   - url: http://localhost:8080
     description: Local development server

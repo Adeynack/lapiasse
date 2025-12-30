@@ -1415,9 +1415,7 @@ func (response BooksCreate201JSONResponse) VisitBooksCreateResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksCreate422JSONResponse ValidationError
-
-func (response BooksCreate422JSONResponse) VisitBooksCreateResponse(w http.ResponseWriter) error {
+func (response ValidationError) VisitBooksCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 
@@ -1502,9 +1500,7 @@ func (response BooksUpdate404JSONResponse) VisitBooksUpdateResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type BooksUpdate422JSONResponse ValidationError
-
-func (response BooksUpdate422JSONResponse) VisitBooksUpdateResponse(w http.ResponseWriter) error {
+func (response ValidationError) VisitBooksUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 
