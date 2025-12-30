@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: La Piasse API - unexpected
+  title: La Piasse API
   version: '1.0'
 tags: []
 paths:
