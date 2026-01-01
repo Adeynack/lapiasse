@@ -12,7 +12,7 @@
                 "tui",
             ],
             "env": {
-                "GOEXPERIMENT": "jsonv2",
+                "GOEXPERIMENT": "jsonv2,synctest",
             }
         },
         {
@@ -26,7 +26,7 @@
                 "serve",
             ],
             "env": {
-                "GOEXPERIMENT": "jsonv2"
+                "GOEXPERIMENT": "jsonv2,synctest"
             }
         },
         {
@@ -41,7 +41,7 @@
                 "--dry-start"
             ],
             "env": {
-                "GOEXPERIMENT": "jsonv2"
+                "GOEXPERIMENT": "jsonv2,synctest"
             }
         },
         {
@@ -56,7 +56,7 @@
                 "${workspaceFolder}/tmp/md.json"
             ],
             "env": {
-                "GOEXPERIMENT": "jsonv2"
+                "GOEXPERIMENT": "jsonv2,synctest"
             }
         }
     ]

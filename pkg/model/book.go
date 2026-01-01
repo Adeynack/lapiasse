@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"adeynack.net/lapiasse/pkg/api"
 	"adeynack.net/lapiasse/pkg/platform/ctxval"
 	"gorm.io/gorm"
 )
@@ -35,4 +36,9 @@ func (b *Book) Validate(ctx context.Context, reason ValidationReason) error {
 	}
 
 	return val.ToError()
+}
+
+func (b *Book) AssignAttributes(attr *api.BookEdit) {
+	b.Name = attr.Name
+	b.DefaultCurrencyIsoCode = attr.DefaultCurrencyIsoCode
 }

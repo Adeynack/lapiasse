@@ -51,10 +51,8 @@ func (t *ApplicationController) GetBook(ctx context.Context, request api.GetBook
 func (t *ApplicationController) CreateBook(ctx context.Context, request api.CreateBookRequestObject) (api.CreateBookResponseObject, error) {
 	db := ctxval.MustResolve[*gorm.DB](ctx)
 
-	book := model.Book{
-		Name:                   request.Body.Name,
-		DefaultCurrencyIsoCode: request.Body.DefaultCurrencyIsoCode,
-	}
+	var book model.Book
+	book.AssignAttributes(request.Body)
 
 	if done, res, err := validate(ctx, &book, model.ValidationReasonCreate); done {
 		return res, err
@@ -72,7 +70,29 @@ func (t *ApplicationController) CreateBook(ctx context.Context, request api.Crea
 
 // UpdateBook implements [api.StrictServerInterface.UpdateBook].
 func (t *ApplicationController) UpdateBook(ctx context.Context, request api.UpdateBookRequestObject) (api.UpdateBookResponseObject, error) {
-	panic("unimplemented")
+	db := ctxval.MustResolve[*gorm.DB](ctx)
+
+	book, err := gorm.G[model.Book](db).Where("id = ?", request.BookId).First(ctx)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return api404ErrorFromId("Book", request.BookId), nil
+	} else if err != nil {
+		return nil, fmt.Errorf("reading book from database: %w", err)
+	}
+
+	book.AssignAttributes(request.Body)
+
+	if done, res, err := validate(ctx, &book, model.ValidationReasonUpdate); done {
+		return res, err
+	}
+
+	_, err = gorm.G[*model.Book](db).Updates(ctx, &book)
+	if err != nil {
+		return nil, fmt.Errorf("updating book in database: %w", err)
+	}
+
+	response := api.UpdateBook200JSONResponse(toApiBookShow(book))
+
+	return response, nil
 }
 
 // DeleteBook implements [api.StrictServerInterface.DeleteBook].

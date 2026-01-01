@@ -4,7 +4,7 @@ This directory contains configuration and customizations for Claude Code.
 
 ## ⚠️ Project Requirements
 
-**IMPORTANT:** This project requires `GOEXPERIMENT=jsonv2` for all `go` commands.
+**IMPORTANT:** This project requires `GOEXPERIMENT=jsonv2,synctest` for all `go` commands.
 
 See [project-config.md](project-config.md) for complete details.
 
