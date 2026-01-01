@@ -42,9 +42,7 @@ func (t *ApplicationController) GetBook(ctx context.Context, request api.GetBook
 		return nil, fmt.Errorf("reading book from database: %w", err)
 	}
 
-	response := api.GetBook200JSONResponse(toApiBookShow(book))
-
-	return response, nil
+	return api.GetBook200JSONResponse(toApiBookShow(book)), nil
 }
 
 // CreateBook implements [api.StrictServerInterface.CreateBook].
@@ -63,9 +61,7 @@ func (t *ApplicationController) CreateBook(ctx context.Context, request api.Crea
 		return nil, fmt.Errorf("creating book in database: %w", err)
 	}
 
-	response := api.CreateBook201JSONResponse(toApiBookShow(book))
-
-	return response, nil
+	return api.CreateBook201JSONResponse(toApiBookShow(book)), nil
 }
 
 // UpdateBook implements [api.StrictServerInterface.UpdateBook].
@@ -90,14 +86,22 @@ func (t *ApplicationController) UpdateBook(ctx context.Context, request api.Upda
 		return nil, fmt.Errorf("updating book in database: %w", err)
 	}
 
-	response := api.UpdateBook200JSONResponse(toApiBookShow(book))
-
-	return response, nil
+	return api.UpdateBook200JSONResponse(toApiBookShow(book)), nil
 }
 
 // DeleteBook implements [api.StrictServerInterface.DeleteBook].
 func (t *ApplicationController) DeleteBook(ctx context.Context, request api.DeleteBookRequestObject) (api.DeleteBookResponseObject, error) {
-	panic("unimplemented")
+	db := ctxval.MustResolve[*gorm.DB](ctx)
+
+	rowsAffected, err := gorm.G[model.Book](db).Where("id = ?", request.BookId).Delete(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("reading book from database: %w", err)
+	}
+	if rowsAffected == 0 {
+		return api404ErrorFromId("Book", request.BookId), nil
+	}
+
+	return api.DeleteBook204Response{}, nil
 }
 
 func toApiBookShow(b model.Book) api.BookShow {

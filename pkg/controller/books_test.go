@@ -204,7 +204,6 @@ func TestUpdateBook(t *testing.T) {
 	}
 
 	for name, tc := range map[string]struct {
-		name         string
 		seed         func(ctx context.Context, db *gorm.DB) *model.Book
 		request      api.UpdateBookRequestObject
 		expecting200 func(t *testing.T, resp api.UpdateBook200JSONResponse, original, updated *model.Book)
@@ -350,11 +349,62 @@ func TestUpdateBook(t *testing.T) {
 					updated, err := gorm.G[model.Book](db).Where("id = ?", resp201.Id).First(ctx)
 					require.NoError(t, err)
 
-					// synctest.Wait()
-
 					tc.expecting200(t, resp201, original, &updated)
 				}
 			})
+		})
+	}
+}
+
+func TestDeleteBook(t *testing.T) {
+	const existingBookId = model.ID(1)
+
+	for name, tc := range map[string]struct {
+		request      api.DeleteBookRequestObject
+		expecting204 func(t *testing.T, resp api.DeleteBook204Response)
+		expecting404 func(t *testing.T, resp api.NotFoundError)
+	}{
+		"deleting existing book returns 204": {
+			request: api.DeleteBookRequestObject{
+				BookId: api.ID(fmt.Sprintf("%d", existingBookId)),
+			},
+			expecting204: func(t *testing.T, resp api.DeleteBook204Response) {
+				// nothing to check in 204 response
+			},
+		},
+		"deleting non-existing book returns 404": {
+			request: api.DeleteBookRequestObject{
+				BookId: api.ID("9999"),
+			},
+			expecting404: func(t *testing.T, resp api.NotFoundError) {
+				require.Equal(t, lo.ToPtr(`Book with ID "9999" not found`), resp.Detail)
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx := app.CreateTestAppCtx(t)
+
+			repository.MustCreate(ctx, &model.Book{
+				Base:                   model.Base{ID: existingBookId},
+				Name:                   "My Book",
+				DefaultCurrencyIsoCode: "EUR",
+			})
+
+			ctrl := &controller.ApplicationController{}
+			resp, err := ctrl.DeleteBook(ctx, tc.request)
+			require.NoError(t, err)
+
+			if tc.expecting204 != nil {
+				require.IsType(t, resp, api.DeleteBook204Response{})
+				resp204 := resp.(api.DeleteBook204Response)
+				tc.expecting204(t, resp204)
+			}
+
+			if tc.expecting404 != nil {
+				require.IsType(t, resp, api.NotFoundError{})
+				resp404 := resp.(api.NotFoundError)
+				tc.expecting404(t, resp404)
+			}
 		})
 	}
 }
