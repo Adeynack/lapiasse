@@ -2,15 +2,38 @@
 
 A parking for ideas and TODOs for the development.
 
-## Roadmap
+## Roadmap for MVP
 
-| Feature    | Model | API | MD Import | TUI |
-| ---------- | ----- | --- | --------- | --- |
-| Books      | ✅    | 🛠️  | 🛠️        | 🛑  |
-| Categories | 🛑    | 🛑  | 🛑        | 🛑  |
-| Accounts   | 🛑    | 🛑  | 🛑        | 🛑  |
-| Exchanges  | 🛑    | 🛑  | 🛑        | 🛑  |
-| Reminders  | 🛑    | 🛑  | 🛑        | 🛑  |
+> `-` N/A `?` To do
+
+| Feature                   | Model | API  | MD Import   | TUI |
+| ------------------------- | ----- | ---- | ----------- | --- |
+| Books                     | Done  | Done | In progress | -   |
+| Categories                | ?     | ?    | ?           | -   |
+| TUI experimentations (\*) | -     | -    | -           | ?   |
+| Books                     | -     | -    | -           | ?   |
+| Categories                | -     | -    | -           | ?   |
+| Accounts                  | ?     | ?    | ?           | ?   |
+| Exchanges                 | ?     | ?    | ?           | ?   |
+| Reminders                 | ?     | ?    | ?           | ?   |
+
+### (\*) TUI experimentations
+
+I will ask Claude (AI) to generate 4 PoV TUIs using different lib/frameworks (BubbleTea, tview, and 2 other recommendations). To have a decent idea of how the code looks in all of them, Claude will be asked to develop the following screens and controls:
+
+- [ ] Books
+  - [ ] List of books
+    - [ ] A table with the books and their default currency
+    - [ ] Controls to add, remove, and edit books
+  - [ ] Book form (create, edit)
+- [ ] Categories
+  - [ ] Tree view listing categories and their parents
+  - [ ] Controls to add, remove, and edit books
+- [ ] Category form
+  - [ ] Chosing a parent category. Could be one of...
+    - Dropdown?
+    - Drop-TreeView ?
+    - Popup/Modal with a Treeview?
 
 ## TODOs for product
 
