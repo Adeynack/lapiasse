@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"path"
 
 	"adeynack.net/lapiasse/pkg/applog"
 	"adeynack.net/lapiasse/pkg/model"
@@ -16,7 +17,7 @@ import (
 )
 
 func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error) {
-	dsn := config.MainDatabaseFilePath()
+	dsn := databaseDsn(config)
 	applog.Debug(ctx, "Initializing the Gorm database connector", "main_database_file_path", dsn)
 
 	gormLogger, err := initializeLogger(ctx)
@@ -41,6 +42,14 @@ func InitializeGorm(ctx context.Context, config *Configuration) (*gorm.DB, error
 	}
 
 	return db, nil
+}
+
+func databaseDsn(config *Configuration) string {
+	if config.InMemory {
+		return "file::memory:?cache=shared"
+	}
+
+	return path.Join(config.BasePath, "lapiasse.db")
 }
 
 func closeDB(db *gorm.DB) ctxval.CleanupFunc {

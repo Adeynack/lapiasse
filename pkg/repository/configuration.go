@@ -68,11 +68,3 @@ func determineDefaultDataDirectory(ctx context.Context) (string, error) {
 
 	return path.Join(home, ".lapiasse"), nil
 }
-
-func (c *Configuration) MainDatabaseFilePath() string {
-	if c.InMemory {
-		return "file::memory:?cache=shared"
-	}
-
-	return path.Join(c.BasePath, "lapiasse.db")
-}
