@@ -1,6 +1,9 @@
 package main
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func main() {
 	// If LAPIASSE_DEFAULT_CMD is set and no subcommand is provided, use the command from the env var.
@@ -11,6 +14,7 @@ func main() {
 
 	err := rootCmd.Execute()
 	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 }
