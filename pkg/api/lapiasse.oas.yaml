@@ -211,6 +211,7 @@ components:
       type: string
       enum:
         - error:internal_error
+        - error:unauthorized
         - error:bad_request
         - error:not_found
         - error:method_not_allowed

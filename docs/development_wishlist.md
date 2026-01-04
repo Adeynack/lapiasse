@@ -37,6 +37,9 @@ I will ask Claude (AI) to generate 4 PoV TUIs using different lib/frameworks (Bu
 
 ## TODOs for product
 
+- [x] Minimal API security
+  - [x] Starting the API logs a key (and/or display it on the screen)
+  - [ ] MoneyDance Import needs that key as a parameter to provide to the API calls
 - [ ] Implement pagination
   - [ ] Change to only `?after={pseudo-cursor}` (remove `page` and `page-size`).
   - [ ] Returns `{"pagination": {"has_next": true, "next": "pseudo-cursor"}}` when there is a next page

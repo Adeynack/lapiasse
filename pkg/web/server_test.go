@@ -30,7 +30,22 @@ func TestServer(t *testing.T) {
 		requestBody    string
 		expectedStatus int
 		expectedBody   string
+		auth           func() (tokenValue string, includeAuthorizationHeader bool) // by default, valid token is provided
 	}{
+		"not providing an Authorization header": {
+			urlPath:        "/health",
+			method:         http.MethodGet,
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"type":"error:unauthorized","title":"Unauthorized","status":401}`,
+			auth:           func() (string, bool) { return "", false },
+		},
+		"providing an invalid API token": {
+			urlPath:        "/health",
+			method:         http.MethodGet,
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"type":"error:unauthorized","title":"Unauthorized","status":401}`,
+			auth:           func() (string, bool) { return "invalid-token", true },
+		},
 		"a path returning a simple response - GET health": {
 			urlPath:        "/health",
 			method:         http.MethodGet,
@@ -123,6 +138,13 @@ func TestServer(t *testing.T) {
 			})
 
 			request := httptest.NewRequest(tc.method, tc.urlPath, strings.NewReader(tc.requestBody))
+
+			if tc.auth == nil {
+				request.Header.Set("Authorization", "Bearer "+web.StaticApiTokenTest)
+			} else if expectedToken, includeAuth := tc.auth(); includeAuth {
+				request.Header.Set("Authorization", "Bearer "+expectedToken)
+			}
+
 			recorder := httptest.NewRecorder()
 
 			server.Handler.ServeHTTP(recorder, request)

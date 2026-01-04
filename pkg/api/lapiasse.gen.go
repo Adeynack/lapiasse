@@ -25,6 +25,7 @@ const (
 	ErrorTypeErrorInternalError    ErrorType = "error:internal_error"
 	ErrorTypeErrorMethodNotAllowed ErrorType = "error:method_not_allowed"
 	ErrorTypeErrorNotFound         ErrorType = "error:not_found"
+	ErrorTypeErrorUnauthorized     ErrorType = "error:unauthorized"
 	ErrorTypeErrorValidation       ErrorType = "error:validation"
 )
 

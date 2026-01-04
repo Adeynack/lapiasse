@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -30,8 +31,12 @@ func StartServer(ctx context.Context, config *Configuration) (*http.Server, erro
 	// Start the server in the background
 	go func() {
 		applog.Info(ctx, "Starting HTTP server", "address", address)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			applog.Error(ctx, "HTTP server ListenAndServe error", "error", err)
+		if err := server.ListenAndServe(); err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				applog.Info(ctx, "HTTP server closed")
+			} else {
+				applog.Error(ctx, "HTTP server ListenAndServe error", "error", err)
+			}
 		}
 	}()
 
@@ -58,6 +63,7 @@ func createHandler(ctx context.Context, config *Configuration) (http.Handler, er
 		recoverFromPanicAsJsonErr(),         // recover from panics
 		handleCors(ctx),                     // handle CORS
 		middleware.Timeout(timeoutDuration), // set a timeout for requests
+		apiTokenMiddleware(ctx),             // check for API token in requests (for all paths)
 	)
 
 	router.NotFound(handleNotFound())
