@@ -53,7 +53,14 @@
             "cwd": "${workspaceFolder}",
             "args": [
                 "--md-source",
-                "${workspaceFolder}/tmp/md.json"
+                "${workspaceFolder}/tmp/md.json",
+                "--api-token",
+                "dev-static-token",
+                "--book-name",
+                "Dev Imported",
+                "--skip-suffix-to-book-name",
+                "--delete-book-if-exists",
+                "true"
             ],
             "env": {
                 "GOEXPERIMENT": "jsonv2,synctest"

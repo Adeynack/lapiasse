@@ -5,6 +5,7 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -13,13 +14,16 @@ import (
 	"adeynack.net/lapiasse/pkg/api"
 	"adeynack.net/lapiasse/pkg/applog"
 	"adeynack.net/lapiasse/pkg/platform/errorex"
+	"github.com/samber/lo"
 )
 
 type moneydanceImporter struct {
 	ApiEndpoint          string
+	ApiToken             string
 	MoneydanceExportPath string
 	BookName             string
-	AddSuffixToBookName  bool
+	DeleteBookIfExists   bool
+	SkipSuffixToBookName bool
 	BookCurrencyIsoCode  string
 
 	apiClient *api.ClientWithResponses
@@ -35,14 +39,16 @@ func (mdi *moneydanceImporter) Start(ctx context.Context) error {
 		ctx,
 		"Importing MoneyDance Export JSON to La Piasse",
 		slog.String("api-endpoint", mdi.ApiEndpoint),
+		slog.String("api-token", lo.Ternary(mdi.ApiToken == "", "(empty)", "(provided)")),
 		slog.String("md-source", mdi.MoneydanceExportPath),
 		slog.String("book-name", mdi.BookName),
-		slog.Bool("add-suffix", mdi.AddSuffixToBookName),
+		slog.Bool("skip-suffix", mdi.SkipSuffixToBookName),
 	)
 
 	for _, step := range []func(context.Context) error{
 		mdi.loadMoneydanceExport,
 		mdi.createApiClient,
+		mdi.deleteExistingBook,
 		mdi.createNewBook,
 		mdi.createRegisters,
 	} {
@@ -72,12 +78,58 @@ func (mdi *moneydanceImporter) loadMoneydanceExport(ctx context.Context) (err er
 	return nil
 }
 
+func requestEditorAuthorize(token string) api.RequestEditorFn {
+	return func(ctx context.Context, req *http.Request) error {
+		req.Header.Add("Authorization", "Bearer "+token)
+
+		return nil
+	}
+}
+
 func (mdi *moneydanceImporter) createApiClient(ctx context.Context) error {
-	apiClient, err := api.NewClientWithResponses(mdi.ApiEndpoint)
+	apiClient, err := api.NewClientWithResponses(
+		mdi.ApiEndpoint,
+		api.WithRequestEditorFn(requestEditorAuthorize(mdi.ApiToken)),
+	)
 	if err != nil {
 		return fmt.Errorf("creating the API client: %w", err)
 	}
 	mdi.apiClient = apiClient
+
+	return nil
+}
+
+func (mdi *moneydanceImporter) deleteExistingBook(ctx context.Context) error {
+	if !mdi.DeleteBookIfExists {
+		return nil
+	}
+
+	bookName := mdi.determineBookName()
+
+	response, err := mdi.apiClient.ListBooksWithResponse(ctx, &api.ListBooksParams{})
+	switch {
+	case err != nil:
+		return fmt.Errorf("listing books via API: %w", err)
+	case response.JSON200 == nil:
+		return fmt.Errorf("listing books via API: %s", response.Status())
+	}
+
+	for _, book := range response.JSON200.Books {
+		if book.Name == bookName {
+			delResp, err := mdi.apiClient.DeleteBookWithResponse(ctx, book.Id)
+			switch {
+			case err != nil:
+				return fmt.Errorf("deleting existing book via API: %w", err)
+			case delResp.StatusCode() != http.StatusNoContent:
+				return fmt.Errorf("deleting existing book via API: %s", delResp.Status())
+			}
+
+			applog.Info(ctx, "Deleted existing book", slog.Group("book",
+				"id", book.Id,
+				"name", book.Name,
+			))
+		}
+	}
 
 	return nil
 }
@@ -110,7 +162,11 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 }
 
 func (mdi *moneydanceImporter) determineBookName() string {
-	if mdi.AddSuffixToBookName {
+	if mdi.BookName == "" {
+		mdi.BookName = mdi.md.Metadata.FileName
+	}
+
+	if !mdi.SkipSuffixToBookName {
 		return fmt.Sprintf("%s (imported on %s)", mdi.BookName, time.Now().Format("2006-01-02 at 15:04:05"))
 	}
 
