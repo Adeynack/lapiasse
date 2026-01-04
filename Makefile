@@ -92,3 +92,15 @@ gen-api:
 test:
 	@echo "Running tests..."
 	go test -json -tags="test" ./... | go tool gotestfmt
+
+# RUN
+
+.PHONE: run
+run: build
+	@echo "Running lapiasse server..."
+	go run ./cmd/lapiasse
+
+.PHONE: run-serve
+run-serve: build
+	@echo "Running lapiasse server..."
+	go run ./cmd/lapiasse serve
