@@ -169,11 +169,11 @@ components:
         A machine-readable format for specifying errors in HTTP API responses
         based on RFC 7807 (https://datatracker.ietf.org/doc/html/rfc7807).
     BadRequestError:
-      x-go-no-type-alias: true
       <<: *error
+      x-go-no-type-alias: true
     NotFoundError:
-      x-go-no-type-alias: true
       <<: *error
+      x-go-no-type-alias: true
     Book.Edit:
       type: object
       required:
@@ -287,8 +287,8 @@ components:
     ID:
       type: string
     InternalError:
-      x-go-no-type-alias: true
       <<: *error
+      x-go-no-type-alias: true
     Pagination:
       type: object
       required:
