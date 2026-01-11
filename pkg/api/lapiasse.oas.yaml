@@ -68,9 +68,9 @@ paths:
                 $ref: "#/components/schemas/Book.Show"
         "400": *response400
         "422": *response422
-  /books/{bookId}:
+  /books/{book_id}:
     parameters:
-      - name: bookId
+      - name: book_id
         in: path
         required: true
         schema:
@@ -292,9 +292,9 @@ components:
     Pagination:
       type: object
       required:
-        - hasNext
+        - has_next
       properties:
-        hasNext:
+        has_next:
           type: boolean
     Register:
       type: object

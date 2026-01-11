@@ -127,7 +127,7 @@ type NotFoundError struct {
 
 // Pagination defines model for Pagination.
 type Pagination struct {
-	HasNext bool `json:"hasNext"`
+	HasNext bool `json:"has_next"`
 }
 
 // ServerHealthStatus defines model for ServerHealthStatus.
@@ -475,7 +475,7 @@ func NewDeleteBookRequest(server string, bookId ID) (*http.Request, error) {
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bookId", runtime.ParamLocationPath, bookId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "book_id", runtime.ParamLocationPath, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +509,7 @@ func NewGetBookRequest(server string, bookId ID) (*http.Request, error) {
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bookId", runtime.ParamLocationPath, bookId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "book_id", runtime.ParamLocationPath, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -554,7 +554,7 @@ func NewUpdateBookRequestWithBody(server string, bookId ID, contentType string, 
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bookId", runtime.ParamLocationPath, bookId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "book_id", runtime.ParamLocationPath, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -1106,13 +1106,13 @@ type ServerInterface interface {
 	// (POST /books)
 	CreateBook(w http.ResponseWriter, r *http.Request)
 
-	// (DELETE /books/{bookId})
+	// (DELETE /books/{book_id})
 	DeleteBook(w http.ResponseWriter, r *http.Request, bookId ID)
 
-	// (GET /books/{bookId})
+	// (GET /books/{book_id})
 	GetBook(w http.ResponseWriter, r *http.Request, bookId ID)
 
-	// (PUT /books/{bookId})
+	// (PUT /books/{book_id})
 	UpdateBook(w http.ResponseWriter, r *http.Request, bookId ID)
 
 	// (GET /health)
@@ -1133,17 +1133,17 @@ func (_ Unimplemented) CreateBook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// (DELETE /books/{bookId})
+// (DELETE /books/{book_id})
 func (_ Unimplemented) DeleteBook(w http.ResponseWriter, r *http.Request, bookId ID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// (GET /books/{bookId})
+// (GET /books/{book_id})
 func (_ Unimplemented) GetBook(w http.ResponseWriter, r *http.Request, bookId ID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// (PUT /books/{bookId})
+// (PUT /books/{book_id})
 func (_ Unimplemented) UpdateBook(w http.ResponseWriter, r *http.Request, bookId ID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -1216,12 +1216,12 @@ func (siw *ServerInterfaceWrapper) DeleteBook(w http.ResponseWriter, r *http.Req
 
 	var err error
 
-	// ------------- Path parameter "bookId" -------------
+	// ------------- Path parameter "book_id" -------------
 	var bookId ID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "bookId", chi.URLParam(r, "bookId"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "book_id", chi.URLParam(r, "book_id"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "book_id", Err: err})
 		return
 	}
 
@@ -1241,12 +1241,12 @@ func (siw *ServerInterfaceWrapper) GetBook(w http.ResponseWriter, r *http.Reques
 
 	var err error
 
-	// ------------- Path parameter "bookId" -------------
+	// ------------- Path parameter "book_id" -------------
 	var bookId ID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "bookId", chi.URLParam(r, "bookId"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "book_id", chi.URLParam(r, "book_id"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "book_id", Err: err})
 		return
 	}
 
@@ -1266,12 +1266,12 @@ func (siw *ServerInterfaceWrapper) UpdateBook(w http.ResponseWriter, r *http.Req
 
 	var err error
 
-	// ------------- Path parameter "bookId" -------------
+	// ------------- Path parameter "book_id" -------------
 	var bookId ID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "bookId", chi.URLParam(r, "bookId"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "book_id", chi.URLParam(r, "book_id"), &bookId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bookId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "book_id", Err: err})
 		return
 	}
 
@@ -1420,13 +1420,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/books", wrapper.CreateBook)
 	})
 	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/books/{bookId}", wrapper.DeleteBook)
+		r.Delete(options.BaseURL+"/books/{book_id}", wrapper.DeleteBook)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/books/{bookId}", wrapper.GetBook)
+		r.Get(options.BaseURL+"/books/{book_id}", wrapper.GetBook)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/books/{bookId}", wrapper.UpdateBook)
+		r.Put(options.BaseURL+"/books/{book_id}", wrapper.UpdateBook)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/health", wrapper.Health)
@@ -1494,7 +1494,7 @@ func (response ValidationError) VisitCreateBookResponse(w http.ResponseWriter) e
 }
 
 type DeleteBookRequestObject struct {
-	BookId ID `json:"bookId"`
+	BookId ID `json:"book_id"`
 }
 
 type DeleteBookResponseObject interface {
@@ -1517,7 +1517,7 @@ func (response NotFoundError) VisitDeleteBookResponse(w http.ResponseWriter) err
 }
 
 type GetBookRequestObject struct {
-	BookId ID `json:"bookId"`
+	BookId ID `json:"book_id"`
 }
 
 type GetBookResponseObject interface {
@@ -1541,7 +1541,7 @@ func (response NotFoundError) VisitGetBookResponse(w http.ResponseWriter) error 
 }
 
 type UpdateBookRequestObject struct {
-	BookId ID `json:"bookId"`
+	BookId ID `json:"book_id"`
 	Body   *UpdateBookJSONRequestBody
 }
 
@@ -1604,13 +1604,13 @@ type StrictServerInterface interface {
 	// (POST /books)
 	CreateBook(ctx context.Context, request CreateBookRequestObject) (CreateBookResponseObject, error)
 
-	// (DELETE /books/{bookId})
+	// (DELETE /books/{book_id})
 	DeleteBook(ctx context.Context, request DeleteBookRequestObject) (DeleteBookResponseObject, error)
 
-	// (GET /books/{bookId})
+	// (GET /books/{book_id})
 	GetBook(ctx context.Context, request GetBookRequestObject) (GetBookResponseObject, error)
 
-	// (PUT /books/{bookId})
+	// (PUT /books/{book_id})
 	UpdateBook(ctx context.Context, request UpdateBookRequestObject) (UpdateBookResponseObject, error)
 
 	// (GET /health)
