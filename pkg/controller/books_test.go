@@ -330,19 +330,19 @@ func TestUpdateBook(t *testing.T) {
 				require.NoError(t, err)
 
 				if tc.expecting404 != nil {
-					require.IsType(t, resp, api.NotFoundError{})
+					require.IsType(t, api.NotFoundError{}, resp)
 					resp404 := resp.(api.NotFoundError)
 					tc.expecting404(t, resp404)
 				}
 
 				if tc.expecting422 != nil {
-					require.IsType(t, resp, api.ValidationError{})
+					require.IsType(t, api.ValidationError{}, resp)
 					resp422 := resp.(api.ValidationError)
 					tc.expecting422(t, resp422)
 				}
 
 				if tc.expecting200 != nil {
-					require.IsType(t, resp, api.UpdateBook200JSONResponse{})
+					require.IsType(t, api.UpdateBook200JSONResponse{}, resp)
 					resp201 := resp.(api.UpdateBook200JSONResponse)
 
 					// Check if updated was really created in DB

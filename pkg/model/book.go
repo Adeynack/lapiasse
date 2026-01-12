@@ -24,7 +24,7 @@ func (b *Book) AssignAttributes(attr *api.BookEdit) {
 }
 
 func (b *Book) Validate(ctx context.Context, reason ValidationReason) error {
-	return b.BaseValidate(ctx, reason, b, func(ctx context.Context, reason ValidationReason, validationErrors ValidationErrorBuilder) error {
+	return b.BaseValidate(ctx, reason, b, func(ctx context.Context, val *ValidationBuilder) error {
 		db := ctxval.MustResolve[*gorm.DB](ctx)
 
 		// Name must be unique.
@@ -35,8 +35,8 @@ func (b *Book) Validate(ctx context.Context, reason ValidationReason) error {
 			} else {
 				return err
 			}
-		} else if reason == ValidationReasonCreate || bookWithSameName.ID != b.ID {
-			validationErrors.Add("Book.Name", "book name must be unique", "unique", b.Name)
+		} else if val.Creating() || bookWithSameName.ID != b.ID {
+			val.AddFieldErr("Name", "book name must be unique", "unique", b.Name)
 		}
 
 		return nil

@@ -5,6 +5,7 @@ import (
 	"encoding/json/jsontext"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"adeynack.net/lapiasse/pkg/appvalidator"
@@ -58,29 +59,33 @@ type Base struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitzero"`
 }
 
-type validationFunc func(ctx context.Context, reason ValidationReason, validationErrors ValidationErrorBuilder) error
+type validationFunc func(ctx context.Context, val *ValidationBuilder) error
 
 // BaseValidate performs validation common to all models.
 // The `self` parameter must be the outer struct to validate.
 func (b *Base) BaseValidate(ctx context.Context, reason ValidationReason, self any, validators ...validationFunc) error {
-	var validationErrors ValidationErrorBuilder
+	val := &ValidationBuilder{
+		reason:    reason,
+		namespace: namespaceFrom(self),
+		errors:    nil,
+	}
 
 	// Validate the Outer (real) struct.
 	if err := appvalidator.Default().StructCtx(ctx, self); err != nil {
 		if validatorValidationErrors, ok := errorex.AsType[validator.ValidationErrors](err); ok {
-			validationErrors.AddFromValidator(validatorValidationErrors)
+			val.AddFromValidator(validatorValidationErrors)
 		} else {
 			return err
 		}
 	}
 
 	for _, validator := range validators {
-		if err := validator(ctx, reason, validationErrors); err != nil {
+		if err := validator(ctx, val); err != nil {
 			return err
 		}
 	}
 
-	return validationErrors.ToError()
+	return val.ToError()
 }
 
 func init() {
@@ -108,3 +113,10 @@ const (
 	ValidationReasonUpdate ValidationReason = 'U' // Validation for update.
 	ValidationReasonDelete ValidationReason = 'D' // Validation for deletion.
 )
+
+func namespaceFrom(model any) string {
+	typeName := fmt.Sprintf("%T", model)
+	parts := strings.Split(typeName, ".")
+
+	return parts[len(parts)-1]
+}
