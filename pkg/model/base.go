@@ -3,12 +3,12 @@ package model
 import (
 	"context"
 	"encoding/json/jsontext"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"adeynack.net/lapiasse/pkg/appvalidator"
+	"adeynack.net/lapiasse/pkg/platform/errorex"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
@@ -58,28 +58,21 @@ type Base struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitzero"`
 }
 
-func (b *Base) ValidateBase(
-	ctx context.Context,
-	db *gorm.DB,
-	reason ValidationReason,
-	outer any,
-) (
-	validationErrors ValidationErrorBuilder,
-	err error,
-) {
-	var validatorValidationErrors validator.ValidationErrors
+// ValidateBase performs validation common to all models.
+// The `self` parameter must be the outer struct to validate.
+func (b *Base) ValidateBase(ctx context.Context, self any) (ValidationErrorBuilder, error) {
+	var val ValidationErrorBuilder
 
 	// Validate the Outer (real) struct.
-	err = appvalidator.Default().StructCtx(ctx, outer)
-	if err != nil {
-		if !errors.As(err, &validatorValidationErrors) {
+	if err := appvalidator.Default().StructCtx(ctx, self); err != nil {
+		if validatorValidationErrors, ok := errorex.AsType[validator.ValidationErrors](err); ok {
+			val.AddFromValidator(validatorValidationErrors)
+		} else {
 			return nil, err
 		}
-
-		validationErrors.AddFromValidator(validatorValidationErrors)
 	}
 
-	return validationErrors, nil
+	return val, nil
 }
 
 func init() {

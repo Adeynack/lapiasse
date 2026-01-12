@@ -19,20 +19,23 @@ type Book struct {
 }
 
 func (b *Book) Validate(ctx context.Context, reason ValidationReason) error {
-	db := ctxval.MustResolve[*gorm.DB](ctx)
-
-	val, err := b.ValidateBase(ctx, db, reason, b)
+	val, err := b.ValidateBase(ctx, b)
 	if err != nil {
 		return err
 	}
 
+	db := ctxval.MustResolve[*gorm.DB](ctx)
+
 	// Name must be unique.
 	// When users are introduced, should be "unique per user".
-	_, err = gorm.G[Book](db).Where("name = ? AND id <> ?", b.Name, b.ID).Select("id").First(ctx)
-	if err == nil {
+	if bookWithSameName, err := gorm.G[Book](db).Where("name = ?", b.Name).Select("id").First(ctx); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No book with same name exists, all good.
+		} else {
+			return err
+		}
+	} else if bookWithSameName.ID != b.ID {
 		val.Add("Book.Name", "book name must be unique", "unique", b.Name)
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
 	}
 
 	return val.ToError()
