@@ -68,7 +68,7 @@ func TestServer(t *testing.T) {
 			urlPath:        "/books",
 			method:         http.MethodGet,
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"books":[],"pagination":{"hasNext":false}}`,
+			expectedBody:   `{"books":[],"pagination":{"has_next":false}}`,
 		},
 		"a path returning a Not Found error - GET books nonexistent-id": {
 			urlPath:        "/books/nonexistent-id",
