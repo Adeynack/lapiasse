@@ -18,30 +18,27 @@ type Book struct {
 	// Registers []Register `gorm:"foreignKey:BookID" json:"registers,omitempty"`
 }
 
-func (b *Book) Validate(ctx context.Context, reason ValidationReason) error {
-	val, err := b.ValidateBase(ctx, b)
-	if err != nil {
-		return err
-	}
-
-	db := ctxval.MustResolve[*gorm.DB](ctx)
-
-	// Name must be unique.
-	// When users are introduced, should be "unique per user".
-	if bookWithSameName, err := gorm.G[Book](db).Where("name = ?", b.Name).Select("id").First(ctx); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No book with same name exists, all good.
-		} else {
-			return err
-		}
-	} else if bookWithSameName.ID != b.ID {
-		val.Add("Book.Name", "book name must be unique", "unique", b.Name)
-	}
-
-	return val.ToError()
-}
-
 func (b *Book) AssignAttributes(attr *api.BookEdit) {
 	b.Name = attr.Name
 	b.DefaultCurrencyIsoCode = attr.DefaultCurrencyIsoCode
+}
+
+func (b *Book) Validate(ctx context.Context, reason ValidationReason) error {
+	return b.BaseValidate(ctx, reason, b, func(ctx context.Context, reason ValidationReason, validationErrors ValidationErrorBuilder) error {
+		db := ctxval.MustResolve[*gorm.DB](ctx)
+
+		// Name must be unique.
+		// When users are introduced, should be "unique per user".
+		if bookWithSameName, err := gorm.G[Book](db).Where("name = ?", b.Name).Select("id").First(ctx); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No book with same name exists, all good.
+			} else {
+				return err
+			}
+		} else if reason == ValidationReasonCreate || bookWithSameName.ID != b.ID {
+			validationErrors.Add("Book.Name", "book name must be unique", "unique", b.Name)
+		}
+
+		return nil
+	})
 }

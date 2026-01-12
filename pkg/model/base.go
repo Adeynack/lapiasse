@@ -58,21 +58,29 @@ type Base struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitzero"`
 }
 
-// ValidateBase performs validation common to all models.
+type validationFunc func(ctx context.Context, reason ValidationReason, validationErrors ValidationErrorBuilder) error
+
+// BaseValidate performs validation common to all models.
 // The `self` parameter must be the outer struct to validate.
-func (b *Base) ValidateBase(ctx context.Context, self any) (ValidationErrorBuilder, error) {
-	var val ValidationErrorBuilder
+func (b *Base) BaseValidate(ctx context.Context, reason ValidationReason, self any, validators ...validationFunc) error {
+	var validationErrors ValidationErrorBuilder
 
 	// Validate the Outer (real) struct.
 	if err := appvalidator.Default().StructCtx(ctx, self); err != nil {
 		if validatorValidationErrors, ok := errorex.AsType[validator.ValidationErrors](err); ok {
-			val.AddFromValidator(validatorValidationErrors)
+			validationErrors.AddFromValidator(validatorValidationErrors)
 		} else {
-			return nil, err
+			return err
 		}
 	}
 
-	return val, nil
+	for _, validator := range validators {
+		if err := validator(ctx, reason, validationErrors); err != nil {
+			return err
+		}
+	}
+
+	return validationErrors.ToError()
 }
 
 func init() {
