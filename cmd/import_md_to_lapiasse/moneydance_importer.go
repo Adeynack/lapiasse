@@ -141,24 +141,28 @@ func (mdi *moneydanceImporter) createNewBook(ctx context.Context) error {
 		DefaultCurrencyIsoCode: strings.ToUpper(mdi.BookCurrencyIsoCode),
 		Name:                   bookName,
 	})
-	switch {
-	case err != nil:
+	if err != nil {
 		return fmt.Errorf("creating new book via API: %w", err)
-	case response.JSON422 != nil:
-		return fmt.Errorf("creating new book via API: %v", response.JSON422)
-	case response.JSON201 == nil:
-		return fmt.Errorf("creating new book via API: %s", response.Status())
 	}
 
-	book := response.JSON201
-	applog.Info(ctx, "Created new book", slog.Group("book",
-		"id", book.Id,
-		"name", book.Name,
-	))
+	return response.Switch(
+		func(book *api.BookShow) error {
+			applog.Info(ctx, "Created new book", slog.Group("book",
+				"id", book.Id,
+				"name", book.Name,
+			))
 
-	mdi.book = book
+			mdi.book = book
 
-	return nil
+			return nil
+		},
+		func(badRequest *api.BadRequestError) error {
+			return fmt.Errorf("creating new book via API: %v", badRequest)
+		},
+		func(validationErr *api.ValidationError) error {
+			return fmt.Errorf("creating new book via API: %v", validationErr)
+		},
+	)
 }
 
 func (mdi *moneydanceImporter) determineBookName() string {
