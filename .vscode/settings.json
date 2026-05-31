@@ -1,6 +1,6 @@
 {
   "go.toolsEnvVars": {
-    "GOEXPERIMENT": "jsonv2,synctest",
+    "GOEXPERIMENT": "jsonv2",
     "PWD": "${workspaceFolder}",
     "WORKSPACE_ROOT": "${workspaceFolder}",
   },

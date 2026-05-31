@@ -6,7 +6,7 @@ description: Run comprehensive Go linting and static analysis tools
 
 Run a comprehensive suite of Go linting and static analysis tools on the codebase.
 
-**IMPORTANT:** This project requires `GOEXPERIMENT=jsonv2,synctest` to be set for all `go` commands. See `.claude/project-config.md` for details.
+**IMPORTANT:** This project requires `GOEXPERIMENT=jsonv2` to be set for all `go` commands. See `.claude/project-config.md` for details.
 
 ## Steps to Execute
 

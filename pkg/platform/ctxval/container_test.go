@@ -152,7 +152,7 @@ func TestContainerFallback(t *testing.T) {
 //
 // To run the benchmark, use the following command:
 //
-//	GOEXPERIMENT=jsonv2,synctest go test -v -benchmem -run=^$ -bench ^BenchmarkContainer$ adeynack.net/lapiasse/pkg/platform/ctxval
+//	GOEXPERIMENT=jsonv2 go test -v -benchmem -run=^$ -bench ^BenchmarkContainer$ adeynack.net/lapiasse/pkg/platform/ctxval
 func BenchmarkContainer(b *testing.B) {
 	b.ReportAllocs()
 	type structWithFloat struct{ C float64 }

@@ -1,5 +1,5 @@
 # Ensuring all tasks are using the new JSONv2 Go library.
-export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2,synctest
+export GOEXPERIMENT := $(GOEXPERIMENT),jsonv2
 
 actual_go_version ?= $(shell go version | awk '{print $$3}' | sed 's/^go//')
 export WORKSPACE_ROOT := $(shell git rev-parse --show-toplevel)
