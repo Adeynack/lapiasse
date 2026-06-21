@@ -1,0 +1,13 @@
+<%# locals: (current_user:) %>
+<%= render "c/card", title: "Current User" do %>
+  <p>
+    Currently logged as
+    <%= current_user.display_name %>
+    (<%= mail_to current_user.email %>).
+  </p>
+  <%= link_button_to "Log out",
+  destroy_user_session_path,
+  data: {
+    turbo_method: :delete,
+  } %>
+<% end %>

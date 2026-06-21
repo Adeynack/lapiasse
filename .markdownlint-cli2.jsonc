@@ -1,0 +1,23 @@
+// Markdown linting rules, shared by editors and CI.
+//
+// Any editor integration that uses markdownlint-cli2 (nvim/LazyVim via Mason,
+// the VS Code markdownlint extension, ...) picks this file up automatically by
+// walking up from the file being edited. CI runs the very same rules through
+// `bin/markdownlint` (see config/ci.rb).
+//
+// Rule reference:
+// https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+{
+  "config": {
+    // Start from the full default rule set (this is what nvim reports today).
+    "default": true,
+  },
+
+  // Used when no glob is given on the command line, so `bin/markdownlint`
+  // checks the whole project.
+  "globs": ["**/*.md"],
+
+  // Skip anything git already ignores (node_modules, tmp, storage, ...).
+  "gitignore": true,
+  "ignores": ["vendor/**"],
+}

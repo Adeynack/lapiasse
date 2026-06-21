@@ -42,6 +42,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# Authentication [https://github.com/heartcombo/devise]
+gem "devise", "~> 5.0"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
@@ -55,6 +58,10 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
+  # Formatter for ERB templates, which Prettier has no parser for
+  # [https://github.com/nebulab/erb-formatter]
+  gem "erb-formatter", require: false
+
   # Behaviour Driven Development for Ruby [https://rspec.info/]
   gem "rspec-rails"
 end
@@ -65,4 +72,16 @@ group :development do
 
   # Process manager for Procfile-based applications and tmux [https://github.com/DarthSim/overmind]
   gem "overmind", "~> 2.5"
+
+  gem "guard"
+  gem "guard-rspec"
+
+  # Ruby LSP addon so the editor's test runner understands RSpec [https://github.com/st0012/ruby-lspf-rspec]
+  gem "ruby-lsp-rspec", require: false
+
+  # Model and Routes Annotations [https://github.com/drwl/annotaterb]
+  gem "annotaterb"
+
+  # Annotate your Rails controllers with route info [https://github.com/nshki/chusaku]
+  gem "chusaku", require: false
 end

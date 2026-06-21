@@ -645,7 +645,7 @@ Lint/Loop:
 
 Lint/MissingCopEnableDirective:
   Enabled: true
-  MaximumRangeSize: .inf
+  MaxRangeSize: .inf
 
 Lint/MissingSuper:
   Enabled: false
@@ -1895,7 +1895,7 @@ Style/TrailingBodyOnModule:
 
 Style/TrailingCommaInArguments:
   Enabled: true
-  EnforcedStyleForMultiline: no_comma
+  EnforcedStyleForMultiline: consistent_comma
 
 Style/TrailingCommaInArrayLiteral:
   Enabled: true

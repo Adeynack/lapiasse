@@ -1,0 +1,14 @@
+<%# https://getbootstrap.com/docs/5.3/components/card/ %>
+<%# locals: (title: nil) %>
+<%#   title:    Optional title, displayed in the card's header. %>
+<%#   &block:   Content of the card's body. %>
+<div class="card">
+  <% if title.present? %>
+    <div class="card-header">
+      <%= title %>
+    </div>
+  <% end %>
+  <div class="card-body">
+    <%= yield %>
+  </div>
+</div>

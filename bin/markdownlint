@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Lint Markdown files with markdownlint-cli2, using .markdownlint-cli2.jsonc.
+#
+#   bin/markdownlint            # lint every *.md in the project
+#   bin/markdownlint --fix      # auto-correct the rules that support fixing
+#   bin/markdownlint README.md  # lint specific files
+set -e
+
+exec "$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)/node_modules/.bin/markdownlint-cli2" "$@"

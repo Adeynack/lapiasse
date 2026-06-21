@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
   <head>
     <title><%= content_for(:title) || "Lapiasse" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Lapiasse">
+    <meta name="application-name" content="La Piasse">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -24,6 +24,22 @@
   </head>
 
   <body>
-    <%= yield %>
+    <%= render "layouts/navbar" %>
+
+    <div class="container-fluid mt-2">
+      <% if notice.present? %>
+        <%= render "c/alert", color: :primary do %>
+          <%= notice %>
+        <% end %>
+      <% end %>
+
+      <% if alert.present? %>
+        <%= render "c/alert", color: :warning do %>
+          <%= alert %>
+        <% end %>
+      <% end %>
+
+      <%= yield %>
+    </div>
   </body>
 </html>

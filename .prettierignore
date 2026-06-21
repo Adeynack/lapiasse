@@ -1,0 +1,12 @@
+# Prettier owns formatting for every file type it supports in this project:
+# Markdown, JavaScript, JSON, YAML, HTML and CSS. `bin/prettier --check .` runs
+# in CI (see .github/workflows/ci.yml).
+#
+# This file is nearly empty on purpose. Prettier 3 defaults --ignore-path to
+# ['.gitignore', '.prettierignore'], so everything git already ignores
+# (node_modules/, app/assets/builds/, public/assets/, tmp/, log/, storage/) is
+# skipped without repeating it here. Files Prettier has no parser for (.rb,
+# .erb, .lock, Gemfile) are skipped automatically too.
+#
+# Add an entry below only for a file that is tracked in git, has a Prettier
+# parser, and still should not be reformatted.

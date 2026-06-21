@@ -52,6 +52,15 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: yarn
+
+      - name: Install JavaScript dependencies
+        run: yarn install --frozen-lockfile
+
       - name: Prepare RuboCop cache
         uses: actions/cache@v4
         env:
@@ -64,3 +73,12 @@ jobs:
 
       - name: Lint code for consistent style
         run: bin/rubocop -f github
+
+      - name: Check formatting for consistent style
+        run: bin/prettier --check .
+
+      - name: Check ERB template formatting
+        run: bin/erb-format --check
+
+      - name: Lint Markdown for consistent style
+        run: bin/markdownlint
