@@ -6,7 +6,7 @@
 
 | Feature    | Model | MD  | C   | R   | U   | D   | Job |
 | ---------- | ----- | --- | --- | --- | --- | --- | --- |
-| Users      | o     | -   | -   | -   | -   | -   | -   |
+| Users      | >     | -   | -   | -   | -   | -   | -   |
 | Login      | -     | -   | o   | -   | -   | o   | -   |
 | Books      | o     | o   | o   | o   | o   | o   | -   |
 | Categories | o     | o   | o   | o   | o   | o   | -   |
