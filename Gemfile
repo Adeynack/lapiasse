@@ -68,4 +68,16 @@ group :development do
 
   # Process manager for Procfile-based applications and tmux [https://github.com/DarthSim/overmind]
   gem "overmind", "~> 2.5"
+
+  gem "guard"
+  gem "guard-rspec"
+
+  # Ruby LSP addon so the editor's test runner understands RSpec [https://github.com/st0012/ruby-lspf-rspec]
+  gem "ruby-lsp-rspec", require: false
+
+  # Model and Routes Annotations [https://github.com/drwl/annotaterb]
+  gem "annotaterb"
+
+  # Annotate your Rails controllers with route info [https://github.com/nshki/chusaku]
+  gem "chusaku", require: false
 end

@@ -645,7 +645,7 @@ Lint/Loop:
 
 Lint/MissingCopEnableDirective:
   Enabled: true
-  MaximumRangeSize: .inf
+  MaxRangeSize: .inf
 
 Lint/MissingSuper:
   Enabled: false

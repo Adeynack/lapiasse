@@ -5,6 +5,10 @@ CI.run do
 
   step "Style: Ruby", "bin/rubocop"
 
+  step "Annotation: Routes in Controllers", "bin/chusaku --dry-run --exit-with-error-on-annotation --verbose"
+  step "Annotation: Models", "bin/annotaterb models --frozen"
+  step "Annotation: Routes", "bin/annotaterb routes --frozen"
+
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: Yarn vulnerability audit", "yarn audit"
   step "Security: Importmap vulnerability audit", "bin/importmap audit"
