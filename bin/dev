@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+# Default to port 3000 if not specified
+export PORT="${PORT:-3000}"
+
+bin/overmind start -f Procfile.dev

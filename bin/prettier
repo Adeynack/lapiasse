@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Run Prettier with the project's config (.prettierrc.yaml).
+#
+#   bin/prettier --write '**/*.md'   # reformat Markdown, fixing MD013 wrapping
+#   bin/prettier --check '**/*.md'   # report without writing
+#   bin/prettier --write README.md   # reformat specific files
+#
+# Note the quotes: the glob is expanded by Prettier, not by the shell.
+set -e
+
+exec "$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)/node_modules/.bin/prettier" "$@"

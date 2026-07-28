@@ -1,0 +1,25 @@
+# Prettier is the formatter for every file type it supports here: Markdown,
+# JavaScript, JSON, YAML, HTML and CSS. CI enforces it via `bin/prettier
+# --check .`; RuboCop remains the authority on Ruby, which Prettier ignores.
+#
+# For Markdown it also does the job markdownlint cannot: markdownlint reports
+# MD013/line-length but has no fixer for it, because reflowing prose is a
+# formatting decision rather than a mechanical one.
+#
+# nvim/LazyVim picks this up automatically: conform resolves `prettier` from the
+# project's node_modules, so no Mason install is needed.
+#
+#   bin/prettier --write .   # reformat
+#   bin/prettier --check .   # report without writing
+
+# Everything not listed here stays at Prettier's defaults, including the global
+# printWidth of 80.
+overrides:
+  - files: "*.md"
+    options:
+      # Hard-wrap prose. Without this Prettier leaves long lines untouched and
+      # MD013 keeps failing.
+      proseWrap: always
+      # Redundant with the global default, but stated explicitly because it must
+      # stay in sync with MD013's line_length in .markdownlint-cli2.jsonc.
+      printWidth: 80

@@ -1,0 +1,6 @@
+<%= render "c/navbar", brand: "La Piasse" do %>
+  <% if current_user %>
+    <%= render "c/navlink", label: "Home", href: "/", active: true %>
+    <%= render "c/navlink", label: "Link", href: "#", disabled: true %>
+  <% end %>
+<% end %>

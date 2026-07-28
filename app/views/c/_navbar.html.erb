@@ -1,0 +1,25 @@
+<%# https://getbootstrap.com/docs/5.3/components/navbar/ %>
+<%# locals: (brand: nil) %>
+<nav class="navbar navbar-expand-sm bg-body-tertiary">
+  <div class="container-fluid">
+    <% if brand.present? %>
+      <a class="navbar-brand" href="#"><%= brand %></a>
+    <% end %>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+        <%= yield %>
+      </ul>
+    </div>
+  </div>
+</nav>

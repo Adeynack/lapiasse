@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Format ERB templates with erb-formatter, the one file type Prettier has no
+# parser for (see .prettierrc.yaml).
+#
+#   bin/erb-format          # reformat every HTML template under app/views
+#   bin/erb-format --check  # report templates needing reformatting, write nothing
+#   bin/erb-format --stdin  # format stdin to stdout, which is what nvim runs
+#   bin/erb-format --write app/views/home/index.html.erb   # specific files
+#
+# Only *.html.erb is in the default file list. erb-formatter is an HTML
+# formatter, so it would mangle layouts/mailer.text.erb and pwa/manifest.json.erb.
+#
+# --check lives here because erb-formatter has no such mode of its own: its CLI
+# either rewrites the file or prints to stdout, with no way to only report. CI
+# runs it, see config/ci.rb and .github/workflows/ci.yml.
+#
+# Every other invocation is handed to erb-formatter untouched, which is why
+# reformatting specific files takes an explicit --write.
+
+ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
+
+require "rubygems"
+require "bundler/setup"
+require "erb/formatter"
+
+APP_ROOT = File.expand_path("..", __dir__)
+
+# Absolute so the default file list is the same from any working directory.
+def default_files = Dir[File.join(APP_ROOT, "app/views/**/*.html.erb")].sort
+
+def relative(file) = file.delete_prefix("#{APP_ROOT}/")
+
+if ARGV.delete("--check")
+  files = ARGV.empty? ? default_files : ARGV
+  unformatted = []
+  # erb-formatter reports malformed markup by raising, and the exception alone
+  # does not say which template it choked on. Collect instead of failing fast,
+  # so one broken template does not hide the state of every other one.
+  errored = {}
+
+  files.each do |file|
+    source = File.read(file)
+    unformatted << file unless ERB::Formatter.format(source, filename: file).to_s == source
+  rescue StandardError => e
+    errored[file] = e.message
+  end
+
+  unless unformatted.empty?
+    warn "erb-format: #{unformatted.size} of #{files.size} template(s) need reformatting:"
+    unformatted.each { |file| warn "  #{relative(file)}" }
+    warn "Run bin/erb-format to fix them.\n\n"
+  end
+
+  errored.each do |file, message|
+    warn "erb-format: #{relative(file)} could not be parsed:"
+    warn message.lines.map { |line| "  #{line}" }.join
+  end
+
+  exit 1 unless unformatted.empty? && errored.empty?
+
+  puts "erb-format: #{files.size} template(s) already formatted"
+else
+  ARGV.replace(["--write", *default_files]) if ARGV.empty?
+  load Gem.bin_path("erb-formatter", "erb-format")
+end
