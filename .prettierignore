@@ -10,3 +10,4 @@
 #
 # Add an entry below only for a file that is tracked in git, has a Prettier
 # parser, and still should not be reformatted.
+vendor
