@@ -4,6 +4,12 @@
 # belong in git's global ignore instead:
 # `$XDG_CONFIG_HOME/git/ignore` or `~/.config/git/ignore`
 
+# Editors / IDEs
+.vscode
+
+# AI Tools
+.claude
+
 # Ignore bundler config.
 /.bundle
 
