@@ -11,7 +11,7 @@ namespace :db do
         ["Create Database", :rake, "db:create"],
         ["Migrate Database", :rake, "db:migrate"], # automatically annotate models
         ["Load Fixtures into Database", :rake, "db:fixtures:load"],
-        ["Seed Database", :rake, "db:seed"]
+        ["Seed Database for development", :rake, "db:seed:dev"]
       ].each do |title, type, command|
         puts "🔹 " + title + (success ? "" : " => 🟡 Skipped because of previous error")
         case type
@@ -26,6 +26,13 @@ namespace :db do
         puts "🔴 " + e.message
         success = false
       end
+    end
+  end
+
+  namespace :seed do
+    desc "Load the seed data from db/seeds.rb, and then db/seeds_dev.rb"
+    task dev: "db:seed" do
+      require_relative "../../db/seeds_dev"
     end
   end
 end
