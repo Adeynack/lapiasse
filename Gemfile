@@ -53,6 +53,10 @@ gem "ruby-vips", "~> 2.0", require: false
 # Authentication [https://github.com/heartcombo/devise]
 gem "devise", "~> 5.0"
 
+gem "money", "~> 7.1"
+
+gem "amazing_print", "~> 2.0"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
@@ -72,6 +76,8 @@ group :development, :test do
 
   # Behaviour Driven Development for Ruby [https://rspec.info/]
   gem "rspec-rails"
+  gem "benchmark", "~> 0.5.0"
+  gem "benchmark-memory", "~> 0.2.0"
 end
 
 group :development do
