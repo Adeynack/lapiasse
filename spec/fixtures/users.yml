@@ -1,0 +1,27 @@
+# == Schema Information
+#
+# Table name: users
+#
+#  id                 :integer          not null, primary key
+#  display_name       :string           not null
+#  email              :string           not null
+#  encrypted_password :string           not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_email  (email) UNIQUE
+#
+joe:
+  email: joe@example.com
+  display_name: Joe
+  encrypted_password: joe
+mary:
+  email: mary@example.com
+  display_name: Proud Mary
+  encrypted_password: mary
+vlad:
+  email: vlad@example.com
+  display_name: Vlad the Impaler
+  encrypted_password: vlad

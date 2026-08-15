@@ -1,0 +1,23 @@
+# == Schema Information
+#
+# Table name: currencies
+#
+#  id              :integer          not null, primary key
+#  iso_code        :string(3)
+#  name            :string           not null
+#  subunit_to_unit :integer          default(100), not null
+#  symbol          :string
+#  symbol_first    :boolean          default(FALSE), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+# Indexes
+#
+#  index_currencies_on_iso_code  (iso_code) UNIQUE
+#
+eur:
+  iso_code: eur
+  name: Euro
+  subunit_to_unit: 100
+  symbol: €
+  symbol_first: true

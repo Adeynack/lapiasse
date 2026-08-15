@@ -15,6 +15,7 @@ rescue ActiveRecord::PendingMigrationError => e
 end
 
 RSpec.configure do |config|
+  config.fixture_paths = [::Rails.root.join("spec", "fixtures")]
   config.use_transactional_fixtures = true
   config.infer_spec_type_from_file_location! # The different available types are documented in the features, such as in https://rspec.info/features/8-0/rspec-rails
   config.filter_rails_from_backtrace!

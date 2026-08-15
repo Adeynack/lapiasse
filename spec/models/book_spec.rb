@@ -21,6 +21,21 @@ require 'rails_helper'
 #  default_currency_id  (default_currency_id => currencies.id)
 #  owner_id             (owner_id => users.id)
 #
-RSpec.describe Book, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+RSpec.fdescribe Book do
+  fixtures :all
+
+  def book_with_defaults(**attr)
+    Book.new(
+      name: "Test Book",
+      default_currency: currencies(:eur),
+      owner: users(:joe),
+      **attr,
+    )
+  end
+
+  describe "is valid" do
+    it "with all needed information" do
+      expect(book_with_defaults).to be_valid
+    end
+  end
 end
