@@ -16,12 +16,12 @@
 joe:
   email: joe@example.com
   display_name: Joe
-  encrypted_password: joe
+  encrypted_password: <%= encrypt_user_password("joe") %>
 mary:
   email: mary@example.com
   display_name: Proud Mary
-  encrypted_password: mary
+  encrypted_password: <%= encrypt_user_password("mary") %>
 vlad:
   email: vlad@example.com
   display_name: Vlad the Impaler
-  encrypted_password: vlad
+  encrypted_password: <%= encrypt_user_password("vlad") %>
