@@ -38,5 +38,9 @@ module Lapiasse
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    rake_tasks do
+      ActiveRecord::Tasks::DatabaseTasks.fixtures_path = Rails.root.join("spec/fixtures").to_s
+    end
   end
 end
