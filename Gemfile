@@ -42,6 +42,11 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
 
+# Backend for Active Storage variants (`config.active_storage.variant_processor = :vips`, the Rails
+# default). `image_processing` 2.0 dropped its runtime dependency on it, so it must be explicit.
+# Requires the libvips system library (macOS: `brew install vips`; the Docker image already has it).
+gem "ruby-vips", "~> 2.0"
+
 # Authentication [https://github.com/heartcombo/devise]
 gem "devise", "~> 5.0"
 
