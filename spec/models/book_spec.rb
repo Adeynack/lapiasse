@@ -21,7 +21,7 @@ require 'rails_helper'
 #  default_currency_id  (default_currency_id => currencies.id)
 #  owner_id             (owner_id => users.id)
 #
-RSpec.fdescribe Book do
+RSpec.describe Book do
   fixtures :all
 
   def book_with_defaults(**attr)

@@ -16,6 +16,10 @@ gem "turbo-rails"
 gem "stimulus-rails"
 # Bundle and process CSS [https://github.com/rails/cssbundling-rails]
 gem "cssbundling-rails"
+
+# Object-oriented views: components are plain Ruby classes rather than ERB
+# partials with `locals:` magic comments [https://www.phlex.fun]
+gem "phlex-rails", "~> 2.4"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
