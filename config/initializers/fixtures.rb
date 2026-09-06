@@ -1,9 +1,7 @@
 # Helpers available to the ERB of every fixture file. `context_class` is the object fixture ERB is
 # rendered against, so anything included here can be called directly from a `.yml` fixture.
 #
-# This lives in an initializer rather than in `spec/support` because fixtures are loaded outside of
-# RSpec too: `rake db:fixtures:load` seeds the development database from the very same files (see
-# `fixtures_path` in `config/application.rb`), and it never loads `spec/rails_helper.rb`.
+# This lives outside of tests because fixtures are also loaded in development from the CLI.
 module FixtureHelpers
   # Hashes a plain-text password the same way Devise does when assigning `User#password=`, so
   # fixtures can keep the password readable:

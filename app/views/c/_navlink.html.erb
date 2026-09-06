@@ -1,15 +1,11 @@
-<%# https://getbootstrap.com/docs/5.3/components/navbar %>
 <%# locals: (href: "#", label: nil, active: false, disabled: false) %>
 <%#   href:     Target of the link. %>
 <%#   label:    Text to display for the link. %>
 <%#   active:   If the link is showed as the current page. %>
 <%#   disabled: Should the link be disabled? %>
-<li class="nav-item">
-  <%= link_to label,
-  href,
-  class: class_names("nav-link", active:, disabled:),
-  aria: {
-    current: ("page" if active),
-    disabled: ("true" if disabled),
-  } %>
-</li>
+<%= link_to label,
+href,
+aria: {
+  current: ("page" if active),
+  disabled: ("true" if disabled),
+} %>

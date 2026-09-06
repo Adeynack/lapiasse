@@ -1,21 +1,19 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3"
+gem "rails", "~> 8.1.3", ">= 8.1.3.1"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record
 gem "sqlite3", ">= 2.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-# Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
-gem "importmap-rails"
+# Bundle and transpile JavaScript [https://github.com/rails/jsbundling-rails]
+gem "jsbundling-rails"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
 gem "stimulus-rails"
-# Bundle and process CSS [https://github.com/rails/cssbundling-rails]
-gem "cssbundling-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
@@ -40,7 +38,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 2.0"
+gem "image_processing", "~> 2.1.0"
 
 # Backend for Active Storage variants (`config.active_storage.variant_processor = :vips`, the Rails
 # default). `image_processing` 2.0 dropped its runtime dependency on it, so it must be explicit.
@@ -48,12 +46,12 @@ gem "image_processing", "~> 2.0"
 # `require: false` because `Bundler.require` would otherwise dlopen libvips in every process that
 # loads `config/application.rb` — including CLIs that never boot Active Storage, such as
 # `bin/importmap` in CI. Active Storage loads it lazily through `image_processing/vips` instead.
-gem "ruby-vips", "~> 2.0", require: false
+gem "ruby-vips", "~> 2.3.0", require: false
 
 # Authentication [https://github.com/heartcombo/devise]
-gem "devise", "~> 5.0"
+gem "devise", "~> 5.0.4"
 
-gem "money", "~> 7.1"
+gem "money", "~> 7.1.1"
 
 gem "amazing_print", "~> 2.0"
 
@@ -74,8 +72,6 @@ group :development, :test do
   # [https://github.com/nebulab/erb-formatter]
   gem "erb-formatter", require: false
 
-  # Behaviour Driven Development for Ruby [https://rspec.info/]
-  gem "rspec-rails"
   gem "benchmark", "~> 0.5.0"
   gem "benchmark-memory", "~> 0.2.0"
 end
@@ -87,15 +83,14 @@ group :development do
   # Process manager for Procfile-based applications and tmux [https://github.com/DarthSim/overmind]
   gem "overmind", "~> 2.5"
 
-  gem "guard"
-  gem "guard-rspec"
-
-  # Ruby LSP addon so the editor's test runner understands RSpec [https://github.com/st0012/ruby-lspf-rspec]
-  gem "ruby-lsp-rspec", require: false
-
   # Model and Routes Annotations [https://github.com/drwl/annotaterb]
   gem "annotaterb"
 
   # Annotate your Rails controllers with route info [https://github.com/nshki/chusaku]
   gem "chusaku", require: false
+end
+group :test do
+  # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
+  gem "capybara"
+  gem "selenium-webdriver"
 end

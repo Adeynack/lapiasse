@@ -5,6 +5,7 @@
     <%= current_user.display_name %>
     (<%= mail_to current_user.email %>).
   </p>
+  <button>Log out</button>
   <%= link_button_to "Log out",
   destroy_user_session_path,
   data: {

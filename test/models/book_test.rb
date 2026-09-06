@@ -1,5 +1,3 @@
-require 'rails_helper'
-
 # == Schema Information
 #
 # Table name: books
@@ -21,8 +19,14 @@ require 'rails_helper'
 #  default_currency_id  (default_currency_id => currencies.id)
 #  owner_id             (owner_id => users.id)
 #
-RSpec.fdescribe Book do
-  fixtures :all
+require "test_helper"
+
+class BookTest < ActiveSupport::TestCase
+  test "is valid with all needed information" do
+    assert book_with_defaults.valid?
+  end
+
+  private
 
   def book_with_defaults(**attr)
     Book.new(
@@ -31,11 +35,5 @@ RSpec.fdescribe Book do
       owner: users(:joe),
       **attr,
     )
-  end
-
-  describe "is valid" do
-    it "with all needed information" do
-      expect(book_with_defaults).to be_valid
-    end
   end
 end

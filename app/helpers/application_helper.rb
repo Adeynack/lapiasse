@@ -2,16 +2,15 @@ module ApplicationHelper
   def link_button_to(
     target = nil,
     options = nil,
-    variant: :primary,
     disabled: false,
     **kwargs
   )
     link_to target, options,
-      class: class_names("btn", "btn-#{variant}", disabled:),
+      class: "button",
       aria: {
         disabled: ("true" if disabled)
       },
-      tabindex: ("-1" unless disabled),
+      tabindex: ("-1" if disabled),
       **kwargs
   end
 end

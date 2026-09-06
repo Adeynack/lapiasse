@@ -28,8 +28,14 @@ CI.run do
   group "audit" do
     step "Security: Gem audit", "bin/bundler-audit"
     step "Security: Yarn vulnerability audit", "yarn audit"
-    step "Security: Importmap vulnerability audit", "bin/importmap audit"
     step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
+  end
+
+  group "test", default: true do
+    step "Tests: Rails", "bin/rails test"
+
+    step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
+    step "Tests: System", "bin/rails test:system"
   end
 
   # Optional: set a green GitHub commit status to unblock PR merge.
