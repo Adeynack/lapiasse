@@ -1,6 +1,14 @@
 inherit_gem:
   rubocop-rails-omakase: rubocop.yml
 
+plugins: rubocop-minitest
+
+AllCops:
+  NewCops: enable
+
+Minitest/Focus:
+  Enabled: true
+
 # Inheriting manually from StandardRB, and removing the cops that cause errors (e.g.: Lint/Syntax).
 # Last update: 2024-06-01
 
@@ -1199,9 +1207,6 @@ Style/Documentation:
   Enabled: false
 
 Style/DocumentationMethod:
-  Enabled: false
-
-Style/DoubleCopDisableDirective:
   Enabled: false
 
 Style/DoubleNegation:

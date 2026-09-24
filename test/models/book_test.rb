@@ -23,7 +23,7 @@ require "test_helper"
 
 class BookTest < ActiveSupport::TestCase
   test "is valid with all needed information" do
-    assert book_with_defaults.valid?
+    assert_predicate book_with_defaults, :valid?
   end
 
   private

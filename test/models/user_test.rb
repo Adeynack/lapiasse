@@ -17,7 +17,7 @@ require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
   test "is valid with an email and password" do
-    assert user_with_defaults.valid?
+    assert_predicate user_with_defaults, :valid?
   end
 
   test "is invalid with an empty email" do

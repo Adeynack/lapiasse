@@ -67,13 +67,16 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
-
+  gem "rubocop-minitest", require: false
   # Formatter for ERB templates, which Prettier has no parser for
   # [https://github.com/nebulab/erb-formatter]
   gem "erb-formatter", require: false
 
   gem "benchmark", "~> 0.5.0"
   gem "benchmark-memory", "~> 0.2.0"
+  gem "guard"
+  gem "guard-minitest"
+  gem "minitest-focus"
 end
 
 group :development do
@@ -89,6 +92,7 @@ group :development do
   # Annotate your Rails controllers with route info [https://github.com/nshki/chusaku]
   gem "chusaku", require: false
 end
+
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
