@@ -1,0 +1,65 @@
+/*
+ * This is a manifest file that'll be compiled into application.css.
+ *
+ * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
+ * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
+ * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
+ * depending on specificity.
+ *
+ * Consider organizing styles into separate files for maintainability.
+ */
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+}
+
+details {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 4px;
+  padding: 4px;
+
+  @media (prefers-color-scheme: dark) {
+    border-color: grey;
+  }
+  @media (prefers-color-scheme: light) {
+    border-color: black;
+  }
+}
+
+hr {
+  @media (prefers-color-scheme: dark) {
+    border-color: grey;
+  }
+}
+
+/* TODO: Make buttons and button-links look the same */
+button,
+a.button {
+  background-color: hsl(257, 14%, 25%);
+  border: 2px solid hsl(257, 14%, 40%);
+  width: auto;
+  height: auto;
+  color: white;
+  text-decoration: none;
+  padding: 4px;
+  border-radius: 6px;
+
+  &:hover {
+    background-color: hsl(257, 14%, 50%);
+  }
+
+  &:visited {
+    color: white;
+  }
+}
