@@ -7,13 +7,6 @@
   </p>
 
   <%= toolbar do |t| %>
-    <%= t.delete "Foo", root_path(foo: 42, sapin: "malin") %>
-    <%= t.delete "FooB", root_path(foo: 42, sapin: "malin") %>
     <%= t.delete "Log out", destroy_user_session_path %>
-    <%= t.delete "Bar", root_path(foo: 42, sapin: "malin") %>
-    <%= t.delete "Log out", destroy_user_session_path %>
-    <%= t.to "Foo", root_path(foo: 42, sapin: "malin") %>
   <% end %>
-
-  <button>Default</button>
 <% end %>
