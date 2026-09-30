@@ -25,6 +25,28 @@ require "rubygems"
 require "bundler/setup"
 require "erb/formatter"
 
+# erb-formatter replaces syntax_tree's formatting of commands (method calls
+# without parentheses, like `link_to "Foo", path, class: "x"`) with a version
+# that does not nest the arguments, so once they wrap they line up with the
+# method name. Nest them one level instead, so the wrapped lines read as
+# continuations of the call:
+#
+#   <%= link_to "Foo",
+#     root_path,
+#     class: "x" %>
+#
+# Redefined in place rather than prepended: erb-formatter prepends its module
+# lazily on every format, which would put it back in front of ours.
+module ERB::Formatter::SyntaxTreeCommandPatch
+  def format(q)
+    q.group do
+      q.format(message)
+      q.text(" ")
+      q.nest(2) { q.format(arguments) }
+    end
+  end
+end
+
 APP_ROOT = File.expand_path("..", __dir__)
 
 # Absolute so the default file list is the same from any working directory.
