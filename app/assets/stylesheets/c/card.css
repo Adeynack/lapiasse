@@ -5,11 +5,9 @@
     border-radius: 4px;
     padding: 4px;
 
+    border-color: black;
     @media (prefers-color-scheme: dark) {
       border-color: grey;
-    }
-    @media (prefers-color-scheme: light) {
-      border-color: black;
     }
   }
 }
