@@ -1,10 +1,28 @@
 # Run using bin/ci
 
+require "amazing_print"
+
 CI.run do
-  @steps = ENV.fetch("CI_STEPS", "").split(",").map(&:downcase)
+  @blacklist, @whitelist = ENV.fetch("CI_STEPS", "")
+    .split(",")
+    .map(&:downcase)
+    .partition { _1.start_with?("-") }
+
+  @blacklist.map! { _1.slice(1..) }
+
+  if @whitelist.length > 0
+    puts "Only executing those groups:"
+    @whitelist.each { puts "  - #{_1}" }
+  end
+
+  if @blacklist.length > 0
+    puts "Excluding those groups:"
+    @blacklist.each { puts "  - #{_1}" }
+  end
 
   def group(name, default: false)
-    return if !@steps.include?(name) && !@steps.include?("all") && !(default && @steps.empty?)
+    return if !@whitelist.include?(name) && !@whitelist.include?("all") && !(default && @whitelist.empty?)
+    return if @blacklist.include?(name)
 
     heading "Running group: #{name}"
     yield
@@ -25,7 +43,7 @@ CI.run do
     step "Annotation: Routes", "bin/annotaterb routes --frozen"
   end
 
-  group "audit" do
+  group "audit", default: false do
     step "Security: Gem audit", "bin/bundler-audit"
     step "Security: Yarn vulnerability audit", "yarn audit"
     step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
