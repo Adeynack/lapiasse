@@ -7,21 +7,42 @@
   </p>
 
   <div class="button-bar">
-    <%= link_to "Foo", root_path(foo: 42, sapin: "malin"), class: "button-bar__item" %>
-    <%= button_to "Log out",
-      destroy_user_session_path,
-      method: :delete,
-      class: "button-bar__item"
-    %>
-    <%= button_to "Bar", root_path, params: {foo: 42, sapin: "malin"}, class: "button-bar__item" %>
-
-    <%= link_button_to "Log out",
-      destroy_user_session_path,
-      class: "button-bar__item",
+    <%= link_to "Foo",
+      root_path(foo: 42, sapin: "malin"),
+      class: "button button-bar__item",
       data: {
         turbo_method: :delete,
       } %>
-    <%= link_to "Foo", root_path(foo: 42, sapin: "malin"), class: "button-bar__item" %>
+    <%= button_to "FooB",
+      root_path(foo: 42, sapin: "malin"),
+      class: "button button-bar__item",
+      method: :delete %>
+    <%= link_to "Log out",
+      destroy_user_session_path,
+      data: {
+        turbo_method: :delete,
+      },
+      class: "button button-bar__item" %>
+    <%= link_to "Bar",
+      root_path,
+      params: {
+        foo: 42,
+        sapin: "malin",
+      },
+      class: "button button-bar__item",
+      data: {
+        turbo_method: :delete,
+      } %>
+
+    <%= link_to "Log out",
+      destroy_user_session_path,
+      class: "button button-bar__item",
+      data: {
+        turbo_method: :delete,
+      } %>
+    <%= link_to "Foo",
+      root_path(foo: 42, sapin: "malin"),
+      class: "button button-bar__item" %>
   </div>
 
   <button>Default</button>

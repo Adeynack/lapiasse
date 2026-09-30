@@ -1,9 +1,5 @@
 @layer base {
-  /* `a.button` is a link that looks like a button (see `link_button_to`). */
-  button,
-  input[type="button"],
-  input[type="submit"],
-  a.button-bar__item {
+  .button {
     text-decoration: none;
     border-radius: 4px;
     border: 1px black solid;
