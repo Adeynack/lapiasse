@@ -18,7 +18,7 @@ class SessionsTest < ApplicationSystemTestCase
 
   test "signing out brings the user back to the log in page" do
     sign_in_as users(:joe), "joe"
-    click_link "Log out"
+    click_button "Log out"
 
     assert_text "Log in"
     assert_no_text "Currently logged as"
