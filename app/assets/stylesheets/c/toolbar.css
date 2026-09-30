@@ -1,28 +1,28 @@
 /*
  * A strip of buttons (buttons, inputs, or links) joined into a single control.
  *
- * Mark each button with `button-bar__item`. A `button_to` renders a form around its button,
+ * Mark each button with `toolbar__item`. A `button_to` renders a form around its button,
  * so the first and last items are found among the bar's direct children or just inside them.
  */
 @layer components {
-  .button-bar {
+  .toolbar {
     display: flex;
     margin-bottom: 4px;
   }
 
-  .button-bar__item {
+  .toolbar__item {
     border-radius: 0;
     border-width: 1px 1px 1px 0;
   }
 
-  .button-bar > :first-child.button-bar__item,
-  .button-bar > :first-child > .button-bar__item {
+  .toolbar > :first-child.toolbar__item,
+  .toolbar > :first-child > .toolbar__item {
     border-radius: 4px 0 0 4px;
     border-width: 1px;
   }
 
-  .button-bar > :last-child.button-bar__item,
-  .button-bar > :last-child > .button-bar__item {
+  .toolbar > :last-child.toolbar__item,
+  .toolbar > :last-child > .toolbar__item {
     border-radius: 0 4px 4px 0;
   }
 }
