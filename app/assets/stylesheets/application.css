@@ -8,19 +8,15 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
 :root {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
+  --font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-size: 1em;
+
+  font-family: var(--font-family);
+  font-size: var(--font-size);
 }
 
 details {
@@ -43,23 +39,59 @@ hr {
   }
 }
 
-/* TODO: Make buttons and button-links look the same */
+/* A strip of buttons (buttons, input, or links) */
+.button-bar {
+  display: flex;
+  margin-bottom: 4px;
+
+  * {
+    display: inline-block;
+  }
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  > :first-child,
+  > form:first-child button {
+    border-radius: 4px 0 0 4px;
+    border-width: 1px 1px 1px 1px;
+  }
+
+  > :last-child,
+  > form:last-child button {
+    border-radius: 0 4px 4px 0;
+  }
+}
+
+.button-bar a,
 button,
-a.button {
-  background-color: hsl(257, 14%, 25%);
-  border: 2px solid hsl(257, 14%, 40%);
-  width: auto;
-  height: auto;
-  color: white;
+input[type="button"],
+input[type="submit"] {
   text-decoration: none;
-  padding: 4px;
-  border-radius: 6px;
+  border-radius: 4px;
+  border: 1px black solid;
+  padding: 2px 6px;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  cursor: default;
+
+  background-color: hsl(0, 0%, 94%);
 
   &:hover {
-    background-color: hsl(257, 14%, 50%);
+    background-color: hsl(0, 0%, 84%);
   }
 
-  &:visited {
+  &:active {
+    background-color: black;
     color: white;
   }
+}
+
+.button-bar a,
+.button-bar button,
+.button-bar input[type="button"],
+.button-bar input[type="submit"] {
+  border-radius: 0;
+  border-width: 1px 1px 1px 0;
 }
