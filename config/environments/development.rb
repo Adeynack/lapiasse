@@ -61,6 +61,10 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  # Hotwire Spark watches app/assets/builds for CSS when it exists, but only esbuild's JS lands there;
+  # stylesheets are served by Propshaft straight from app/assets/stylesheets.
+  config.hotwire.spark.css_paths = %w[app/assets/stylesheets]
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 

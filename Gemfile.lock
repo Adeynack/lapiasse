@@ -160,6 +160,10 @@ GEM
     guard-minitest (3.0.0)
       guard-compat (~> 1.2)
       minitest (>= 5.0.4, < 7.0)
+    hotwire-spark (0.1.13)
+      listen
+      rails (>= 7.0.0)
+      zeitwerk
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     image_processing (2.1.0)
@@ -474,6 +478,7 @@ DEPENDENCIES
   erb-formatter
   guard
   guard-minitest
+  hotwire-spark
   image_processing (~> 2.1.0)
   jbuilder
   jsbundling-rails
@@ -555,6 +560,7 @@ CHECKSUMS
   guard (2.20.2) sha256=2d0574d35619669f2f71739a0313290810b9cf66b2263f5d97e815fcce598d4d
   guard-compat (1.2.1) sha256=3ad21ab0070107f92edfd82610b5cdc2fb8e368851e72362ada9703443d646fe
   guard-minitest (3.0.0) sha256=0c418e62a4081a429e4e66ad094a3b66f113423542b43ad7b2df0c87f19d5728
+  hotwire-spark (0.1.13) sha256=0a24799b0942fc9b7ea3e560a5aba3f4dd9a6086958a25929894340f920fb499
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   image_processing (2.1.0) sha256=ca3814b1b909fc5fab68b261c50eaffef11e29a6907143e9cf1efc14b6dc6f47
   io-console (0.9.4) sha256=a403304f32928ee85e56d457b4612ca43f2703b561a3258844992bd24085fbb1

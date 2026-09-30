@@ -91,6 +91,9 @@ group :development do
 
   # Annotate your Rails controllers with route info [https://github.com/nshki/chusaku]
   gem "chusaku", require: false
+
+  # Live reload for HTML, CSS and Stimulus, injected by middleware [https://github.com/hotwired/spark]
+  gem "hotwire-spark"
 end
 
 group :test do

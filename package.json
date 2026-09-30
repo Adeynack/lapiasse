@@ -2,13 +2,12 @@
   "name": "app",
   "private": true,
   "devDependencies": {
-    "chokidar": "^5.0.0",
     "esbuild": "^0.28.2",
     "markdownlint-cli2": "^0.23.3",
     "prettier": "^3.9.9"
   },
   "scripts": {
-    "build": "node esbuild.config.js"
+    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
