@@ -6,7 +6,7 @@ module ApplicationHelper
     **kwargs
   )
     link_to target, options,
-      class: "button",
+      class: class_names("button", kwargs.delete(:class)),
       aria: {
         disabled: ("true" if disabled)
       },

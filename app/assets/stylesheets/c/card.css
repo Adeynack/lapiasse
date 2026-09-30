@@ -1,0 +1,15 @@
+@layer components {
+  .card {
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+    padding: 4px;
+
+    @media (prefers-color-scheme: dark) {
+      border-color: grey;
+    }
+    @media (prefers-color-scheme: light) {
+      border-color: black;
+    }
+  }
+}
