@@ -1,6 +1,6 @@
 @layer vars {
   :root {
-    --link-color: hsl(215, 100%, 58%);
+    --link-color: hsl(215, 100%, 55%);
     @media (prefers-color-scheme: dark) {
       --link-color: hsl(215, 100%, 70%);
     }

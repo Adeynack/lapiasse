@@ -1,4 +1,8 @@
 @layer c {
+  :root {
+    --button-border-width: 1px;
+  }
+
   .button {
     text-decoration: none;
     border-radius: 4px;
@@ -7,36 +11,36 @@
     font-size: var(--font-size);
     cursor: default;
 
-    color: color-mix(in oklab, white 60%, var(--link-color));
-    background-color: var(--link-color);
+    color: var(--link-color);
+    background-color: color-mix(white 90%, var(--link-color));
 
-    border-width: 1px;
+    border-width: var(--button-border-width);
     border-style: solid;
-    border-color: black;
+    border-color: color-mix(black 20%, var(--link-color));
 
     @media (prefers-color-scheme: dark) {
       color: var(--link-color);
-      background-color: color-mix(in oklab, black 50%, var(--link-color));
-      border-color: color-mix(in oklab, black 25%, var(--link-color));
+      background-color: color-mix(black 50%, var(--link-color));
+      border-color: color-mix(black 25%, var(--link-color));
     }
 
     &:hover {
-      color: color-mix(in oklab, white 80%, var(--link-color));
-      background-color: color-mix(in oklab, white 20%, var(--link-color));
+      color: color-mix(white 80%, var(--link-color));
+      background-color: color-mix(white 20%, var(--link-color));
 
       @media (prefers-color-scheme: dark) {
-        color: color-mix(in oklab, white 50%, var(--link-color));
-        background-color: color-mix(in oklab, black 20%, var(--link-color));
+        color: color-mix(white 50%, var(--link-color));
+        background-color: color-mix(black 20%, var(--link-color));
       }
     }
 
     &:active {
-      color: color-mix(in oklab, white 90%, var(--link-color));
-      background-color: color-mix(in oklab, white 40%, var(--link-color));
+      color: color-mix(white 90%, var(--link-color));
+      background-color: color-mix(white 40%, var(--link-color));
 
       @media (prefers-color-scheme: dark) {
-        color: color-mix(in oklab, white 70%, var(--link-color));
-        background-color: color-mix(in oklab, black 00%, var(--link-color));
+        color: color-mix(white 70%, var(--link-color));
+        background-color: var(--link-color);
       }
     }
   }
