@@ -39,8 +39,12 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
-
+# Result of assets compilation
 /app/assets/builds/*
 !/app/assets/builds/.keep
 
+# Node / Yarn
 /node_modules
+
+# Sorbet
+sorbet/rbi/hidden-definitions/errors.txt
