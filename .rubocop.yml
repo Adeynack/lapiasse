@@ -5,6 +5,8 @@ plugins: rubocop-minitest
 
 AllCops:
   NewCops: enable
+  Exclude:
+    - "sorbet/**/*"
 
 Minitest/Focus:
   Enabled: true

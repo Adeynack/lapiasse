@@ -55,6 +55,8 @@ gem "money", "~> 7.1.1"
 
 gem "amazing_print", "~> 2.0"
 
+gem "sorbet-runtime"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
@@ -77,6 +79,7 @@ group :development, :test do
   gem "guard"
   gem "guard-minitest"
   gem "minitest-focus"
+  gem "tapioca", require: false
 end
 
 group :development do
@@ -94,6 +97,8 @@ group :development do
 
   # Live reload for HTML, CSS and Stimulus, injected by middleware [https://github.com/hotwired/spark]
   gem "hotwire-spark"
+
+  gem "sorbet"
 end
 
 group :test do
