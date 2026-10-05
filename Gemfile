@@ -38,7 +38,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 2.1.0"
+gem "image_processing", "~> 2.2.0"
 
 # Backend for Active Storage variants (`config.active_storage.variant_processor = :vips`, the Rails
 # default). `image_processing` 2.0 dropped its runtime dependency on it, so it must be explicit.
