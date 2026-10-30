@@ -16,6 +16,8 @@
 class User < ApplicationRecord
   devise :database_authenticatable
 
+  has_many :books
+
   validates :email,
     presence: true,
     format: {with: /\A(.+)@(.+)\z/, message: "has invalid format"},

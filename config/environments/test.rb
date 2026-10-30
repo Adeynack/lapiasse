@@ -28,6 +28,9 @@ Rails.application.configure do
   # Disable request forgery protection in test environment.
   config.action_controller.allow_forgery_protection = false
 
+  # Force Associations to be explicitely loaded (in dev & test).
+  config.active_record.strict_loading_by_default = true
+
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
 
