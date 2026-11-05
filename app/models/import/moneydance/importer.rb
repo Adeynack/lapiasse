@@ -1,11 +1,12 @@
 module Import
   module Moneydance
     class Importer
-      def initialize(reporter:, json_content:, book_owner_email:, default_currency_iso_code:)
+      def initialize(reporter:, json_content:, book_owner_email:, default_currency_iso_code:, auto_delete_book:)
         @reporter = reporter
         @json_content = json_content
         @book_owner_email = book_owner_email
         @default_currency_iso_code = default_currency_iso_code
+        @auto_delete_book = auto_delete_book
       end
 
       class MissingInformationError < StandardError
@@ -25,7 +26,7 @@ module Import
 
       private
 
-      attr_reader :reporter, :json_content, :book_owner_email, :default_currency_iso_code
+      attr_reader :reporter, :json_content, :book_owner_email, :default_currency_iso_code, :auto_delete_book
 
       def create_book!(md_json:)
         owner = User.find_by(email: book_owner_email) || raise(DataError, "No user with E-Mail #{book_owner_email} found")

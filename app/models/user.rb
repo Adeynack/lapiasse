@@ -16,7 +16,7 @@
 class User < ApplicationRecord
   devise :database_authenticatable
 
-  has_many :books
+  has_many :books, inverse_of: :owner
 
   validates :email,
     presence: true,
