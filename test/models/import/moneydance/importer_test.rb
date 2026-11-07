@@ -7,7 +7,7 @@ module Import
       let(:imported_book) do
         Importer.new(
           reporter:,
-          json_content:,
+          md_json:,
           book_owner_email:,
           default_currency_iso_code:,
           auto_delete_book:,
@@ -15,6 +15,7 @@ module Import
       end
       let(:reporter) { TestReporter.new }
       let(:json_content) { file_fixture("import/moneydance/with_metadata.json").read }
+      let(:md_json) { JSON.parse(json_content) }
       let(:owner) { users(:joe) }
       let(:book_owner_email) { owner.email }
       let(:default_currency_iso_code) { "eur" }

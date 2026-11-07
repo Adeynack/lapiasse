@@ -1,37 +1,19 @@
 module Import
   class TestReporter
-    def error_entries
-      @error_entries ||= []
-    end
+    # Reporter Interface
 
-    def error(&block)
-      error_entries << yield
-    end
-
-    def log_entries
-      @log_entries ||= []
-    end
-
-    def log(&block)
+    def log
       log_entries << yield
     end
 
-    def verbose_entries
-      @verbose_entries ||= []
+    def with_progress(title:, total:)
+      yield
     end
 
-    def verbose(&block)
-      verbose_entries << yield
-    end
+    # Debugger Part
 
-    def with_progress(title:, total:, &block)
-      yield(progress_reporter)
-    end
-
-    private
-
-    def progress_reporter
-      @progress_reporter ||= TestProgressReporter.new
+    def log_entries
+      @log_entries ||= []
     end
   end
 end

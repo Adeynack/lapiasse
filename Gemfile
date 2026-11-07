@@ -55,6 +55,8 @@ gem "money", "~> 7.1.1"
 
 gem "amazing_print", "~> 2.0"
 
+gem "progress_bar"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"

@@ -1,9 +1,11 @@
 module Import
   module Moneydance
     class Importer
-      def initialize(reporter:, json_content:, book_owner_email:, default_currency_iso_code:, auto_delete_book:)
+      ##
+      # md_json: an already parsed JSON content (Hash).
+      def initialize(reporter:, md_json:, book_owner_email:, default_currency_iso_code:, auto_delete_book:)
         @reporter = reporter
-        @json_content = json_content
+        @md_json = md_json
         @book_owner_email = book_owner_email
         @default_currency_iso_code = default_currency_iso_code
         @auto_delete_book = auto_delete_book
@@ -20,15 +22,14 @@ module Import
       class DataError < StandardError; end
 
       def import!
-        md_json = JSON.parse(json_content)
-        create_book!(md_json:)
+        create_book!
       end
 
       private
 
-      attr_reader :reporter, :json_content, :book_owner_email, :default_currency_iso_code, :auto_delete_book
+      attr_reader :reporter, :md_json, :book_owner_email, :default_currency_iso_code, :auto_delete_book
 
-      def create_book!(md_json:)
+      def create_book!
         owner = User.find_by(email: book_owner_email) || raise(DataError, "No user with E-Mail #{book_owner_email} found")
         metadata = md_json["metadata"] || raise(MissingInformationError.new("metadata"))
         file_name = metadata["file_name"].to_s.presence || raise(MissingInformationError.new("filename (in metadata)"))
@@ -51,7 +52,10 @@ module Import
           raise(DataError, "No currency with ISO Code #{default_currency_iso_code} found")
 
         reporter.log { "Creating book with name \"#{book_name}\"" }
-        owner.books.create!(name: book_name, default_currency:)
+        book = owner.books.create!(name: book_name, default_currency:)
+        reporter.log { "Created book with ID #{book.id}" }
+
+        book
       end
     end
   end
