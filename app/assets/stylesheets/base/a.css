@@ -1,9 +1,0 @@
-@layer base {
-  a {
-    color: var(--link-color);
-
-    &:visited {
-      color: var(--link-color);
-    }
-  }
-}
