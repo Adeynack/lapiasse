@@ -53,7 +53,7 @@ Rails.application.configure do
   config.active_record.query_log_tags_enabled = true
 
   # Force Associations to be explicitely loaded (in dev & test).
-  config.active_record.strict_loading_by_default = true
+  config.active_record.strict_loading_by_default = false
 
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true

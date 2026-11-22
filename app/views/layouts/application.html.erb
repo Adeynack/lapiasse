@@ -29,7 +29,7 @@
   <body>
     <%= render "layouts/navbar" %>
 
-    <div>
+    <div class="container-fluid">
       <% if notice.present? %>
         <%= render "c/alert", color: :primary do %>
           <%= notice %>
@@ -40,6 +40,12 @@
         <%= render "c/alert", color: :warning do %>
           <%= alert %>
         <% end %>
+      <% end %>
+
+      <% if content_for :title %>
+        <h1><%= yield :title %></h1>
+      <% elsif Rails.env.development? %>
+        <h1>TODO: SPECIFY A TITLE</h1>
       <% end %>
 
       <%= yield %>

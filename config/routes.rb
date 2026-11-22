@@ -10,8 +10,10 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Defines the root path route ("/")
-  root "home#index"
+  resource :home, only: [:show]
+  resource :navigation, only: [:show]
+  resources :books
+  root "homes#show"
 end
 
 # == Route Map
@@ -21,7 +23,17 @@ end
 #                             user_session POST   /users/sign_in(.:format)                                                                          devise/sessions#create
 #                     destroy_user_session DELETE /users/sign_out(.:format)                                                                         devise/sessions#destroy
 #                       rails_health_check GET    /up(.:format)                                                                                     rails/health#show
-#                                     root GET    /                                                                                                 home#index
+#                                     home GET    /home(.:format)                                                                                   homes#show
+#                               navigation GET    /navigation(.:format)                                                                             navigations#show
+#                                    books GET    /books(.:format)                                                                                  books#index
+#                                          POST   /books(.:format)                                                                                  books#create
+#                                 new_book GET    /books/new(.:format)                                                                              books#new
+#                                edit_book GET    /books/:id/edit(.:format)                                                                         books#edit
+#                                     book GET    /books/:id(.:format)                                                                              books#show
+#                                          PATCH  /books/:id(.:format)                                                                              books#update
+#                                          PUT    /books/:id(.:format)                                                                              books#update
+#                                          DELETE /books/:id(.:format)                                                                              books#destroy
+#                                     root GET    /                                                                                                 homes#show
 #         turbo_recede_historical_location GET    /recede_historical_location(.:format)                                                             turbo/native/navigation#recede
 #         turbo_resume_historical_location GET    /resume_historical_location(.:format)                                                             turbo/native/navigation#resume
 #        turbo_refresh_historical_location GET    /refresh_historical_location(.:format)                                                            turbo/native/navigation#refresh

@@ -1,0 +1,9 @@
+<%= content_for :title, "Books" %>
+
+<ul>
+  <% @books.each do |book| %>
+    <li>
+      <%= link_to book.name, book %>
+    </li>
+  <% end %>
+</ul>
