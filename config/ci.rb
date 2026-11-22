@@ -1,7 +1,5 @@
 # Run using bin/ci
 
-require "amazing_print"
-
 CI.run do
   @blacklist, @whitelist = ENV.fetch("CI_STEPS", "")
     .split(",")

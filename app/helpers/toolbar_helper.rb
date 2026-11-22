@@ -7,7 +7,7 @@ module ToolbarHelper
   #   <% end %>
   def toolbar(**options, &)
     builder = ToolbarBuilder.new(self)
-    tag.div(**options, class: class_names("toolbar", options[:class])) do
+    tag.div(**options) do
       capture(builder, &)
     end
   end

@@ -8,19 +8,31 @@ class ToolbarHelperTest < ActionView::TestCase
       <% end %>
     ERB
 
-    assert_dom "div.toolbar > a.button.toolbar__item[href='/home']", text: "Home"
+    assert_dom "div > a[role='button'][href='/home']", text: "Home"
   end
 
-  test "renders a button in a form with the verb" do
+  test "renders a submit button targeting the URL with the verb" do
     render inline: <<~ERB
       <%= toolbar do |t| %>
         <%= t.delete "Log out", "/logout", class: "extra" %>
       <% end %>
     ERB
 
-    assert_dom "div.toolbar > form[action='/logout']" do
-      assert_dom "input[name='_method'][value='delete']"
-      assert_dom "button.button.toolbar__item.extra", text: "Log out"
-    end
+    button = "a.extra[href='/logout'][role='button'][data-turbo-method='delete']"
+
+    assert_dom "div > #{button}", text: "Log out"
+  end
+
+  test "keeps every item a direct child of the group" do
+    render inline: <<~ERB
+      <%= toolbar do |t| %>
+        <%= t.to "Home", "/home" %>
+        <%= t.post "Save", "/save" %>
+        <%= t.delete "Log out", "/logout" %>
+      <% end %>
+    ERB
+
+    assert_dom "div > *", count: 3
+    assert_dom "div form", count: 0
   end
 end

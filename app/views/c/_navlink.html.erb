@@ -3,9 +3,11 @@
 <%#   label:    Text to display for the link. %>
 <%#   active:   If the link is showed as the current page. %>
 <%#   disabled: Should the link be disabled? %>
-<%= link_to label,
-  href,
-  aria: {
-    current: ("page" if active),
-    disabled: ("true" if disabled),
-  } %>
+<li>
+  <%= link_to label,
+    href,
+    aria: {
+      current: ("page" if active),
+      disabled: ("true" if disabled),
+    } %>
+</li>

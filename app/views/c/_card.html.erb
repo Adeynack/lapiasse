@@ -1,11 +1,11 @@
 <%# locals: (title: nil) %>
 <%#   title:    Optional title, displayed in the card's header. %>
 <%#   &block:   Content of the card's body. %>
-<details class="card" open="true">
+<article>
   <% if title.present? %>
-    <summary>
+    <header>
       <%= title %>
-    </summary>
+    </header>
   <% end %>
   <%= yield %>
-</details>
+</article>
