@@ -1,5 +1,7 @@
 <%= content_for :title, "Books" %>
 
+<%= paginate @books %>
+
 <ul>
   <% @books.each do |book| %>
     <li>

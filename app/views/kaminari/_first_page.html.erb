@@ -1,0 +1,10 @@
+<span class="first">
+  <%= link_to(
+    t("views.pagination.first").html_safe,
+    url,
+    remote:,
+    data:,
+    role: :button,
+    disabled: current_page.first?,
+  ) %>
+</span>

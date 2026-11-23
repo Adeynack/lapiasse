@@ -1,0 +1,11 @@
+<span class="next">
+  <%= link_to(
+    t("views.pagination.next").html_safe,
+    url,
+    rel: "next",
+    remote:,
+    data:,
+    role: :button,
+    disabled: current_page.last?,
+  ) %>
+</span>

@@ -57,7 +57,17 @@ gem "amazing_print", "~> 3.0"
 
 gem "progress_bar"
 
+gem "kaminari", "~> 1.3"
+
 group :development, :test do
+  # Setting up Ruby objects as test data [https://github.com/thoughtbot/factory_bot]
+  # Factory Bot Book: https://thoughtbot.github.io/factory_bot/
+  gem "factory_bot", "~> 6.6"
+  gem "factory_bot_rails", "~> 6.5"
+
+  # Generating fake data [https://github.com/faker-ruby/faker]
+  gem "faker", "~> 3.8"
+
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
 

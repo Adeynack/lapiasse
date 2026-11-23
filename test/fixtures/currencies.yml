@@ -15,9 +15,12 @@
 #
 #  index_currencies_on_iso_code  (iso_code) UNIQUE
 #
-eur:
-  iso_code: eur
-  name: Euro
-  subunit_to_unit: 100
-  symbol: €
-  symbol_first: true
+
+# <% ["EUR", "CAD", "USD"].map { Money::Currency.new(it) }.each do |cur| %>
+<%= cur.iso_code.downcase %>:
+  iso_code: <%= cur.iso_code %>
+  name: <%= cur.name %>
+  subunit_to_unit: <%= cur.subunit_to_unit %>
+  symbol: "<%= cur.symbol %>"
+  symbol_first: <%= cur.symbol_first %>
+# <% end %>

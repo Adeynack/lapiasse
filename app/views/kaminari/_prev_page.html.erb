@@ -1,0 +1,11 @@
+<span class="prev">
+  <%= link_to(
+    t("views.pagination.previous").html_safe,
+    url,
+    rel: "prev",
+    remote:,
+    data:,
+    role: :button,
+    disabled: current_page.first?,
+  ) %>
+</span>

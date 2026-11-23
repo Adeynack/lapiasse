@@ -1,0 +1,10 @@
+<span class="last">
+  <%= link_to(
+    t("views.pagination.last").html_safe,
+    url,
+    remote:,
+    data:,
+    role: :button,
+    disabled: current_page.last?,
+  ) %>
+</span>
