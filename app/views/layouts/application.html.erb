@@ -42,7 +42,7 @@
         <% end %>
       <% end %>
 
-      <% if content_for :title %>
+      <% if content_for? :title %>
         <h1><%= yield :title %></h1>
       <% elsif Rails.env.development? %>
         <h1>TODO: SPECIFY A TITLE</h1>
